@@ -10,12 +10,12 @@ const DIFF_STYLE: Record<Difficulty, { bg: string; text: string }> = {
 };
 
 const CARD_COLORS = [
-  "linear-gradient(135deg,#6366F1,#8B5CF6)",
-  "linear-gradient(135deg,#0EA5E9,#06B6D4)",
+  "linear-gradient(135deg,#3B82F6,#06B6D4)",
+  "linear-gradient(135deg,#0EA5E9,#10B981)",
   "linear-gradient(135deg,#10B981,#059669)",
   "linear-gradient(135deg,#F59E0B,#EF4444)",
-  "linear-gradient(135deg,#EC4899,#8B5CF6)",
-  "linear-gradient(135deg,#3B82F6,#6366F1)",
+  "linear-gradient(135deg,#EC4899,#F43F5E)",
+  "linear-gradient(135deg,#3B82F6,#60A5FA)",
 ];
 
 function ProjectCard({ project, idx }: { project: Project; idx: number }) {
@@ -62,7 +62,7 @@ export default function ResourcePage() {
   return (
     <div className="h-full overflow-y-auto" style={{ background: "#F4F6FB" }}>
       {/* Header */}
-      <div className="bg-white border-b border-slate-100 px-6 py-5" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+      <div className="bg-white border-b border-slate-100 px-4 md:px-6 py-4 md:py-5" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-extrabold text-slate-800">Project Resources</h1>
@@ -104,7 +104,7 @@ export default function ResourcePage() {
                 onClick={() => setSelectedCategory(cat)}
                 className="px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all duration-150"
                 style={selectedCategory === cat
-                  ? { background: "linear-gradient(135deg,#4F46E5,#7C3AED)", color: "#fff", boxShadow: "0 2px 8px #4F46E540" }
+                  ? { background: "linear-gradient(135deg,#3B82F6,#06B6D4)", color: "#fff", boxShadow: "0 2px 8px #3B82F640" }
                   : { background: "#F1F5F9", color: "#64748B" }
                 }
               >
@@ -131,7 +131,7 @@ export default function ResourcePage() {
             <p className="text-xs mt-1">Try a different search or category</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filtered.map((project, i) => (
               <ProjectCard key={project.id} project={project} idx={i} />
             ))}

@@ -358,7 +358,7 @@ function PracticeListView({ onSelect }: { onSelect: (q: ApiQuestion) => void }) 
   const loading = tagsLoading || qLoading;
 
   return (
-    <div className="flex flex-1 overflow-hidden p-5 gap-5 min-h-0">
+    <div className="flex flex-1 overflow-hidden p-4 md:p-5 gap-5 min-h-0">
       {/* Main content */}
       <div className="flex-1 overflow-y-auto min-w-0">
         <h2 className="text-xl font-extrabold mb-4">
@@ -463,8 +463,8 @@ function PracticeListView({ onSelect }: { onSelect: (q: ApiQuestion) => void }) 
         </div>
       </div>
 
-      {/* Sidebar */}
-      <div className="w-60 shrink-0">
+      {/* Sidebar — hidden on mobile */}
+      <div className="hidden md:block w-60 shrink-0">
         <PracticeStatsSidebar />
       </div>
     </div>
@@ -474,7 +474,7 @@ function PracticeListView({ onSelect }: { onSelect: (q: ApiQuestion) => void }) 
 // ─── Assessments tab (placeholder) ───────────────────────────────────────────
 function AssessmentsView() {
   return (
-    <div className="flex flex-1 overflow-hidden p-5 gap-5 min-h-0">
+    <div className="flex flex-1 overflow-hidden p-4 md:p-5 gap-5 min-h-0">
       <div className="flex-1 overflow-y-auto">
         <h2 className="text-xl font-extrabold mb-4">
           <span className="text-[#3D65F4]">Available</span>{" "}
@@ -488,7 +488,7 @@ function AssessmentsView() {
           <p className="text-xs text-gray-300">Check back soon for new assessments.</p>
         </div>
       </div>
-      <div className="w-60 shrink-0"><PracticeStatsSidebar /></div>
+      <div className="hidden md:block w-60 shrink-0"><PracticeStatsSidebar /></div>
     </div>
   );
 }

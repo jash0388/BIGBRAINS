@@ -61,39 +61,60 @@ function CareerPathView() {
   }
 
   return (
-    <div className="flex h-full">
-      {/* Sidebar – path list */}
-      <div className="w-52 shrink-0 border-r border-gray-100 p-4 overflow-y-auto">
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-          Career Paths <span className="text-[#3D65F4]">({paths.length})</span>
-        </p>
-        {enrolledCount > 0 && (
-          <p className="text-[9px] text-green-600 font-semibold mb-3 px-0.5">
-            ✓ {enrolledCount} enrolled
+    <div className="flex flex-col md:flex-row h-full">
+      {/* Path list — vertical sidebar on desktop, horizontal chips on mobile */}
+      <div className="md:w-52 shrink-0 md:border-r border-gray-100 md:p-4 md:overflow-y-auto">
+        {/* Mobile: horizontal scrollable chip row */}
+        <div className="flex md:hidden items-center gap-2 px-4 py-3 overflow-x-auto border-b border-gray-100"
+          style={{ scrollbarWidth: "none" }}>
+          <span className="text-[10px] font-bold text-gray-400 whitespace-nowrap shrink-0">Paths:</span>
+          {paths.map((p) => {
+            const isAct = active?._id === p._id;
+            return (
+              <button key={p._id}
+                onClick={() => { setSelected(p); setOpenMod(null); }}
+                className="px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap transition-all shrink-0"
+                style={isAct
+                  ? { background: "#EC4899", color: "#fff", boxShadow: "0 2px 8px #EC489940" }
+                  : { background: "#FDF2F8", color: "#EC4899", border: "1px solid #FBCFE8" }
+                }>
+                {p.title}
+              </button>
+            );
+          })}
+        </div>
+        {/* Desktop: vertical list */}
+        <div className="hidden md:block">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+            Career Paths <span className="text-[#EC4899]">({paths.length})</span>
           </p>
-        )}
-        {enrolledCount === 0 && <div className="mb-3" />}
-        {paths.map((p) => {
-          const prog  = progress.find((pr) => pr.career_path_id === p._id);
-          const isAct = active?._id === p._id;
-          return (
-            <button key={p._id}
-              onClick={() => { setSelected(p); setOpenMod(null); }}
-              className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold mb-1 transition-all ${isAct ? "bg-[#3D65F4] text-white shadow-sm" : "text-gray-600 hover:bg-gray-50"}`}>
-              {p.title}
-              {prog?.progress != null && (
-                <div className={`mt-1.5 h-1 rounded-full overflow-hidden ${isAct ? "bg-white/30" : "bg-gray-200"}`}>
-                  <div className={`h-full rounded-full ${isAct ? "bg-white" : "bg-[#3D65F4]"}`} style={{ width: `${Math.min(100, prog.progress)}%` }} />
-                </div>
-              )}
-            </button>
-          );
-        })}
+          {enrolledCount > 0 && (
+            <p className="text-[9px] text-green-600 font-semibold mb-3 px-0.5">✓ {enrolledCount} enrolled</p>
+          )}
+          {enrolledCount === 0 && <div className="mb-3" />}
+          {paths.map((p) => {
+            const prog  = progress.find((pr) => pr.career_path_id === p._id);
+            const isAct = active?._id === p._id;
+            return (
+              <button key={p._id}
+                onClick={() => { setSelected(p); setOpenMod(null); }}
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold mb-1 transition-all ${isAct ? "text-white shadow-sm" : "text-gray-600 hover:bg-gray-50"}`}
+                style={isAct ? { background: "#EC4899" } : {}}>
+                {p.title}
+                {prog?.progress != null && (
+                  <div className={`mt-1.5 h-1 rounded-full overflow-hidden ${isAct ? "bg-white/30" : "bg-gray-200"}`}>
+                    <div className={`h-full rounded-full ${isAct ? "bg-white" : "bg-[#EC4899]"}`} style={{ width: `${Math.min(100, prog.progress)}%` }} />
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Detail panel */}
       {active && (
-        <div className="flex-1 overflow-y-auto p-6 max-w-2xl">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 max-w-2xl">
           {/* Header */}
           <div className="border border-[#3D65F4]/30 rounded-xl p-4 mb-5 bg-[#F9FBFF]">
             <h2 className="text-base font-extrabold text-[#182B68] mb-1">{active.title}</h2>

@@ -172,12 +172,25 @@ function TopicLearnView({
 function CourseOutline({
   course,
   onSelectTopic,
+  onBack,
 }: {
   course: Course;
   onSelectTopic: (t: SelectedTopic) => void;
+  onBack?: () => void;
 }) {
   return (
     <div className="h-full overflow-y-auto p-4">
+      {/* Mobile back button */}
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="md:hidden flex items-center gap-1.5 text-xs font-bold text-blue-500 mb-3 px-1"
+        >
+          <ChevronLeft size={15} />
+          All Courses
+        </button>
+      )}
+
       {/* Course header */}
       <div className="border-2 border-[#3D65F4]/20 rounded-xl p-3 mb-3 text-sm font-bold text-[#182B68] bg-[#F9FBFF] text-center">
         {course.name}
@@ -337,8 +350,12 @@ export default function AcademicsPage() {
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* ── Left panel: Course grid ── */}
-        <div className={`shrink-0 border-r border-gray-100 overflow-y-auto transition-all ${selectedCourse ? "w-[400px]" : "w-full max-w-[600px]"}`}>
+        {/* ── Left panel: Course grid ── (hidden on mobile when a course is selected) */}
+        <div className={`shrink-0 border-r border-gray-100 overflow-y-auto transition-all
+          ${selectedCourse
+            ? "hidden md:block md:w-[400px]"
+            : "w-full md:max-w-[600px]"
+          }`}>
           <div className="p-5">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -396,9 +413,9 @@ export default function AcademicsPage() {
                 : courses.map(course => {
                 const isActive = selectedCourse?.code === course.code;
                 const typeGrad: Record<string, { grad: string; glow: string; badge: string; badgeText: string }> = {
-                  Theory:   { grad: "135deg,#4F46E5,#6366F1", glow: "#4F46E530", badge: "rgba(79,70,229,0.12)", badgeText: "#4F46E5" },
+                  Theory:   { grad: "135deg,#3B82F6,#60A5FA", glow: "#3B82F630", badge: "rgba(59,130,246,0.12)", badgeText: "#2563EB" },
                   Lab:      { grad: "135deg,#059669,#10B981", glow: "#05966930", badge: "rgba(5,150,105,0.12)",  badgeText: "#059669" },
-                  Elective: { grad: "135deg,#7C3AED,#A855F7", glow: "#7C3AED30", badge: "rgba(124,58,237,0.12)", badgeText: "#7C3AED" },
+                  Elective: { grad: "135deg,#06B6D4,#22D3EE", glow: "#06B6D430", badge: "rgba(6,182,212,0.12)",  badgeText: "#0891B2" },
                   Project:  { grad: "135deg,#EA580C,#F97316", glow: "#EA580C30", badge: "rgba(234,88,12,0.12)",  badgeText: "#EA580C" },
                 };
                 const t = typeGrad[course.type] || typeGrad.Theory;
@@ -453,18 +470,19 @@ export default function AcademicsPage() {
           </div>
         </div>
 
-        {/* ── Right panel: Course outline OR empty ── */}
-        <div className="flex-1 overflow-hidden">
+        {/* ── Right panel: Course outline OR empty (always visible on desktop, full-screen on mobile) ── */}
+        <div className={`flex-1 overflow-hidden ${selectedCourse ? "block" : "hidden md:flex"}`}>
           {selectedCourse ? (
             <CourseOutline
               course={selectedCourse}
               onSelectTopic={t => setSelectedTopic(t)}
+              onBack={() => setSelectedCourse(null)}
             />
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
-                <div className="w-16 h-16 rounded-2xl bg-[#EEF2FF] flex items-center justify-center mx-auto mb-3">
-                  <BookOpen size={28} className="text-[#3D65F4] opacity-50" />
+                <div className="w-16 h-16 rounded-2xl bg-[#EFF6FF] flex items-center justify-center mx-auto mb-3">
+                  <BookOpen size={28} className="text-blue-400 opacity-60" />
                 </div>
                 <p className="text-sm font-semibold text-gray-400">Select a course</p>
                 <p className="text-xs text-gray-300 mt-1">to view full syllabus &amp; units</p>

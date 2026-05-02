@@ -53,53 +53,53 @@ export default function ProfilePage() {
   return (
     <div className="h-full overflow-y-auto bg-[#F9FBFF]">
       {/* Tabs */}
-      <div className="px-6 pt-4 pb-0 bg-white border-b border-gray-100 flex gap-6">
-        {[{ id: "profile", label: "My Profile" }, { id: "feedback", label: "Complaints & Feedback" }].map((t) => (
+      <div className="px-4 md:px-6 pt-4 pb-0 bg-white border-b border-gray-100 flex gap-5">
+        {[{ id: "profile", label: "My Profile" }, { id: "feedback", label: "Feedback" }].map((t) => (
           <button key={t.id} onClick={() => setTab(t.id as "profile" | "feedback")}
-            className={`pb-3 text-sm font-semibold transition-all border-b-2 ${tab === t.id ? "border-[#3D65F4] text-[#3D65F4]" : "border-transparent text-gray-400 hover:text-gray-600"}`}>
+            className={`pb-3 text-sm font-semibold transition-all border-b-2 ${tab === t.id ? "border-blue-500 text-blue-500" : "border-transparent text-gray-400 hover:text-gray-600"}`}>
             {t.label}
           </button>
         ))}
       </div>
 
       {tab === "profile" && (
-        <div className="max-w-2xl mx-auto p-6 space-y-5">
+        <div className="max-w-2xl mx-auto p-4 md:p-6 space-y-4">
 
           {infoLoading && (
-            <div className="flex items-center gap-2 text-xs text-[#3D65F4] font-semibold px-1">
+            <div className="flex items-center gap-2 text-xs text-blue-500 font-semibold px-1">
               <Loader2 size={13} className="animate-spin" /> Syncing live profile data…
             </div>
           )}
 
-          {/* Banner */}
-          <div className="rounded-2xl px-6 py-5 flex items-center justify-between shadow-lg"
-            style={{ background: "linear-gradient(135deg, #7C5CFC 0%, #3D65F4 50%, #FF6B4A 100%)" }}>
+          {/* Banner — blue to pink, no violet */}
+          <div className="rounded-2xl px-5 py-4 flex items-center justify-between shadow-lg"
+            style={{ background: "linear-gradient(135deg,#3B82F6 0%,#EC4899 100%)" }}>
             <div>
               <p className="text-white/70 text-xs font-semibold mb-0.5">Roll Number</p>
-              <span className="text-white font-extrabold text-xl tracking-wide">{roll}</span>
+              <span className="text-white font-extrabold text-lg md:text-xl tracking-wide">{roll}</span>
             </div>
             <div className="text-right">
               <p className="text-white/70 text-xs font-semibold mb-0.5">Institution</p>
-              <span className="text-white font-bold text-sm">{college || "Sphoorthy Engineering College"}</span>
+              <span className="text-white font-bold text-xs md:text-sm">{college || "Sphoorthy Engineering College"}</span>
             </div>
           </div>
 
           {/* Profile header */}
-          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-5">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#EEF2FF] to-[#F5F0FF] flex items-center justify-center shrink-0 border-2 border-[#3D65F4]/20">
-              <svg viewBox="0 0 80 80" className="w-14 h-14" fill="none">
+          <div className="bg-white rounded-2xl p-4 md:p-5 border border-gray-100 shadow-sm flex items-center gap-4">
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-gradient-to-br from-[#EFF6FF] to-[#FDF2F8] flex items-center justify-center shrink-0 border-2 border-blue-100">
+              <svg viewBox="0 0 80 80" className="w-11 h-11 md:w-14 md:h-14" fill="none">
                 <circle cx="40" cy="28" r="15" fill="#BFDBFE"/>
                 <ellipse cx="40" cy="66" rx="25" ry="13" fill="#BFDBFE"/>
               </svg>
             </div>
-            <div className="flex-1">
-              <h2 className="text-lg font-extrabold text-[#3D65F4]">{fullName}</h2>
-              <p className="text-sm text-gray-400 mb-2">{roll}</p>
-              <div className="flex flex-wrap gap-2">
-                {year && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EEF2FF] text-[#3D65F4]">{year}</span>}
-                {semester && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F0FFF4] text-green-600">SEM {semester}</span>}
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FFF0EB] text-[#FF6B4A]">Data Science</span>
-                {cgpa && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F5F0FF] text-[#7C5CFC]">CGPA: {cgpa}</span>}
+            <div className="flex-1 min-w-0">
+              <h2 className="text-base md:text-lg font-extrabold text-blue-600 truncate">{fullName}</h2>
+              <p className="text-xs text-gray-400 mb-2">{roll}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {year && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">{year}</span>}
+                {semester && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">SEM {semester}</span>}
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-500">Data Science</span>
+                {cgpa && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600">CGPA: {cgpa}</span>}
               </div>
             </div>
           </div>
@@ -173,10 +173,10 @@ export default function ProfilePage() {
             <h3 className="text-sm font-bold text-[#182B68] mb-4">Academic Summary</h3>
             <div className="grid grid-cols-4 gap-3">
               {[
-                { label: "CGPA",      value: cgpa || "—",      color: "text-[#3D65F4]" },
-                { label: "Year",      value: year || "2nd",    color: "text-[#7C5CFC]" },
-                { label: "Semester",  value: semester || "IV", color: "text-[#FF6B4A]" },
-                { label: "Section",   value: section || "A",   color: "text-green-600" },
+                { label: "CGPA",      value: cgpa || "—",      color: "text-blue-600" },
+                { label: "Year",      value: year || "2nd",    color: "text-pink-500" },
+                { label: "Semester",  value: semester || "IV", color: "text-amber-500" },
+                { label: "Section",   value: section || "A",   color: "text-emerald-600" },
               ].map((s) => (
                 <div key={s.label} className="bg-[#F9FBFF] rounded-xl p-3 text-center border border-blue-50">
                   <p className={`text-xl font-extrabold ${s.color}`}>{s.value}</p>
@@ -215,7 +215,7 @@ export default function ProfilePage() {
                 <textarea className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#3D65F4] h-32 resize-none transition-colors" placeholder="Describe in detail…" />
               </div>
               <button className="w-full py-3 rounded-xl text-white font-semibold text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
-                style={{ background: "linear-gradient(135deg, #3D65F4, #5B3CF4)" }}>
+                style={{ background: "linear-gradient(135deg, #3B82F6, #EC4899)" }}>
                 Submit Feedback
               </button>
             </div>
