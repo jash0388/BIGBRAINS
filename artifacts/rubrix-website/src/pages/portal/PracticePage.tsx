@@ -122,6 +122,8 @@ function CodingIDE({ problem, onBack }: { problem: ApiQuestion; onBack: () => vo
   const [output, setOutput] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [customInput, setCustomInput] = useState(problem.sample_testcase[0]?.testcase || "");
+  // Mobile: which panel is visible
+  const [mobilePanel, setMobilePanel] = useState<"problem" | "code">("problem");
 
   const currentLang = useMemo(() => {
     if (languages.length === 0) return null;
@@ -130,19 +132,12 @@ function CodingIDE({ problem, onBack }: { problem: ApiQuestion; onBack: () => vo
 
   const currentCode = codeByLang[selectedLangEditor] ?? CODE_TEMPLATES[selectedLangEditor] ?? "// your code here";
 
-  const handleCodeChange = (val: string) => {
-    setCodeByLang(prev => ({ ...prev, [selectedLangEditor]: val }));
-  };
-
-  const handleReset = () => {
-    setCodeByLang(prev => ({ ...prev, [selectedLangEditor]: CODE_TEMPLATES[selectedLangEditor] || "" }));
-    setOutput(null);
-  };
+  const handleCodeChange = (val: string) => setCodeByLang(prev => ({ ...prev, [selectedLangEditor]: val }));
+  const handleReset = () => { setCodeByLang(prev => ({ ...prev, [selectedLangEditor]: CODE_TEMPLATES[selectedLangEditor] || "" })); setOutput(null); };
 
   const handleRun = async () => {
     if (!currentLang) return;
-    setRunning(true);
-    setOutput(null);
+    setRunning(true); setOutput(null);
     try {
       const raw = localStorage.getItem("dn_auth");
       const sess = raw ? JSON.parse(raw) : null;
@@ -155,65 +150,80 @@ function CodingIDE({ problem, onBack }: { problem: ApiQuestion; onBack: () => vo
       if (resp.ok) {
         const data = await resp.json();
         setOutput(data.stdout ?? data.stderr ?? data.output ?? JSON.stringify(data));
-      } else {
-        setOutput(`Run failed (${resp.status}). Please try again.`);
-      }
-    } catch {
-      setOutput("Network error during code execution.");
-    }
+      } else { setOutput(`Run failed (${resp.status}). Please try again.`); }
+    } catch { setOutput("Network error during code execution."); }
     setRunning(false);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-white" style={{ top: 0, left: 0, right: 0, bottom: 0 }}>
+    <div className="fixed inset-0 z-50 flex flex-col bg-white">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-5 py-2.5 border-b border-gray-200 shrink-0">
-        <button onClick={onBack}
-          className="flex items-center gap-1.5 text-blue-500 text-sm font-semibold hover:gap-2.5 transition-all">
-          <ArrowLeft size={16} /> Back to Practice
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-200 shrink-0 gap-2">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-blue-500 text-xs font-semibold shrink-0">
+          <ArrowLeft size={15} /> <span className="hidden sm:inline">Back to Practice</span><span className="sm:hidden">Back</span>
         </button>
-        <div className="flex items-center gap-2">
-          <button onClick={handleReset}
-            className="px-3 py-1.5 border border-gray-200 text-xs font-semibold text-gray-600 rounded-lg hover:border-gray-300 transition-colors">
-            Reset
+
+        {/* Mobile panel toggle */}
+        <div className="flex md:hidden items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
+          <button onClick={() => setMobilePanel("problem")}
+            className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${mobilePanel === "problem" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500"}`}>
+            Problem
           </button>
-          <button className="px-3 py-1.5 border border-[#3D65F4] text-xs font-semibold text-[#3D65F4] rounded-lg hover:bg-[#EEF2FF] transition-colors">
-            Save
+          <button onClick={() => { setMobilePanel("code"); }}
+            className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${mobilePanel === "code" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500"}`}>
+            Code
           </button>
+        </div>
+
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button onClick={handleReset} className="px-2.5 py-1.5 border border-gray-200 text-xs font-semibold text-gray-600 rounded-lg transition-colors">Reset</button>
+          <button className="px-2.5 py-1.5 border border-blue-400 text-xs font-semibold text-blue-500 rounded-lg transition-colors">Save</button>
         </div>
       </div>
 
+      {/* Body */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left: Problem */}
-        <div className="w-[42%] shrink-0 border-r border-gray-200 overflow-y-auto p-5">
-          <h2 className="text-base font-extrabold text-[#182B68] mb-3">Problem : {problem.name}</h2>
-          <div
-            className="text-xs text-gray-700 leading-relaxed space-y-2 mb-5 [&_pre]:whitespace-pre-wrap [&_pre]:bg-transparent [&_pre]:font-sans"
-            dangerouslySetInnerHTML={{ __html: problem.description }}
-          />
+
+        {/* Problem panel — full width on mobile when mobilePanel=problem, hidden when code */}
+        <div className={`border-r border-gray-200 overflow-y-auto p-4 md:p-5
+          ${mobilePanel === "problem" ? "flex flex-col w-full md:w-[42%]" : "hidden md:flex md:flex-col md:w-[42%]"}`}>
+          <h2 className="text-sm font-extrabold text-[#182B68] mb-3">{problem.name}</h2>
+          <div className="flex gap-2 mb-3 flex-wrap">
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${DIFF_BADGE[problem.difficulty_level] || "bg-gray-100 text-gray-600"}`}>
+              {DIFF_LABEL[problem.difficulty_level] || problem.difficulty_level}
+            </span>
+            {problem.tags.slice(0, 3).map(t => (
+              <span key={t} className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{t}</span>
+            ))}
+          </div>
+          <div className="text-xs text-gray-700 leading-relaxed space-y-2 mb-4 [&_pre]:whitespace-pre-wrap [&_pre]:bg-transparent [&_pre]:font-sans"
+            dangerouslySetInnerHTML={{ __html: problem.description }} />
           {problem.sample_testcase.map((tc, i) => (
-            <div key={i} className="mb-4">
-              <p className="text-xs font-bold text-gray-500 mb-1.5">Sample Input {i + 1}</p>
+            <div key={i} className="mb-3">
+              <p className="text-xs font-bold text-gray-500 mb-1">Input {i + 1}</p>
               <pre className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono text-gray-700 whitespace-pre-wrap">{tc.testcase}</pre>
-              <p className="text-xs font-bold text-gray-500 mt-2.5 mb-1.5">Sample Output {i + 1}</p>
+              <p className="text-xs font-bold text-gray-500 mt-2 mb-1">Output {i + 1}</p>
               <pre className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs font-mono text-gray-700 whitespace-pre-wrap">{tc.output}</pre>
             </div>
           ))}
-          <div className="flex gap-4 mt-2 text-[11px] text-gray-400 border-t pt-3">
-            <span>Time Limit: <strong className="text-gray-600">{problem.time_limit}s</strong></span>
+          <div className="flex gap-4 text-[11px] text-gray-400 border-t pt-3 mt-auto">
+            <span>Time: <strong className="text-gray-600">{problem.time_limit}s</strong></span>
             <span>Memory: <strong className="text-gray-600">{Math.round(problem.memory_limit / 1000)}MB</strong></span>
           </div>
+          {/* Mobile: go to code button */}
+          <button onClick={() => setMobilePanel("code")}
+            className="md:hidden mt-4 w-full py-2.5 rounded-xl bg-blue-500 text-white text-sm font-bold flex items-center justify-center gap-2">
+            <Play size={14} /> Open Code Editor
+          </button>
         </div>
 
-        {/* Right: Editor */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Editor panel — full width on mobile when mobilePanel=code */}
+        <div className={`flex-col overflow-hidden
+          ${mobilePanel === "code" ? "flex flex-1" : "hidden md:flex md:flex-1"}`}>
           {/* Language bar */}
-          <div className="flex items-center gap-3 px-4 py-2 border-b border-gray-200 bg-gray-50 shrink-0">
-            <select
-              value={selectedLangEditor}
-              onChange={e => { setSelectedLangEditor(e.target.value); setOutput(null); }}
-              className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 bg-white focus:outline-none focus:border-[#3D65F4] cursor-pointer"
-            >
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 bg-gray-50 shrink-0 flex-wrap">
+            <select value={selectedLangEditor} onChange={e => { setSelectedLangEditor(e.target.value); setOutput(null); }}
+              className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 bg-white focus:outline-none cursor-pointer">
               {languages.length > 0
                 ? languages.map(l => <option key={l.id} value={l.editor}>{l.name}</option>)
                 : Object.entries({ cpp: "C++", c: "C", java: "Java", python: "Python", csharp: "C#", javascript: "JS" }).map(([k, v]) => (
@@ -221,51 +231,35 @@ function CodingIDE({ problem, onBack }: { problem: ApiQuestion; onBack: () => vo
                   ))
               }
             </select>
-            <div className="ml-auto flex gap-1">
-              {problem.tags.map(t => (
-                <span key={t} className="text-[10px] bg-gray-200 text-gray-600 rounded px-1.5 py-0.5">{t}</span>
-              ))}
-            </div>
           </div>
 
           {/* Code textarea */}
-          <textarea
-            value={currentCode}
-            onChange={e => handleCodeChange(e.target.value)}
+          <textarea value={currentCode} onChange={e => handleCodeChange(e.target.value)}
             className="flex-1 font-mono text-[13px] bg-[#1E1E1E] text-[#D4D4D4] p-4 resize-none outline-none leading-relaxed"
-            spellCheck={false}
-            style={{ minHeight: 0 }}
-          />
+            spellCheck={false} style={{ minHeight: 0 }} />
 
           {/* Output */}
           {output !== null && (
-            <div className="border-t border-gray-700 bg-[#1a1a1a] px-4 py-3 max-h-32 overflow-y-auto shrink-0">
+            <div className="border-t border-gray-700 bg-[#1a1a1a] px-4 py-3 max-h-36 overflow-y-auto shrink-0">
               <p className="text-[10px] font-bold text-gray-500 mb-1">Output</p>
               <pre className="text-xs text-green-400 font-mono whitespace-pre-wrap">{output}</pre>
             </div>
           )}
 
           {/* Bottom bar */}
-          <div className="flex items-end gap-3 px-4 py-3 border-t border-gray-200 bg-white shrink-0">
-            <div className="flex-1">
+          <div className="flex items-end gap-2 px-3 py-2.5 border-t border-gray-200 bg-white shrink-0">
+            <div className="flex-1 min-w-0">
               <p className="text-[10px] font-semibold text-gray-400 mb-1">Custom Input</p>
-              <textarea
-                value={customInput}
-                onChange={e => setCustomInput(e.target.value)}
-                rows={2}
-                className="w-full text-xs font-mono border border-gray-200 rounded-lg px-2 py-1.5 resize-none outline-none focus:border-[#3D65F4] transition-colors"
-              />
+              <textarea value={customInput} onChange={e => setCustomInput(e.target.value)} rows={2}
+                className="w-full text-xs font-mono border border-gray-200 rounded-lg px-2 py-1.5 resize-none outline-none focus:border-blue-400 transition-colors" />
             </div>
-            <button
-              onClick={handleRun}
-              disabled={running}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#182B68] text-white text-xs font-bold hover:bg-[#1a3280] disabled:opacity-60 transition-colors shrink-0"
-            >
+            <button onClick={handleRun} disabled={running}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#182B68] text-white text-xs font-bold disabled:opacity-60 transition-colors shrink-0">
               {running ? <Loader2 size={13} className="animate-spin" /> : <Play size={13} />}
-              Run Code
+              <span className="hidden sm:inline">Run Code</span><span className="sm:hidden">Run</span>
             </button>
-            <button className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#3D65F4] text-white text-xs font-bold hover:bg-[#2D55E4] transition-colors shrink-0">
-              <Send size={13} /> Submit
+            <button className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-500 text-white text-xs font-bold transition-colors shrink-0">
+              <Send size={13} /> <span className="hidden sm:inline">Submit</span>
             </button>
           </div>
         </div>
@@ -496,7 +490,7 @@ function AssessmentsView() {
 // ─── Interview tab (placeholder) ──────────────────────────────────────────────
 function InterviewView() {
   return (
-    <div className="flex flex-1 overflow-hidden p-5 gap-5 min-h-0">
+    <div className="flex flex-1 overflow-hidden p-4 md:p-5 gap-5 min-h-0">
       <div className="flex-1 flex items-center justify-center flex-col gap-3 text-gray-400">
         <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
           <span className="text-2xl">🎤</span>
@@ -504,7 +498,7 @@ function InterviewView() {
         <p className="text-sm font-semibold">Interview Prep</p>
         <p className="text-xs text-gray-300">Coming soon — curated interview questions.</p>
       </div>
-      <div className="w-60 shrink-0"><PracticeStatsSidebar /></div>
+      <div className="hidden md:block w-60 shrink-0"><PracticeStatsSidebar /></div>
     </div>
   );
 }

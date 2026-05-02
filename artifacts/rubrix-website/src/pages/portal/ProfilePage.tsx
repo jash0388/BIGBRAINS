@@ -171,7 +171,7 @@ export default function ProfilePage() {
           {/* Academic Summary */}
           <div className="bg-white rounded-2xl p-5 border border-blue-100 shadow-sm">
             <h3 className="text-sm font-bold text-[#182B68] mb-4">Academic Summary</h3>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { label: "CGPA",      value: cgpa || "—",      color: "text-blue-600" },
                 { label: "Year",      value: year || "2nd",    color: "text-pink-500" },

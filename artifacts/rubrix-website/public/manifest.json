@@ -1,0 +1,27 @@
+{
+  "name": "DataNauts — Student Portal",
+  "short_name": "DataNauts",
+  "description": "Your academic portal by Big Brains — Jashwanth & Team",
+  "start_url": "/student/academics",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#3B82F6",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education"],
+  "screenshots": [],
+  "prefer_related_applications": false
+}
