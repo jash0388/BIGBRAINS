@@ -1,92 +1,146 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-interface Student {
+export interface Student {
   rollNumber: string;
-  name: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  email: string;
+  mobile: string;
   college: string;
   branch: string;
   year: string;
   semester: string;
   batch: string;
+  section: string;
+  cgpa: string;
+  token: string;
 }
 
-const KNOWN_STUDENTS: Record<string, Student> = {
-  "24N81A6758": {
-    rollNumber: "24N81A6758",
-    name: "NEANAVTH JASHWANTH SINGH",
-    college: "Sphoorthy Engineering College (UGC Autonomous)",
-    branch: "B.Tech – Computer Science & Engineering (Data Science)",
-    year: "2nd Year",
-    semester: "IV",
-    batch: "2024-2028",
-  },
-};
+function parseJwt(token: string): Record<string, unknown> {
+  try {
+    return JSON.parse(atob(token.split(".")[1]));
+  } catch {
+    return {};
+  }
+}
+
+// BASE_PATH of our API server proxy
+const API_BASE = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/proxy`.replace(/\/\//g, "/");
 
 interface AuthState {
   isLoggedIn: boolean;
   student: Student | null;
-  login: (roll: string, otp: string) => { success: boolean; error?: string };
+  sendOTP: (roll: string) => Promise<{ success: boolean; message?: string; error?: string }>;
+  verifyOTP: (roll: string, otp: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
-  sendOTP: (roll: string) => { success: boolean; otp?: string; error?: string };
 }
 
 const AuthContext = createContext<AuthState>({
   isLoggedIn: false,
   student: null,
-  login: () => ({ success: false }),
+  sendOTP: async () => ({ success: false }),
+  verifyOTP: async () => ({ success: false }),
   logout: () => {},
-  sendOTP: () => ({ success: false }),
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [student, setStudent] = useState<Student | null>(null);
-  const [pendingOTP, setPendingOTP] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const saved = localStorage.getItem("rubrix_session");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
+    try {
+      const saved = localStorage.getItem("rubrix_auth");
+      if (saved) {
+        const parsed: Student = JSON.parse(saved);
+        // Check if token has expired
+        const payload = parseJwt(parsed.token);
+        const exp = payload.exp as number | undefined;
+        if (exp && Date.now() / 1000 > exp) {
+          localStorage.removeItem("rubrix_auth");
+          return;
+        }
         setStudent(parsed);
         setIsLoggedIn(true);
-      } catch {}
-    }
+      }
+    } catch {}
   }, []);
 
-  function sendOTP(roll: string): { success: boolean; otp?: string; error?: string } {
-    const r = roll.trim().toUpperCase();
-    const st = KNOWN_STUDENTS[r];
-    if (!st) {
-      return { success: false, error: "Roll number not found. Please check and try again." };
+  async function sendOTP(roll: string): Promise<{ success: boolean; message?: string; error?: string }> {
+    const userName = roll.trim().toUpperCase();
+    try {
+      const res = await fetch(`${API_BASE}/get-otp?userName=${encodeURIComponent(userName)}`);
+      const data = await res.json();
+      if (data.status === "Success" && data.result === "OK") {
+        return { success: true, message: data.description };
+      }
+      return { success: false, error: data.description || "Roll number not found. Please check and try again." };
+    } catch {
+      return { success: false, error: "Network error. Please try again." };
     }
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    setPendingOTP((prev) => ({ ...prev, [r]: otp }));
-    return { success: true, otp };
   }
 
-  function login(roll: string, otp: string): { success: boolean; error?: string } {
-    const r = roll.trim().toUpperCase();
-    const st = KNOWN_STUDENTS[r];
-    if (!st) return { success: false, error: "Roll number not found." };
-    const expected = pendingOTP[r];
-    if (!expected) return { success: false, error: "Please request an OTP first." };
-    if (otp.trim() !== expected) return { success: false, error: "Incorrect OTP. Please try again." };
-    setStudent(st);
-    setIsLoggedIn(true);
-    localStorage.setItem("rubrix_session", JSON.stringify(st));
-    return { success: true };
+  async function verifyOTP(roll: string, otp: string): Promise<{ success: boolean; error?: string }> {
+    const username = roll.trim().toUpperCase();
+    try {
+      const res = await fetch(
+        `${API_BASE}/validate-otp?otp=${encodeURIComponent(otp.trim())}&username=${encodeURIComponent(username)}`
+      );
+      const data = await res.json();
+
+      if (data.statusCode !== "OK") {
+        return { success: false, error: "Incorrect OTP. Please try again." };
+      }
+
+      // JWT comes in our custom forwarded header
+      const rawAuth = res.headers.get("x-rubrix-token");
+      const token = rawAuth ? rawAuth.replace(/^Bearer\s+/i, "") : "";
+      if (!token) {
+        return { success: false, error: "Login failed. Please try again." };
+      }
+
+      // Fetch real student info
+      const infoRes = await fetch(
+        `${API_BASE}/student-info?identificationNo=${encodeURIComponent(username)}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const infoData = await infoRes.json();
+      const info = infoData?.result?.[0];
+
+      const s: Student = {
+        rollNumber: username,
+        firstName: info?.firstName || username,
+        lastName: info?.lastName || "",
+        fullName: info ? `${info.firstName || ""} ${info.lastName || ""}`.trim() : username,
+        email: info?.personalMail || info?.workMail || "",
+        mobile: info?.mobileNo || "",
+        college: info?.instituteName || "Your Institution",
+        branch: info?.departmentName || "Engineering",
+        year: info?.currentYear || "",
+        semester: info?.currentSem || "",
+        batch: info?.batchName || "",
+        section: info?.section || "",
+        cgpa: info?.cgpa || "",
+        token,
+      };
+
+      setStudent(s);
+      setIsLoggedIn(true);
+      localStorage.setItem("rubrix_auth", JSON.stringify(s));
+      return { success: true };
+    } catch {
+      return { success: false, error: "Network error. Please try again." };
+    }
   }
 
   function logout() {
     setStudent(null);
     setIsLoggedIn(false);
-    setPendingOTP({});
-    localStorage.removeItem("rubrix_session");
+    localStorage.removeItem("rubrix_auth");
   }
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, student, login, logout, sendOTP }}>
+    <AuthContext.Provider value={{ isLoggedIn, student, sendOTP, verifyOTP, logout }}>
       {children}
     </AuthContext.Provider>
   );

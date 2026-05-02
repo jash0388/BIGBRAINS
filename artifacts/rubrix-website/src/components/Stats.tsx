@@ -17,7 +17,7 @@ export default function Stats() {
           viewport={{ once: true }}
           className="text-center text-blue-300 text-sm font-semibold uppercase tracking-widest mb-12"
         >
-          Rubrix.ai by the Numbers
+          DataNauts by the Numbers
         </motion.p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
           {stats.map((s, i) => (

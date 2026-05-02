@@ -29,12 +29,12 @@ export default function StudentFeatures() {
               <span style={{ color: "#3D65F4" }}>Dream Career</span>
             </h2>
             <p className="text-gray-500 text-base mb-8 leading-relaxed">
-              From day one to placement day, Rubrix.ai walks beside every student — building skills, tracking progress, and opening doors to the right opportunities.
+              From day one to placement day, DataNauts walks beside every student — building skills, tracking progress, and opening doors to the right opportunities.
             </p>
             <a
-              href="https://learn.rubrix.ai/login"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/student/login"
+              target={undefined}
+              rel={undefined}
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5"
               style={{ background: "linear-gradient(135deg, #3D65F4, #5B3CF4)" }}
             >

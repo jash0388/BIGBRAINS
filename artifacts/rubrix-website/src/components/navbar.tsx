@@ -10,7 +10,7 @@ export default function Navbar() {
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
             <Boxes className="w-5 h-5" />
           </div>
-          <span className="text-xl font-bold text-rubrix-navy tracking-tight">Rubrix.ai</span>
+          <span className="text-xl font-bold text-rubrix-navy tracking-tight">DataNauts</span>
         </div>
         
         <nav className="hidden md:flex items-center gap-6">

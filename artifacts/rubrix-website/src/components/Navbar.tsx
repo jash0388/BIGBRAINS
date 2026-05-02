@@ -31,16 +31,16 @@ export default function Navbar() {
               <rect x="18" y="18" width="12" height="12" rx="3" fill="#3D65F4"/>
             </svg>
           </div>
-          <span className="text-[#182B68] font-bold text-lg tracking-tight">Rubrix.ai</span>
+          <span className="text-[#182B68] font-bold text-lg tracking-tight">DataNauts</span>
         </a>
 
         <div className="hidden md:flex items-center gap-8">
           {["Student Login", "Faculty Login", "NBA Login", "Contact"].map((item) => (
             <a
               key={item}
-              href={item === "Student Login" ? "https://learn.rubrix.ai/login" : "#contact"}
-              target={item === "Student Login" ? "_blank" : undefined}
-              rel={item === "Student Login" ? "noopener noreferrer" : undefined}
+              href={item === "Student Login" ? "/student/login" : "#contact"}
+              target={undefined}
+              rel={undefined}
               className="text-[#6B4EFF] font-medium text-sm hover:text-[#3D65F4] transition-colors"
             >
               {item}
@@ -64,7 +64,7 @@ export default function Navbar() {
             {["Student Login", "Faculty Login", "NBA Login", "Contact"].map((item) => (
               <a
                 key={item}
-                href={item === "Student Login" ? "https://learn.rubrix.ai/login" : "#contact"}
+                href={item === "Student Login" ? "/student/login" : "#contact"}
                 className="text-[#6B4EFF] font-medium text-sm"
                 onClick={() => setMenuOpen(false)}
               >

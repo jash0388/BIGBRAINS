@@ -16,11 +16,11 @@ export default function CTASection() {
               Ready to Transform Your Institution?
             </h2>
             <p className="text-gray-500 mb-8 leading-relaxed">
-              Join 100+ institutions that have already elevated their academic outcomes, placement rates, and accreditation readiness with Rubrix.ai.
+              Join 100+ institutions that have already elevated their academic outcomes, placement rates, and accreditation readiness with DataNauts.
             </p>
             <div className="space-y-4">
               {[
-                { icon: Mail, label: "contact@rubrix.ai" },
+                { icon: Mail, label: "contact@datanauts.ai" },
                 { icon: Phone, label: "+91 98765 43210" },
                 { icon: MapPin, label: "Hyderabad, Telangana, India" },
               ].map((item) => (

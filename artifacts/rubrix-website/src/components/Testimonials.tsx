@@ -4,7 +4,7 @@ const testimonials = [
   {
     name: "Dr. K. Srinivasa Rao",
     title: "Principal, MVSR Engineering College",
-    quote: "Rubrix.ai transformed how we approach NBA accreditation. What used to take months of manual work now happens automatically. Our SAR was ready in days.",
+    quote: "DataNauts transformed how we approach NBA accreditation. What used to take months of manual work now happens automatically. Our SAR was ready in days.",
     initials: "KS",
     color: "#3D65F4",
   },
@@ -18,7 +18,7 @@ const testimonials = [
   {
     name: "Dr. Ramesh Babu",
     title: "Training & Placement Officer, GITAM",
-    quote: "Our placement numbers jumped 40% in the first year with Rubrix.ai. Students get personalized prep and we finally have visibility into their readiness.",
+    quote: "Our placement numbers jumped 40% in the first year with DataNauts. Students get personalized prep and we finally have visibility into their readiness.",
     initials: "RB",
     color: "#FF6B4A",
   },

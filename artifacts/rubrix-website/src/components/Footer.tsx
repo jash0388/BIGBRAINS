@@ -15,7 +15,7 @@ export default function Footer() {
                   <rect x="18" y="18" width="12" height="12" rx="3" fill="#3D65F4"/>
                 </svg>
               </div>
-              <span className="text-white font-bold text-base">Rubrix.ai</span>
+              <span className="text-white font-bold text-base">DataNauts</span>
             </div>
             <p className="text-xs text-blue-300 leading-relaxed mb-4">India's First Institutional Excellence Platform — powering academics, placements, and accreditation.</p>
             <div className="flex gap-3">
@@ -44,7 +44,7 @@ export default function Footer() {
           ))}
         </div>
         <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
-          <p className="text-xs text-blue-400">© 2024 Rubrix.ai. All rights reserved.</p>
+          <p className="text-xs text-blue-400">© 2024 DataNauts. All rights reserved.</p>
           <p className="text-xs text-blue-400">Made with care in Hyderabad, India</p>
         </div>
       </div>
