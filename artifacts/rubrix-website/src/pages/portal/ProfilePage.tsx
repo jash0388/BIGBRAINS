@@ -1,30 +1,39 @@
 import { useState } from "react";
-import { Edit2, MessageSquare } from "lucide-react";
+import { Edit2, MapPin, Phone, Mail, Globe, Award } from "lucide-react";
 
 const studentData = {
   rollNumber: "24N81A6758",
-  college: "Sphoorthi Engineering College",
+  college: "Sphoorthy Engineering College (UGC Autonomous)",
+  collegeShort: "SPHN",
+  address: "Nadargul Village, Saroornagar Mandal, Hyderabad, Telangana – 501510",
+  phone: "+91 9392 11 9392",
+  email: "admissions@sphoorthyengg.ac.in",
+  website: "www.sphoorthyengg.ac.in",
+  naac: "A Grade",
+  affiliation: "JNTUH",
+  established: "2004",
   firstName: "NEANAVTH",
   lastName: "JASHWANTH SINGH",
   mobile: "8074772823",
-  email: "jashwanth038@gmail.com",
+  studentEmail: "jashwanth038@gmail.com",
   batch: "2024-2028",
-  branch: "Computer Science & Engineering (Data Science)",
+  branch: "B.Tech – Computer Science & Engineering (Data Science)",
   section: "A",
+  year: "2nd Year",
   semester: "IV",
   cgpa: "8.4",
+  attendance: "82%",
   fatherName: "NEANAVTH VENKAT RAO",
   dob: "15-03-2006",
-  address: "Hyderabad, Telangana",
 };
 
 function InfoField({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <label className="block text-xs text-gray-400 mb-1">{label}</label>
-      <div className="flex items-center justify-between border border-gray-200 rounded-xl px-4 py-2.5 bg-white">
+      <label className="block text-[11px] text-gray-400 mb-1 font-medium">{label}</label>
+      <div className="flex items-center justify-between border border-gray-200 rounded-xl px-4 py-2.5 bg-white hover:border-[#3D65F4]/40 transition-colors">
         <span className="text-sm font-semibold text-[#182B68]">{value}</span>
-        <Edit2 size={14} className="text-gray-300 cursor-pointer hover:text-[#3D65F4] transition-colors" />
+        <Edit2 size={13} className="text-gray-300 cursor-pointer hover:text-[#3D65F4] transition-colors shrink-0 ml-2" />
       </div>
     </div>
   );
@@ -34,9 +43,9 @@ export default function ProfilePage() {
   const [tab, setTab] = useState<"profile" | "feedback">("profile");
 
   return (
-    <div className="h-full overflow-y-auto">
-      {/* Top tabs */}
-      <div className="px-6 pt-4 pb-0 border-b border-gray-100 flex gap-6">
+    <div className="h-full overflow-y-auto bg-[#F9FBFF]">
+      {/* Tabs */}
+      <div className="px-6 pt-4 pb-0 bg-white border-b border-gray-100 flex gap-6">
         {[
           { id: "profile", label: "My Profile" },
           { id: "feedback", label: "Complaints & Feedback" },
@@ -54,85 +63,196 @@ export default function ProfilePage() {
       </div>
 
       {tab === "profile" && (
-        <div className="max-w-2xl mx-auto p-6">
+        <div className="max-w-2xl mx-auto p-6 space-y-5">
+
           {/* Header banner */}
           <div
-            className="rounded-2xl px-6 py-5 mb-6 flex items-center justify-between"
-            style={{ background: "linear-gradient(135deg, #7C5CFC, #3D65F4, #FF6B4A)" }}
+            className="rounded-2xl px-6 py-5 flex items-center justify-between shadow-lg"
+            style={{ background: "linear-gradient(135deg, #7C5CFC 0%, #3D65F4 50%, #FF6B4A 100%)" }}
           >
-            <span className="text-white font-extrabold text-lg tracking-wide">{studentData.rollNumber}</span>
-            <span className="text-white font-semibold text-sm">{studentData.college}</span>
+            <div>
+              <p className="text-white/70 text-xs font-semibold mb-0.5">Roll Number</p>
+              <span className="text-white font-extrabold text-xl tracking-wide">{studentData.rollNumber}</span>
+            </div>
+            <div className="text-right">
+              <p className="text-white/70 text-xs font-semibold mb-0.5">Institution</p>
+              <span className="text-white font-bold text-sm">{studentData.college}</span>
+            </div>
           </div>
 
-          {/* Profile info */}
-          <div className="flex items-center gap-5 mb-8">
-            <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 shrink-0">
-              <svg viewBox="0 0 80 80" className="w-16 h-16" fill="none">
-                <circle cx="40" cy="28" r="16" fill="#CBD5E1"/>
-                <ellipse cx="40" cy="68" rx="28" ry="16" fill="#CBD5E1"/>
+          {/* Profile header */}
+          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm flex items-center gap-5">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#EEF2FF] to-[#F5F0FF] flex items-center justify-center shrink-0 border-2 border-[#3D65F4]/20">
+              <svg viewBox="0 0 80 80" className="w-14 h-14" fill="none">
+                <circle cx="40" cy="28" r="15" fill="#BFDBFE"/>
+                <ellipse cx="40" cy="66" rx="25" ry="13" fill="#BFDBFE"/>
               </svg>
             </div>
-            <div>
-              <h2 className="text-xl font-extrabold text-[#3D65F4]">
+            <div className="flex-1">
+              <h2 className="text-lg font-extrabold text-[#3D65F4]">
                 {studentData.firstName} {studentData.lastName}
               </h2>
-              <p className="text-sm text-gray-400">{studentData.rollNumber}</p>
+              <p className="text-sm text-gray-400 mb-2">{studentData.rollNumber}</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EEF2FF] text-[#3D65F4]">
+                  {studentData.year}
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F0FFF4] text-green-600">
+                  SEM {studentData.semester}
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FFF0EB] text-[#FF6B4A]">
+                  Data Science
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F5F0FF] text-[#7C5CFC]">
+                  CGPA: {studentData.cgpa}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* General Information */}
-          <div className="mb-8">
+          {/* College Info Card */}
+          <div className="bg-white rounded-2xl p-5 border border-blue-100 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-[#182B68]">College Information</h3>
+              <div className="flex items-center gap-1.5">
+                <Award size={13} className="text-orange-500" />
+                <span className="text-xs font-bold text-orange-600">NAAC {studentData.naac}</span>
+                <span className="mx-1 text-gray-300">|</span>
+                <span className="text-xs font-bold text-[#3D65F4]">UGC Autonomous</span>
+              </div>
+            </div>
+            <div className="space-y-2.5">
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-lg bg-[#EEF2FF] flex items-center justify-center shrink-0 mt-0.5">
+                  <MapPin size={13} className="text-[#3D65F4]" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-[#182B68]">{studentData.college}</p>
+                  <p className="text-xs text-gray-500">{studentData.address}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg bg-[#EEF2FF] flex items-center justify-center shrink-0">
+                  <Phone size={13} className="text-[#3D65F4]" />
+                </div>
+                <p className="text-xs text-gray-600">{studentData.phone}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg bg-[#EEF2FF] flex items-center justify-center shrink-0">
+                  <Mail size={13} className="text-[#3D65F4]" />
+                </div>
+                <p className="text-xs text-gray-600">{studentData.email}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg bg-[#EEF2FF] flex items-center justify-center shrink-0">
+                  <Globe size={13} className="text-[#3D65F4]" />
+                </div>
+                <a href="https://www.sphoorthyengg.ac.in" target="_blank" rel="noopener noreferrer" className="text-xs text-[#3D65F4] font-semibold hover:underline">
+                  {studentData.website}
+                </a>
+              </div>
+              <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-100">
+                {[
+                  { label: "Affiliation", value: studentData.affiliation },
+                  { label: "Code", value: studentData.collegeShort },
+                  { label: "Est.", value: studentData.established },
+                ].map((item) => (
+                  <div key={item.label} className="bg-[#F9FBFF] rounded-xl p-2.5 text-center border border-blue-50">
+                    <p className="text-sm font-extrabold text-[#3D65F4]">{item.value}</p>
+                    <p className="text-[9px] text-gray-400 mt-0.5">{item.label}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* General Info */}
+          <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
             <h3 className="text-sm font-bold text-[#182B68] mb-4">My General Information</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <InfoField label="First name" value={studentData.firstName} />
-              <InfoField label="Second name" value={studentData.lastName} />
+            <div className="grid grid-cols-2 gap-3">
+              <InfoField label="First Name" value={studentData.firstName} />
+              <InfoField label="Last Name" value={studentData.lastName} />
               <InfoField label="Mobile" value={studentData.mobile} />
-              <InfoField label="Email" value={studentData.email} />
+              <InfoField label="Email" value={studentData.studentEmail} />
               <InfoField label="Batch" value={studentData.batch} />
               <InfoField label="Roll Number" value={studentData.rollNumber} />
-              <InfoField label="Branch" value={studentData.branch} />
+              <div className="col-span-2">
+                <InfoField label="Branch" value={studentData.branch} />
+              </div>
               <InfoField label="Section" value={studentData.section} />
-              <InfoField label="Current Semester" value={studentData.semester} />
+              <InfoField label="Current Year" value={studentData.year} />
+              <InfoField label="Semester" value={`SEM ${studentData.semester}`} />
               <InfoField label="CGPA" value={studentData.cgpa} />
               <InfoField label="Father's Name" value={studentData.fatherName} />
               <InfoField label="Date of Birth" value={studentData.dob} />
             </div>
           </div>
 
-          {/* Academic summary */}
-          <div className="bg-[#F9FBFF] rounded-2xl p-5 border border-blue-100">
+          {/* Academic Summary */}
+          <div className="bg-white rounded-2xl p-5 border border-blue-100 shadow-sm">
             <h3 className="text-sm font-bold text-[#182B68] mb-4">Academic Summary</h3>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-3">
               {[
-                { label: "CGPA", value: studentData.cgpa },
-                { label: "Semester", value: "IV" },
-                { label: "Attendance", value: "82%" },
+                { label: "CGPA", value: studentData.cgpa, color: "text-[#3D65F4]" },
+                { label: "Year", value: "2nd", color: "text-[#7C5CFC]" },
+                { label: "Semester", value: "IV", color: "text-[#FF6B4A]" },
+                { label: "Attendance", value: studentData.attendance, color: "text-green-600" },
               ].map((s) => (
-                <div key={s.label} className="bg-white rounded-xl p-3 text-center border border-blue-50">
-                  <p className="text-lg font-extrabold text-[#3D65F4]">{s.value}</p>
-                  <p className="text-xs text-gray-400">{s.label}</p>
+                <div key={s.label} className="bg-[#F9FBFF] rounded-xl p-3 text-center border border-blue-50">
+                  <p className={`text-xl font-extrabold ${s.color}`}>{s.value}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{s.label}</p>
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Credit */}
+          <div className="text-center pb-2">
+            <p className="text-[11px] text-gray-300 font-medium">
+              Portal customized by{" "}
+              <span className="text-[#3D65F4] font-bold">Neanavth Jashwanth Singh</span>
+              {" "}· 24N81A6758 · Sphoorthy Engineering College
+            </p>
           </div>
         </div>
       )}
 
       {tab === "feedback" && (
         <div className="max-w-lg mx-auto p-6">
-          <h3 className="text-sm font-bold text-[#182B68] mb-4">Complaints & Feedback</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Subject</label>
-              <input className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#3D65F4]" placeholder="Enter subject" />
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <h3 className="text-sm font-bold text-[#182B68] mb-1">Complaints & Feedback</h3>
+            <p className="text-xs text-gray-400 mb-5">Your feedback helps improve the platform for everyone.</p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-medium text-gray-400 mb-1">Category</label>
+                <select className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 focus:outline-none focus:border-[#3D65F4] bg-white">
+                  <option>Academic Issue</option>
+                  <option>Technical Problem</option>
+                  <option>Career Guidance</option>
+                  <option>General Feedback</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] font-medium text-gray-400 mb-1">Subject</label>
+                <input
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#3D65F4] transition-colors"
+                  placeholder="Brief subject of your complaint or feedback"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-medium text-gray-400 mb-1">Message</label>
+                <textarea
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#3D65F4] h-32 resize-none transition-colors"
+                  placeholder="Describe in detail..."
+                />
+              </div>
+              <button
+                className="w-full py-3 rounded-xl text-white font-semibold text-sm shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all"
+                style={{ background: "linear-gradient(135deg, #3D65F4, #5B3CF4)" }}
+              >
+                Submit Feedback
+              </button>
             </div>
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Message</label>
-              <textarea className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-[#3D65F4] h-32 resize-none" placeholder="Describe your complaint or feedback" />
-            </div>
-            <button className="w-full py-3 rounded-xl text-white font-semibold text-sm" style={{ background: "linear-gradient(135deg, #3D65F4, #5B3CF4)" }}>
-              Submit
-            </button>
           </div>
         </div>
       )}
