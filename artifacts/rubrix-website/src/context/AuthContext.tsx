@@ -17,116 +17,103 @@ export interface Student {
   token: string;
 }
 
-function parseJwt(token: string): Record<string, unknown> {
-  try {
-    return JSON.parse(atob(token.split(".")[1]));
-  } catch {
-    return {};
-  }
-}
-
-// BASE_PATH of our API server proxy
-const API_BASE = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/api/proxy`.replace(/\/\//g, "/");
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+const API  = `${BASE}/api/proxy`;
 
 interface AuthState {
   isLoggedIn: boolean;
   student: Student | null;
-  sendOTP: (roll: string) => Promise<{ success: boolean; message?: string; error?: string }>;
+  sendOTP:   (roll: string) => Promise<{ success: boolean; message?: string; error?: string }>;
   verifyOTP: (roll: string, otp: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthState>({
-  isLoggedIn: false,
-  student: null,
-  sendOTP: async () => ({ success: false }),
+  isLoggedIn: false, student: null,
+  sendOTP:   async () => ({ success: false }),
   verifyOTP: async () => ({ success: false }),
   logout: () => {},
 });
 
+function decodeJwt(token: string): Record<string, unknown> {
+  try { return JSON.parse(atob(token.split(".")[1])); } catch { return {}; }
+}
+
+function mapProfile(roll: string, profile: Record<string, unknown>, token: string): Student {
+  const firstName = String(profile.firstName || profile.first_name || roll);
+  const lastName  = String(profile.lastName  || profile.last_name  || "");
+  return {
+    rollNumber: roll,
+    firstName,
+    lastName,
+    fullName:  [firstName, lastName].filter(Boolean).join(" "),
+    email:     String(profile.personalMail  || profile.workMail    || profile.email || ""),
+    mobile:    String(profile.mobileNo      || profile.mobile      || ""),
+    college:   String(profile.instituteName || profile.college     || profile.collegeName || ""),
+    branch:    String(profile.departmentName|| profile.branch      || profile.department  || ""),
+    year:      String(profile.currentYear   || profile.year        || ""),
+    semester:  String(profile.currentSem    || profile.semester    || ""),
+    batch:     String(profile.batchName     || profile.batch       || ""),
+    section:   String(profile.section       || ""),
+    cgpa:      String(profile.cgpa          || ""),
+    token,
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [student, setStudent] = useState<Student | null>(null);
+  const [student,    setStudent]    = useState<Student | null>(null);
 
   useEffect(() => {
+    // Clear any old session from previous key names
+    localStorage.removeItem("rubrix_auth");
+    localStorage.removeItem("rubrix_session");
     try {
-      const saved = localStorage.getItem("rubrix_auth");
-      if (saved) {
-        const parsed: Student = JSON.parse(saved);
-        // Check if token has expired
-        const payload = parseJwt(parsed.token);
-        const exp = payload.exp as number | undefined;
-        if (exp && Date.now() / 1000 > exp) {
-          localStorage.removeItem("rubrix_auth");
-          return;
-        }
-        setStudent(parsed);
-        setIsLoggedIn(true);
+      const raw = localStorage.getItem("dn_auth");
+      if (!raw) return;
+      const parsed: Student = JSON.parse(raw);
+      // Expire check
+      const payload = decodeJwt(parsed.token);
+      if (typeof payload.exp === "number" && Date.now() / 1000 > payload.exp) {
+        localStorage.removeItem("dn_auth");
+        return;
       }
-    } catch {}
+      setStudent(parsed);
+      setIsLoggedIn(true);
+    } catch { /* ignore */ }
   }, []);
 
-  async function sendOTP(roll: string): Promise<{ success: boolean; message?: string; error?: string }> {
-    const userName = roll.trim().toUpperCase();
+  async function sendOTP(roll: string) {
     try {
-      const res = await fetch(`${API_BASE}/get-otp?userName=${encodeURIComponent(userName)}`);
+      const res  = await fetch(`${API}/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userName: roll.trim().toUpperCase() }),
+      });
       const data = await res.json();
-      if (data.status === "Success" && data.result === "OK") {
-        return { success: true, message: data.description };
-      }
-      return { success: false, error: data.description || "Roll number not found. Please check and try again." };
+      return data.success
+        ? { success: true,  message: data.message }
+        : { success: false, error: data.error || "Roll number not found." };
     } catch {
       return { success: false, error: "Network error. Please try again." };
     }
   }
 
-  async function verifyOTP(roll: string, otp: string): Promise<{ success: boolean; error?: string }> {
-    const username = roll.trim().toUpperCase();
+  async function verifyOTP(roll: string, otp: string) {
     try {
-      const res = await fetch(
-        `${API_BASE}/validate-otp?otp=${encodeURIComponent(otp.trim())}&username=${encodeURIComponent(username)}`
-      );
+      const res  = await fetch(`${API}/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userName: roll.trim().toUpperCase(), otp: otp.trim() }),
+      });
       const data = await res.json();
-
-      if (data.statusCode !== "OK") {
-        return { success: false, error: "Incorrect OTP. Please try again." };
+      if (!data.success || !data.token) {
+        return { success: false, error: data.error || "Incorrect OTP. Please try again." };
       }
-
-      // JWT comes in our custom forwarded header
-      const rawAuth = res.headers.get("x-rubrix-token");
-      const token = rawAuth ? rawAuth.replace(/^Bearer\s+/i, "") : "";
-      if (!token) {
-        return { success: false, error: "Login failed. Please try again." };
-      }
-
-      // Fetch real student info
-      const infoRes = await fetch(
-        `${API_BASE}/student-info?identificationNo=${encodeURIComponent(username)}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const infoData = await infoRes.json();
-      const info = infoData?.result?.[0];
-
-      const s: Student = {
-        rollNumber: username,
-        firstName: info?.firstName || username,
-        lastName: info?.lastName || "",
-        fullName: info ? `${info.firstName || ""} ${info.lastName || ""}`.trim() : username,
-        email: info?.personalMail || info?.workMail || "",
-        mobile: info?.mobileNo || "",
-        college: info?.instituteName || "Your Institution",
-        branch: info?.departmentName || "Engineering",
-        year: info?.currentYear || "",
-        semester: info?.currentSem || "",
-        batch: info?.batchName || "",
-        section: info?.section || "",
-        cgpa: info?.cgpa || "",
-        token,
-      };
-
+      const s = mapProfile(roll.trim().toUpperCase(), data.profile || {}, data.token);
       setStudent(s);
       setIsLoggedIn(true);
-      localStorage.setItem("rubrix_auth", JSON.stringify(s));
+      localStorage.setItem("dn_auth", JSON.stringify(s));
       return { success: true };
     } catch {
       return { success: false, error: "Network error. Please try again." };
@@ -136,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function logout() {
     setStudent(null);
     setIsLoggedIn(false);
-    localStorage.removeItem("rubrix_auth");
+    localStorage.removeItem("dn_auth");
   }
 
   return (
@@ -146,6 +133,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+export function useAuth() { return useContext(AuthContext); }
