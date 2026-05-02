@@ -13,7 +13,7 @@ const testimonials = [
     title: "Dean of Academics, KL University",
     quote: "The AI Faculty Agents are a game changer. My faculty spend 60% less time on routine tasks and more time mentoring students. Results speak for themselves.",
     initials: "AR",
-    color: "#7C5CFC",
+    color: "#0EA5E9",
   },
   {
     name: "Dr. Ramesh Babu",
@@ -26,21 +26,21 @@ const testimonials = [
 
 export default function Testimonials() {
   return (
-    <section className="py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-6">
+    <section className="py-16 md:py-24 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-12 md:mb-16"
         >
-          <h2 className="text-4xl font-extrabold text-[#182B68] mb-3">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-[#182B68] mb-3">
             Loved by Institutions Across India
           </h2>
-          <p className="text-gray-500">Real results from real educators</p>
+          <p className="text-gray-500 text-sm md:text-base">Real results from real educators</p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-5 md:gap-6">
           {testimonials.map((t, i) => (
             <motion.div
               key={t.name}
@@ -48,7 +48,7 @@ export default function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.15 }}
-              className="bg-[#F9FBFF] rounded-2xl p-7 border border-blue-50 hover:shadow-lg transition-all"
+              className="bg-[#F9FBFF] rounded-2xl p-5 md:p-7 border border-blue-50 hover:shadow-lg transition-all"
             >
               <div className="flex mb-3 gap-0.5">
                 {Array.from({ length: 5 }).map((_, j) => (

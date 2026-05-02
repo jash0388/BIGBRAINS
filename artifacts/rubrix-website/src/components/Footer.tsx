@@ -2,10 +2,10 @@ import { Linkedin, Twitter, Mail } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#0F1A45] text-blue-200 py-14">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid md:grid-cols-4 gap-10 mb-10">
-          <div className="col-span-1">
+    <footer className="bg-[#0F1A45] text-blue-200 py-12 md:py-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-10 mb-10">
+          <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-7 h-7">
                 <svg viewBox="0 0 32 32" fill="none">
@@ -28,8 +28,8 @@ export default function Footer() {
           </div>
           {[
             { title: "Platform", links: ["Student Portal", "Faculty Portal", "NBA Module", "Analytics"] },
-            { title: "Company", links: ["About Us", "Careers", "Blog", "Contact"] },
-            { title: "Legal", links: ["Privacy Policy", "Terms of Service", "Cookie Policy"] },
+            { title: "Company",  links: ["About Us", "Careers", "Blog", "Contact"] },
+            { title: "Legal",    links: ["Privacy Policy", "Terms of Service", "Cookie Policy"] },
           ].map((col) => (
             <div key={col.title}>
               <p className="text-white font-semibold text-sm mb-4">{col.title}</p>
@@ -43,20 +43,20 @@ export default function Footer() {
             </div>
           ))}
         </div>
-        <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div className="border-t border-white/10 pt-6 flex flex-col gap-3 items-center text-center">
           <p className="text-xs text-blue-400">© 2024 DataNauts. All rights reserved.</p>
-          <div className="flex items-center gap-2.5">
-            <span className="text-[10px] font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>Modified by</span>
+          <p className="text-[10px] flex flex-wrap items-center justify-center gap-1.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+            <span>Modified by</span>
             <span
-              className="text-[11px] font-black tracking-widest uppercase"
+              className="font-black tracking-widest uppercase text-[10px]"
               style={{ background: "linear-gradient(90deg,#818CF8,#A78BFA)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
             >Big Brains</span>
-            <span className="text-white/15 text-[10px]">·</span>
-            <span className="text-[10px] font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>Startup by</span>
-            <span className="text-[10px] font-bold" style={{ color: "rgba(167,139,250,0.8)" }}>Jashwanth &amp; Team</span>
-            <span className="text-white/15 text-[10px]">·</span>
-            <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>Sphoorthy Engineering College</span>
-          </div>
+            <span className="text-white/15">·</span>
+            <span>Startup by</span>
+            <span style={{ color: "rgba(167,139,250,0.8)", fontWeight: 700 }}>Jashwanth &amp; Team</span>
+            <span className="text-white/15">·</span>
+            <span>Sphoorthy Engineering College</span>
+          </p>
         </div>
       </div>
     </footer>

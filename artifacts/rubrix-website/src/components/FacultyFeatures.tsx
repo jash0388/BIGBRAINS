@@ -10,9 +10,9 @@ const features = [
 
 export default function FacultyFeatures() {
   return (
-    <section id="faculty" className="py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+    <section id="faculty" className="py-16 md:py-24 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           {/* Visual */}
           <motion.div
             initial={{ opacity: 0, x: -40 }}
@@ -21,9 +21,9 @@ export default function FacultyFeatures() {
             transition={{ duration: 0.6 }}
             className="order-2 lg:order-1"
           >
-            <div className="bg-[#F9FBFF] rounded-3xl p-8 border border-blue-100 shadow-xl">
+            <div className="bg-[#F9FBFF] rounded-3xl p-6 md:p-8 border border-blue-100 shadow-xl">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#3D65F4] to-[#5B3CF4] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#3D65F4] to-[#0EA5E9] flex items-center justify-center">
                   <Cpu size={20} className="text-white" />
                 </div>
                 <div>
@@ -34,8 +34,8 @@ export default function FacultyFeatures() {
 
               {[
                 { label: "Generating Course Material", pct: 78, color: "#3D65F4" },
-                { label: "Evaluating Assignments", pct: 56, color: "#7C5CFC" },
-                { label: "Building Question Bank", pct: 91, color: "#00C2CB" },
+                { label: "Evaluating Assignments",     pct: 56, color: "#0EA5E9" },
+                { label: "Building Question Bank",     pct: 91, color: "#00C2CB" },
               ].map((item) => (
                 <div key={item.label} className="mb-4">
                   <div className="flex justify-between text-xs text-gray-500 mb-1">
@@ -57,13 +57,13 @@ export default function FacultyFeatures() {
 
               <div className="grid grid-cols-3 gap-3 mt-6">
                 {[
-                  { label: "Lectures Generated", value: "124" },
-                  { label: "Students Assessed", value: "1,840" },
-                  { label: "Hours Saved", value: "320" },
+                  { label: "Lectures Generated",  value: "124"   },
+                  { label: "Students Assessed",   value: "1,840" },
+                  { label: "Hours Saved",          value: "320"   },
                 ].map((stat) => (
                   <div key={stat.label} className="bg-white rounded-xl p-3 text-center border border-blue-50">
                     <p className="text-lg font-extrabold text-[#3D65F4]">{stat.value}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">{stat.label}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5 leading-tight">{stat.label}</p>
                   </div>
                 ))}
               </div>
@@ -78,12 +78,12 @@ export default function FacultyFeatures() {
             transition={{ duration: 0.6 }}
             className="order-1 lg:order-2"
           >
-            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#F5F0FF] text-[#7C5CFC] mb-4 uppercase tracking-wider">
+            <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-[#EFF6FF] text-[#3D65F4] mb-4 uppercase tracking-wider">
               Faculty Module
             </span>
-            <h2 className="text-4xl font-extrabold text-[#182B68] mb-4 leading-tight">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-[#182B68] mb-4 leading-tight">
               AI Faculty Agents —{" "}
-              <span style={{ color: "#7C5CFC" }}>Built for Modern Educators</span>
+              <span style={{ color: "#0EA5E9" }}>Built for Modern Educators</span>
             </h2>
             <p className="text-gray-500 text-base mb-8 leading-relaxed">
               Let AI handle the repetitive work. Faculty spend less time on paperwork and more time on what matters — inspiring students and driving outcomes.
@@ -98,8 +98,8 @@ export default function FacultyFeatures() {
                   transition={{ delay: i * 0.1 }}
                   className="flex gap-4 items-start"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-[#F5F0FF] flex items-center justify-center shrink-0">
-                    <f.icon size={16} className="text-[#7C5CFC]" />
+                  <div className="w-9 h-9 rounded-lg bg-[#EFF6FF] flex items-center justify-center shrink-0">
+                    <f.icon size={16} className="text-[#3D65F4]" />
                   </div>
                   <div>
                     <p className="text-sm font-bold text-[#182B68]">{f.title}</p>

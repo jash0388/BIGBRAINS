@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { Download } from "lucide-react";
 
 function StudentCard() {
   return (
@@ -15,15 +14,15 @@ function StudentCard() {
             key={tag}
             className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
             style={{
-              background: ["#EEF2FF","#F0FFF4","#FFF7ED","#EEF2FF","#FDF2F8","#F0F9FF"][i % 6],
-              color: ["#3D65F4","#059669","#EA580C","#7C3AED","#DB2777","#0284C7"][i % 6],
+              background: ["#EEF2FF","#F0FFF4","#FFF7ED","#EFF6FF","#FDF2F8","#F0F9FF"][i % 6],
+              color:      ["#3D65F4","#059669","#EA580C","#1D4ED8","#DB2777","#0284C7"][i % 6],
             }}
           >
             {tag}
           </span>
         ))}
       </div>
-      <div className="w-full h-24 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center overflow-hidden">
+      <div className="w-full h-24 rounded-xl bg-gradient-to-br from-blue-100 to-sky-100 flex items-center justify-center overflow-hidden">
         <svg viewBox="0 0 80 80" className="w-16 h-16" fill="none">
           <circle cx="40" cy="28" r="14" fill="#93C5FD"/>
           <ellipse cx="40" cy="62" rx="22" ry="14" fill="#BFDBFE"/>
@@ -49,7 +48,7 @@ function AIAgentCard() {
             initial={{ width: 0 }}
             animate={{ width: "62%" }}
             transition={{ delay: 1.2, duration: 1 }}
-            className="h-full rounded-full bg-gradient-to-r from-[#3D65F4] to-[#7C5CFC]"
+            className="h-full rounded-full bg-gradient-to-r from-[#3D65F4] to-[#0EA5E9]"
           />
         </div>
       </div>
@@ -103,7 +102,6 @@ function NBACard() {
 export default function Hero() {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center pt-20 pb-10 overflow-hidden">
-      {/* Grid background */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -116,12 +114,12 @@ export default function Hero() {
       />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#F9FBFF] pointer-events-none" />
 
-      <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
+      <div className="relative z-10 text-center max-w-4xl mx-auto px-4 sm:px-6">
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7 }}
-          className="text-5xl md:text-7xl font-extrabold leading-tight mb-6"
+          className="text-4xl sm:text-5xl md:text-7xl font-extrabold leading-tight mb-6"
           style={{
             background: "linear-gradient(135deg, #3D65F4 0%, #182B68 60%)",
             WebkitBackgroundClip: "text",
@@ -135,7 +133,7 @@ export default function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.6 }}
-          className="text-xl md:text-2xl font-semibold text-[#182B68] mb-10"
+          className="text-lg sm:text-xl md:text-2xl font-semibold text-[#182B68] mb-10"
         >
           Improve{" "}
           <span style={{ color: "#00C2CB" }}>Academics.</span>{" "}
@@ -143,7 +141,7 @@ export default function Hero() {
           <span style={{ color: "#FF6B4A" }}>Placements.</span>
           <br />
           Simplify{" "}
-          <span style={{ color: "#7C5CFC" }}>Accreditation.</span>
+          <span style={{ color: "#3D65F4" }}>Accreditation.</span>
         </motion.p>
 
         <motion.div
@@ -154,20 +152,19 @@ export default function Hero() {
         >
           <a
             href="/student/login"
-            className="px-8 py-4 rounded-2xl text-white font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
-            style={{ background: "linear-gradient(135deg, #3D65F4, #5B3CF4)" }}
+            className="w-full sm:w-auto px-8 py-4 rounded-2xl text-white font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 text-center"
+            style={{ background: "linear-gradient(135deg, #3D65F4, #0EA5E9)" }}
           >
             Student Login
           </a>
           <a
             href="#"
-            className="px-8 py-4 rounded-2xl font-semibold text-base border-2 border-[#3D65F4] text-[#3D65F4] hover:bg-[#EEF2FF] transition-all duration-300"
+            className="w-full sm:w-auto px-8 py-4 rounded-2xl font-semibold text-base border-2 border-[#3D65F4] text-[#3D65F4] hover:bg-[#EEF2FF] transition-all duration-300 text-center"
           >
             Faculty Login
           </a>
         </motion.div>
 
-        {/* Feature cards */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 flex-wrap">
           <StudentCard />
           <AIAgentCard />
