@@ -43,34 +43,28 @@ function BottomTab({ href, icon: Icon, label, color, bg }: typeof NAV[0]) {
   const active = location.startsWith(href);
   return (
     <Link href={href}>
-      <div className="flex flex-col items-center justify-center gap-0.5 py-2 px-1 cursor-pointer flex-1">
+      <div className="flex flex-col items-center justify-center flex-1 h-full gap-1 cursor-pointer select-none">
+        {/* Pill capsule when active */}
         <div
           className="flex items-center justify-center rounded-2xl transition-all duration-200"
           style={{
-            width: active ? 44 : 36,
-            height: active ? 32 : 32,
+            width: active ? 52 : 40,
+            height: 30,
             background: active ? bg : "transparent",
-            transform: active ? "translateY(-2px)" : "none",
           }}
         >
           <Icon
-            size={active ? 18 : 17}
-            strokeWidth={active ? 2.5 : 2}
-            color={active ? color : "#CBD5E1"}
+            size={18}
+            strokeWidth={active ? 2.5 : 1.8}
+            color={active ? color : "#B0BEC5"}
           />
         </div>
         <span
-          className="text-[9px] font-bold tracking-wide transition-colors"
-          style={{ color: active ? color : "#CBD5E1" }}
+          className="text-[10px] font-bold leading-none transition-colors"
+          style={{ color: active ? color : "#B0BEC5" }}
         >
           {label}
         </span>
-        {active && (
-          <div
-            className="w-1 h-1 rounded-full mt-0.5"
-            style={{ background: color }}
-          />
-        )}
       </div>
     </Link>
   );
@@ -268,12 +262,12 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
 
         {/* ══════════════════ MOBILE BOTTOM NAV ══════════════════ */}
         <nav
-          className="md:hidden fixed bottom-0 left-0 right-0 flex items-center bg-white z-50"
+          className="md:hidden fixed bottom-0 left-0 right-0 flex items-stretch bg-white z-50"
           style={{
-            borderTop: "1px solid #F1F5F9",
-            boxShadow: "0 -8px 32px rgba(0,0,0,0.08)",
+            borderTop: "1.5px solid #F1F5F9",
+            boxShadow: "0 -4px 24px rgba(59,130,246,0.08)",
             paddingBottom: "env(safe-area-inset-bottom)",
-            height: 64,
+            height: 68,
           }}
         >
           {NAV.map(item => <BottomTab key={item.href} {...item} />)}
