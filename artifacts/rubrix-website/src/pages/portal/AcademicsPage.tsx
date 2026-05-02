@@ -1,78 +1,224 @@
 import { useState } from "react";
-import { ChevronDown, BookOpen, ChevronRight } from "lucide-react";
+import { ChevronDown, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { curriculum, type Course } from "../../data/curriculum";
+import { useAuth } from "../../context/AuthContext";
 
-function UnitTestBadge() {
+// ─── Types ────────────────────────────────────────────────────────────────────
+interface SelectedTopic { unitTitle: string; topicName: string; }
+
+// ─── Topic Learn View ─────────────────────────────────────────────────────────
+function TopicLearnView({
+  course,
+  topic,
+  onBack,
+}: {
+  course: Course;
+  topic: SelectedTopic;
+  onBack: () => void;
+}) {
+  const [tab, setTab] = useState<"learn" | "quiz">("learn");
+  const [studyMode, setStudyMode] = useState(false);
+  const [markedDone, setMarkedDone] = useState(false);
+
   return (
-    <div className="px-3 py-1.5 border border-yellow-200 rounded-lg bg-yellow-50 text-xs font-semibold text-yellow-700 text-center">
-      Unit Test
-    </div>
-  );
-}
-
-function AssignmentBadge() {
-  return (
-    <div className="px-3 py-1.5 border border-red-200 rounded-lg bg-red-50 text-xs font-semibold text-red-600 text-center">
-      Assignment
-    </div>
-  );
-}
-
-function CourseDetail({ course }: { course: Course }) {
-  const [openUnit, setOpenUnit] = useState<number | null>(0);
-
-  return (
-    <div className="h-full overflow-y-auto p-5">
-      {/* Course header */}
-      <div className="border-2 border-[#3D65F4]/25 rounded-xl p-3 mb-4 bg-[#F9FBFF] flex items-center justify-between">
-        <span className="text-sm font-bold text-[#182B68]">{course.name}</span>
-        <ChevronDown size={14} className="text-gray-400" />
+    <div className="h-full flex overflow-hidden">
+      {/* Left – narrow course outline */}
+      <div className="w-52 shrink-0 border-r border-gray-100 overflow-y-auto">
+        <button
+          onClick={onBack}
+          className="w-full flex items-center gap-2 px-4 py-3 border-b border-gray-100 text-xs font-bold text-[#3D65F4] hover:bg-[#F9FBFF] transition-colors"
+        >
+          <ChevronLeft size={14} /> {course.name}
+        </button>
+        <div className="p-3 space-y-1">
+          <button className="w-full text-left px-3 py-2 border border-gray-200 rounded-lg text-xs text-gray-600 hover:border-[#3D65F4] hover:bg-[#F9FBFF] transition-all">
+            About &amp; Course Outcomes
+          </button>
+          {course.units.map((unit, ui) => (
+            <div key={ui} className="mt-2">
+              <p className="text-[10px] font-bold text-[#3D65F4] px-1 mb-1.5 leading-tight">{unit.title}</p>
+              <div className="relative ml-2 pl-3 border-l-2 border-[#3D65F4]/20 space-y-1">
+                {unit.topics.map((t, ti) => {
+                  const isActive = t === topic.topicName;
+                  return (
+                    <div key={ti} className="relative">
+                      <div className="absolute -left-[15px] top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full border-2 border-[#3D65F4]/40 bg-white" />
+                      <div className={`px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all cursor-pointer leading-tight ${
+                        isActive
+                          ? "bg-[#3D65F4] text-white"
+                          : "text-gray-600 hover:bg-[#F0F4FF]"
+                      }`}>
+                        {t}
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="space-y-1 mt-1">
+                  <div className="px-2 py-1.5 border border-yellow-200 rounded-lg bg-yellow-50 text-[10px] font-semibold text-yellow-700 text-center">Unit Test</div>
+                  <div className="px-2 py-1.5 border border-red-200 rounded-lg bg-red-50 text-[10px] font-semibold text-red-600 text-center">Assignment</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* About */}
-      <button className="w-full text-left flex items-center gap-2 px-3 py-2.5 border border-gray-200 rounded-lg mb-4 hover:border-[#3D65F4] hover:bg-[#F9FBFF] transition-all text-sm font-medium text-gray-700">
+      {/* Right – content */}
+      <div className="flex-1 overflow-y-auto">
+        {/* Tab bar */}
+        <div className="flex items-center justify-between px-6 py-3 border-b border-gray-100 sticky top-0 bg-white z-10">
+          <div className="flex gap-4">
+            {(["learn", "quiz"] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`text-sm font-semibold capitalize border-b-2 pb-1 transition-all ${
+                  tab === t ? "border-[#3D65F4] text-[#3D65F4]" : "border-transparent text-gray-400"
+                }`}
+              >
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <span>Study Mode</span>
+              <button
+                onClick={() => setStudyMode(s => !s)}
+                className={`relative w-9 h-5 rounded-full transition-colors ${studyMode ? "bg-[#3D65F4]" : "bg-gray-200"}`}
+              >
+                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${studyMode ? "translate-x-[18px]" : "translate-x-0.5"}`} />
+              </button>
+            </div>
+            <button
+              onClick={() => setMarkedDone(d => !d)}
+              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${
+                markedDone
+                  ? "border-green-300 text-green-600 bg-green-50"
+                  : "border-[#3D65F4]/30 text-[#3D65F4] hover:bg-[#EEF2FF]"
+              }`}
+            >
+              {markedDone ? "✓ Done" : "✓ Mark as Done"}
+            </button>
+          </div>
+        </div>
+
+        {tab === "learn" ? (
+          <div className="px-8 py-6 max-w-3xl">
+            <h1 className="text-2xl font-extrabold text-[#182B68] mb-4">
+              Topic Overview: {topic.topicName}
+            </h1>
+            <p className="text-sm text-gray-700 leading-relaxed mb-4">
+              Welcome to this topic in our course on <strong>{course.name}</strong>! In this session,
+              we'll explore the concepts and principles that form the foundation of <em>{topic.topicName}</em>.
+              Understanding this topic is not merely about memorizing definitions — it's about grasping
+              the 'why' behind the 'what', and connecting theory with real-world applications.
+            </p>
+            <p className="text-sm text-gray-700 leading-relaxed mb-6">
+              This unit — <strong>{topic.unitTitle}</strong> — sets the stage for everything that follows.
+              By the end of this topic, you'll have a solid conceptual foundation that will help you
+              excel in tests, assignments, and your overall academic journey.
+            </p>
+
+            <h2 className="text-lg font-extrabold text-[#182B68] mb-3">Background and Prerequisites</h2>
+            <p className="text-sm text-gray-600 leading-relaxed mb-6">
+              Before diving in, make sure you're comfortable with the foundational concepts from earlier
+              units. Prior knowledge of the subject area will significantly help your understanding of
+              this topic.
+            </p>
+
+            <div className="bg-[#F9FBFF] border border-[#3D65F4]/20 rounded-xl p-4 mb-6">
+              <p className="text-xs font-bold text-[#3D65F4] mb-2">Key Learning Objectives</p>
+              <ul className="space-y-1.5 text-xs text-gray-700">
+                <li className="flex items-start gap-2"><span className="text-[#3D65F4] font-bold mt-0.5">→</span> Understand the core concepts of {topic.topicName}</li>
+                <li className="flex items-start gap-2"><span className="text-[#3D65F4] font-bold mt-0.5">→</span> Apply theoretical knowledge to practical problems</li>
+                <li className="flex items-start gap-2"><span className="text-[#3D65F4] font-bold mt-0.5">→</span> Analyze and evaluate different approaches to the subject matter</li>
+                <li className="flex items-start gap-2"><span className="text-[#3D65F4] font-bold mt-0.5">→</span> Prepare effectively for unit tests and final examinations</li>
+              </ul>
+            </div>
+
+            <p className="text-[10px] text-gray-400 italic mb-4">Some of the content might be AI generated</p>
+
+            <div className="border border-gray-200 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-[#FFB800]">⭐</span>
+                <p className="text-xs font-bold text-gray-700">Resources</p>
+              </div>
+              <div className="bg-black rounded-xl overflow-hidden aspect-video flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity group">
+                <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <div className="w-0 h-0 border-t-[10px] border-b-[10px] border-l-[18px] border-t-transparent border-b-transparent border-l-white ml-1" />
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-2 font-medium">{topic.topicName} — Video Lecture</p>
+            </div>
+          </div>
+        ) : (
+          <div className="px-8 py-6 max-w-2xl">
+            <h2 className="text-xl font-extrabold text-[#182B68] mb-2">Quiz: {topic.topicName}</h2>
+            <p className="text-sm text-gray-500 mb-6">Test your understanding with a quick quiz on this topic.</p>
+            <div className="flex items-center justify-center py-12 flex-col gap-3 text-gray-400 border border-dashed border-gray-200 rounded-2xl">
+              <span className="text-3xl">📝</span>
+              <p className="text-sm font-semibold">Quiz coming soon</p>
+              <p className="text-xs text-gray-300">Questions for this topic will appear here.</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Course Outline Panel ─────────────────────────────────────────────────────
+function CourseOutline({
+  course,
+  onSelectTopic,
+}: {
+  course: Course;
+  onSelectTopic: (t: SelectedTopic) => void;
+}) {
+  return (
+    <div className="h-full overflow-y-auto p-4">
+      {/* Course header */}
+      <div className="border-2 border-[#3D65F4]/20 rounded-xl p-3 mb-4 text-sm font-bold text-[#182B68] bg-[#F9FBFF] text-center">
+        {course.name}
+      </div>
+
+      {/* About button */}
+      <button className="w-full text-left px-3 py-2.5 border border-gray-200 rounded-lg text-xs font-medium text-gray-700 hover:border-[#3D65F4] hover:bg-[#F9FBFF] transition-all mb-4">
         About &amp; Course Outcomes
       </button>
 
       {/* Units */}
-      <div className="space-y-2">
+      <div className="space-y-4">
         {course.units.map((unit, ui) => (
           <div key={ui}>
-            <button
-              onClick={() => setOpenUnit(openUnit === ui ? null : ui)}
-              className="w-full text-left px-3 py-2.5 rounded-lg bg-[#F0F4FF] hover:bg-[#E5ECFF] transition-colors flex items-center justify-between"
-            >
-              <span className="text-xs font-bold text-[#3D65F4]">{unit.title}</span>
-              <ChevronDown
-                size={13}
-                className={`text-[#3D65F4] transition-transform ${openUnit === ui ? "rotate-180" : ""}`}
-              />
-            </button>
+            {/* Unit header */}
+            <p className="text-[11px] font-bold text-[#3D65F4] mb-2 px-1 leading-tight">{unit.title}</p>
 
-            {openUnit === ui && (
-              <div className="ml-3 mt-1.5 space-y-1 border-l-2 border-[#3D65F4]/20 pl-3 pb-1">
-                {unit.topics.map((topic, ti) => (
-                  <div key={ti}>
-                    <div className="px-3 py-2 border border-gray-100 rounded-lg text-xs text-gray-700 hover:border-[#3D65F4]/40 hover:bg-[#F9FBFF] cursor-pointer transition-all bg-white flex items-center justify-between group">
-                      <span>{topic}</span>
-                      <ChevronRight size={11} className="text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                    {ti === Math.ceil(unit.topics.length / 2) - 1 && (
-                      <div className="space-y-1 my-1.5">
-                        <UnitTestBadge />
-                        <AssignmentBadge />
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {unit.topics.length > 0 && (
-                  <div className="space-y-1 mt-2">
-                    <UnitTestBadge />
-                    <AssignmentBadge />
-                  </div>
-                )}
+            {/* Topics with timeline */}
+            <div className="relative ml-3 pl-4 border-l-2 border-[#3D65F4]/20 space-y-1.5">
+              {unit.topics.map((topic, ti) => (
+                <div key={ti} className="relative">
+                  {/* Timeline dot */}
+                  <div className="absolute -left-[17px] top-1/2 -translate-y-1/2 w-3 h-3 rounded-full border-2 border-[#3D65F4]/50 bg-white" />
+                  <button
+                    onClick={() => onSelectTopic({ unitTitle: unit.title, topicName: topic })}
+                    className="w-full text-left px-3 py-2 border border-gray-100 rounded-lg text-xs text-gray-700 hover:border-[#3D65F4]/50 hover:bg-[#F9FBFF] cursor-pointer transition-all bg-white"
+                  >
+                    {topic}
+                  </button>
+                </div>
+              ))}
+              {/* Unit Test + Assignment badges */}
+              <div className="relative space-y-1.5 mt-1">
+                <div className="absolute -left-[17px] top-3 w-3 h-3 rounded-full border-2 border-yellow-400 bg-white" />
+                <div className="px-3 py-2 border border-yellow-200 rounded-lg bg-yellow-50 text-xs font-semibold text-yellow-700 text-center">Unit Test</div>
+                <div className="relative">
+                  <div className="absolute -left-[17px] top-3 w-3 h-3 rounded-full border-2 border-red-300 bg-white" />
+                  <div className="px-3 py-2 border border-red-200 rounded-lg bg-red-50 text-xs font-semibold text-red-600 text-center">Assignment</div>
+                </div>
               </div>
-            )}
+            </div>
           </div>
         ))}
       </div>
@@ -80,127 +226,164 @@ function CourseDetail({ course }: { course: Course }) {
   );
 }
 
+// ─── Main page ────────────────────────────────────────────────────────────────
 export default function AcademicsPage() {
-  const [selectedSem, setSelectedSem] = useState(4);
-  const [showPractical, setShowPractical] = useState(false);
+  const { student } = useAuth();
+  const [selectedSem, setSelectedSem]       = useState(4);
+  const [showPractical, setShowPractical]   = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [selectedTopic, setSelectedTopic]   = useState<SelectedTopic | null>(null);
 
-  const semData = curriculum.find((s) => s.sem === selectedSem);
+  const semData    = curriculum.find(s => s.sem === selectedSem);
   const allCourses = semData?.courses || [];
-  const courses = showPractical ? allCourses.filter((c) => c.type === "Lab") : allCourses;
+  const courses    = showPractical ? allCourses.filter(c => c.type === "Lab") : allCourses;
+
+  const branch  = student?.branch  || "B.Tech CSE (Data Science)";
+  const college = student?.college || "Sphoorthy Engineering College";
+
+  // Navigate between sems
+  const semIndex   = curriculum.findIndex(s => s.sem === selectedSem);
+  const prevSem    = semIndex > 0 ? curriculum[semIndex - 1] : null;
+  const nextSem    = semIndex < curriculum.length - 1 ? curriculum[semIndex + 1] : null;
+
+  const handleSelectCourse = (c: Course) => {
+    setSelectedCourse(c);
+    setSelectedTopic(null);
+  };
+
+  // If a topic is selected — show the 3-panel Learn view
+  if (selectedTopic && selectedCourse) {
+    return (
+      <TopicLearnView
+        course={selectedCourse}
+        topic={selectedTopic}
+        onBack={() => setSelectedTopic(null)}
+      />
+    );
+  }
 
   return (
     <div className="h-full flex flex-col bg-white">
-      {/* Top tab */}
-      <div className="px-6 pt-4 pb-0 border-b border-gray-100">
-        <span className="text-sm font-bold text-[#3D65F4] border-b-2 border-[#3D65F4] pb-2.5 inline-block">
-          Curriculum
-        </span>
+      {/* Tab header */}
+      <div className="px-6 pt-4 pb-0 border-b border-gray-100 flex items-center gap-6">
+        <span className="text-sm font-bold text-[#3D65F4] border-b-2 border-[#3D65F4] pb-2.5 inline-block">Curriculum</span>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* Left panel */}
-        <div className="w-[500px] shrink-0 p-5 overflow-y-auto border-r border-gray-100">
-          {/* Header row */}
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-base font-extrabold text-[#182B68]">My Academic Courses</h1>
-              <p className="text-[11px] text-gray-400 mt-0.5">
-                B.Tech CSE (Data Science) · 2nd Year · Sphoorthy Engineering College
-              </p>
-            </div>
-            <div className="relative">
-              <select
-                value={selectedSem}
-                onChange={(e) => {
-                  setSelectedSem(Number(e.target.value));
-                  setSelectedCourse(null);
-                  setShowPractical(false);
-                }}
-                className="appearance-none pr-7 pl-3 py-1.5 border border-gray-200 rounded-lg text-xs font-semibold text-[#182B68] bg-white focus:outline-none focus:border-[#3D65F4] cursor-pointer hover:border-[#3D65F4] transition-colors"
-              >
-                {curriculum.map((s) => (
-                  <option key={s.sem} value={s.sem}>
-                    {s.label} — Year {s.year}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            </div>
-          </div>
+        {/* ── Left panel: Course grid ── */}
+        <div className={`shrink-0 border-r border-gray-100 overflow-y-auto transition-all ${selectedCourse ? "w-[400px]" : "w-full max-w-[600px]"}`}>
+          <div className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-base font-extrabold text-[#182B68]">My Academic Courses</h1>
+                <p className="text-[11px] text-gray-400 mt-0.5">{branch} · {college}</p>
+              </div>
 
-          {/* Tab pills */}
-          <div className="flex items-center gap-2 mb-4">
-            <button
-              onClick={() => { setShowPractical(false); setSelectedCourse(null); }}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                !showPractical ? "bg-[#3D65F4] text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              All Courses
-            </button>
-            <button
-              onClick={() => { setShowPractical(true); setSelectedCourse(null); }}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                showPractical ? "bg-[#3D65F4] text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              Practical Courses
-            </button>
-            <span className="ml-auto text-[10px] text-gray-400 font-medium">
-              {courses.length} courses
-            </span>
-          </div>
-
-          {/* Course grid */}
-          <div className="grid grid-cols-2 gap-2.5">
-            {courses.map((course) => {
-              const isActive = selectedCourse?.code === course.code;
-              const typeColor = { Theory: "#3D65F4", Lab: "#059669", Elective: "#7C5CFC", Project: "#FF6B4A" }[course.type];
-              return (
-                <button
-                  key={course.code}
-                  onClick={() => setSelectedCourse(course)}
-                  className={`text-left p-3 rounded-xl border-2 transition-all ${
-                    isActive
-                      ? "border-[#3D65F4] bg-[#3D65F4] shadow-md shadow-blue-200"
-                      : "border-gray-200 hover:border-[#3D65F4]/50 hover:shadow-sm bg-white"
-                  }`}
+              {/* Semester selector */}
+              <div className="relative">
+                <select
+                  value={selectedSem}
+                  onChange={e => { setSelectedSem(Number(e.target.value)); setSelectedCourse(null); setSelectedTopic(null); }}
+                  className="appearance-none pl-3 pr-7 py-1.5 border border-gray-200 rounded-lg text-xs font-bold text-[#182B68] bg-white focus:outline-none focus:border-[#3D65F4] cursor-pointer"
                 >
-                  <p
-                    className={`text-[10px] font-bold mb-1.5 ${isActive ? "text-blue-200" : ""}`}
-                    style={{ color: isActive ? undefined : typeColor }}
-                  >
-                    {course.code}
-                  </p>
-                  <p className={`text-xs font-semibold leading-tight ${isActive ? "text-white" : "text-[#182B68]"}`}>
-                    {course.name}
-                  </p>
-                  <span
-                    className={`inline-block text-[9px] font-bold mt-1.5 px-1.5 py-0.5 rounded-full ${
+                  {curriculum.map(s => <option key={s.sem} value={s.sem}>{s.label}</option>)}
+                </select>
+                <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* All / Practical tabs */}
+            <div className="flex items-center gap-2 mb-4">
+              <button
+                onClick={() => prevSem && setSelectedSem(prevSem.sem)}
+                disabled={!prevSem}
+                className="p-1.5 border border-gray-200 rounded-lg hover:border-[#3D65F4] disabled:opacity-30 transition-colors"
+              >
+                <ChevronLeft size={14} />
+              </button>
+              <button
+                onClick={() => { setShowPractical(false); setSelectedCourse(null); }}
+                className={`px-4 py-1.5 rounded-lg text-xs font-semibold border transition-all ${!showPractical ? "bg-[#3D65F4] text-white border-[#3D65F4]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"}`}
+              >
+                All Courses
+              </button>
+              <button
+                onClick={() => { setShowPractical(true); setSelectedCourse(null); }}
+                className={`px-4 py-1.5 rounded-lg text-xs font-semibold border transition-all ${showPractical ? "bg-[#3D65F4] text-white border-[#3D65F4]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"}`}
+              >
+                Practical Courses
+              </button>
+              <button
+                onClick={() => nextSem && setSelectedSem(nextSem.sem)}
+                disabled={!nextSem}
+                className="p-1.5 border border-gray-200 rounded-lg hover:border-[#3D65F4] disabled:opacity-30 transition-colors ml-auto"
+              >
+                <ChevronRight size={14} />
+              </button>
+            </div>
+
+            {/* Course grid */}
+            <div className="grid grid-cols-2 gap-2.5">
+              {courses.map(course => {
+                const isActive = selectedCourse?.code === course.code;
+                const typeColors: Record<string, { bg: string; text: string }> = {
+                  Theory:   { bg: "#3D65F4", text: "#fff" },
+                  Lab:      { bg: "#059669", text: "#fff" },
+                  Elective: { bg: "#7C5CFC", text: "#fff" },
+                  Project:  { bg: "#FF6B4A", text: "#fff" },
+                };
+                const col = typeColors[course.type] || typeColors.Theory;
+                return (
+                  <button
+                    key={course.code}
+                    onClick={() => handleSelectCourse(course)}
+                    className={`text-left rounded-xl border-2 transition-all overflow-hidden ${
                       isActive
-                        ? "bg-white/20 text-white"
-                        : course.type === "Lab"
-                        ? "bg-green-50 text-green-600"
-                        : course.type === "Elective"
-                        ? "bg-purple-50 text-purple-600"
-                        : course.type === "Project"
-                        ? "bg-orange-50 text-orange-600"
-                        : "bg-[#EEF2FF] text-[#3D65F4]"
+                        ? "border-[#3D65F4] bg-[#3D65F4] shadow-md shadow-blue-200"
+                        : "border-gray-200 hover:border-[#3D65F4]/60 hover:shadow-sm bg-white"
                     }`}
                   >
-                    {course.type}
-                  </span>
-                </button>
-              );
-            })}
+                    <div className="flex items-stretch">
+                      {/* Code badge – left strip */}
+                      <div
+                        className="w-[38px] shrink-0 flex items-center justify-center p-1"
+                        style={{ backgroundColor: isActive ? "rgba(255,255,255,0.15)" : col.bg }}
+                      >
+                        <span className="text-[8px] font-extrabold text-white leading-tight text-center break-all">
+                          {course.code}
+                        </span>
+                      </div>
+                      {/* Name */}
+                      <div className="flex-1 p-2.5">
+                        <p className={`text-xs font-semibold leading-tight ${isActive ? "text-white" : "text-[#182B68]"}`}>
+                          {course.name}
+                        </p>
+                        <span className={`inline-block text-[9px] font-bold mt-1 px-1.5 py-0.5 rounded-full ${
+                          isActive
+                            ? "bg-white/20 text-white"
+                            : course.type === "Lab" ? "bg-green-50 text-green-600"
+                            : course.type === "Elective" ? "bg-purple-50 text-purple-600"
+                            : course.type === "Project"  ? "bg-orange-50 text-orange-600"
+                            : "bg-[#EEF2FF] text-[#3D65F4]"
+                        }`}>
+                          {course.type}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Right panel */}
+        {/* ── Right panel: Course outline OR empty ── */}
         <div className="flex-1 overflow-hidden">
           {selectedCourse ? (
-            <CourseDetail course={selectedCourse} />
+            <CourseOutline
+              course={selectedCourse}
+              onSelectTopic={t => setSelectedTopic(t)}
+            />
           ) : (
             <div className="h-full flex items-center justify-center">
               <div className="text-center">
@@ -208,7 +391,7 @@ export default function AcademicsPage() {
                   <BookOpen size={28} className="text-[#3D65F4] opacity-50" />
                 </div>
                 <p className="text-sm font-semibold text-gray-400">Select a course</p>
-                <p className="text-xs text-gray-300 mt-1">to view full syllabus</p>
+                <p className="text-xs text-gray-300 mt-1">to view full syllabus &amp; units</p>
               </div>
             </div>
           )}
