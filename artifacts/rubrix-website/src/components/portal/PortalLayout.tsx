@@ -171,18 +171,27 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
 
-        {/* Big Brains branding strip */}
+        {/* Big Brains branding strip — frosted glass dark bar */}
         <div
-          className="shrink-0 flex items-center justify-center gap-2 py-1.5 px-4"
-          style={{ background: "linear-gradient(90deg,#4F46E5,#7C3AED,#4F46E5)", backgroundSize: "200% 100%" }}
+          className="shrink-0 flex items-center justify-center gap-2.5 py-1.5 px-4"
+          style={{
+            background: "rgba(10,12,28,0.88)",
+            backdropFilter: "blur(16px)",
+            borderTop: "1px solid rgba(255,255,255,0.07)",
+          }}
         >
-          <span className="text-[10px] font-extrabold text-white/90 tracking-wide">⚡ Modified by</span>
-          <span className="text-[10px] font-extrabold text-yellow-300 tracking-wider">BIG BRAINS</span>
-          <span className="text-white/40 text-[10px]">·</span>
-          <span className="text-[10px] text-white/80 font-semibold">Startup initiated by</span>
-          <span className="text-[10px] font-extrabold text-cyan-300">Jashwanth &amp; Team</span>
-          <span className="text-white/40 text-[10px]">·</span>
-          <span className="text-[10px] text-white/60 font-medium">Sphoorthy Engineering College</span>
+          <span className="text-[9.5px] font-medium tracking-wide" style={{ color: "rgba(255,255,255,0.38)" }}>Modified by</span>
+          <span
+            className="text-[10px] font-black tracking-widest uppercase"
+            style={{ background: "linear-gradient(90deg,#818CF8,#A78BFA)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
+          >
+            Big Brains
+          </span>
+          <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 10 }}>·</span>
+          <span className="text-[9.5px] font-medium" style={{ color: "rgba(255,255,255,0.38)" }}>Startup by</span>
+          <span className="text-[10px] font-bold" style={{ color: "rgba(167,139,250,0.85)" }}>Jashwanth &amp; Team</span>
+          <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 10 }}>·</span>
+          <span className="text-[9.5px] font-medium" style={{ color: "rgba(255,255,255,0.28)" }}>Sphoorthy Engineering College</span>
         </div>
       </div>
     </div>

@@ -45,12 +45,17 @@ export default function Footer() {
         </div>
         <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
           <p className="text-xs text-blue-400">© 2024 DataNauts. All rights reserved.</p>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-extrabold text-yellow-400">⚡ BIG BRAINS</span>
-            <span className="text-white/30 text-xs">·</span>
-            <span className="text-xs text-cyan-400 font-semibold">Startup initiated by Jashwanth &amp; Team</span>
-            <span className="text-white/30 text-xs">·</span>
-            <p className="text-xs text-blue-400">Sphoorthy Engineering College</p>
+          <div className="flex items-center gap-2.5">
+            <span className="text-[10px] font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>Modified by</span>
+            <span
+              className="text-[11px] font-black tracking-widest uppercase"
+              style={{ background: "linear-gradient(90deg,#818CF8,#A78BFA)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
+            >Big Brains</span>
+            <span className="text-white/15 text-[10px]">·</span>
+            <span className="text-[10px] font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>Startup by</span>
+            <span className="text-[10px] font-bold" style={{ color: "rgba(167,139,250,0.8)" }}>Jashwanth &amp; Team</span>
+            <span className="text-white/15 text-[10px]">·</span>
+            <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>Sphoorthy Engineering College</span>
           </div>
         </div>
       </div>
