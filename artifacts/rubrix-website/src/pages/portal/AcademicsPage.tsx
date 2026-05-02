@@ -210,45 +210,44 @@ function CourseOutline({
               {unit.title}
             </p>
 
-            {/* Topics — clean step timeline */}
-            <div className="space-y-0">
-              {unit.topics.map((topic, ti) => {
-                const isFirst = ti === 0;
-                const isLast  = ti === unit.topics.length - 1;
-                return (
-                  <div key={ti} className="flex items-stretch gap-3">
-                    {/* Timeline column */}
-                    <div className="flex flex-col items-center" style={{ width: 20, flexShrink: 0 }}>
-                      {/* Line above dot (hidden for first) */}
-                      <div
-                        className="flex-none"
-                        style={{ width: 2, height: 10, background: isFirst ? "transparent" : "rgba(79,70,229,0.2)" }}
-                      />
-                      {/* Dot */}
-                      <div
-                        className="rounded-full flex-none"
-                        style={{ width: 10, height: 10, border: "2px solid rgba(79,70,229,0.5)", background: "#fff", flexShrink: 0 }}
-                      />
-                      {/* Line below dot (hidden for last) */}
-                      <div
-                        className="flex-1"
-                        style={{ width: 2, background: isLast ? "transparent" : "rgba(79,70,229,0.2)", minHeight: 6 }}
-                      />
-                    </div>
+            {/* Topics — timeline with continuous line */}
+            <div className="relative pl-5">
+              {/* Continuous vertical line — from top of first dot to bottom of last dot */}
+              <div
+                className="absolute"
+                style={{
+                  left: 9,
+                  top: 9,
+                  bottom: 9,
+                  width: 2,
+                  background: "rgba(59,130,246,0.18)",
+                  borderRadius: 2,
+                }}
+              />
 
-                    {/* Topic button */}
-                    <div className="flex-1 pb-1.5">
-                      <button
-                        onClick={() => onSelectTopic({ unitTitle: unit.title, topicName: topic })}
-                        className="w-full text-left px-3 py-2 border border-gray-100 rounded-lg text-xs text-gray-700 hover:border-[#3D65F4]/50 hover:bg-[#F9FBFF] cursor-pointer transition-all bg-white"
-                        style={{ marginTop: 2 }}
-                      >
-                        {topic}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+              {unit.topics.map((topic, ti) => (
+                <div key={ti} className="relative flex items-start gap-3 mb-2">
+                  {/* Dot — centered on the line */}
+                  <div
+                    className="absolute rounded-full bg-white z-10"
+                    style={{
+                      left: 0,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      width: 10,
+                      height: 10,
+                      border: "2px solid rgba(59,130,246,0.45)",
+                    }}
+                  />
+                  {/* Topic button */}
+                  <button
+                    onClick={() => onSelectTopic({ unitTitle: unit.title, topicName: topic })}
+                    className="w-full text-left px-3 py-2 border border-gray-100 rounded-lg text-xs text-gray-700 hover:border-blue-300 hover:bg-blue-50 cursor-pointer transition-all bg-white"
+                  >
+                    {topic}
+                  </button>
+                </div>
+              ))}
             </div>
 
             {/* Unit Test + Assignment — outside the timeline, as floating badges */}
