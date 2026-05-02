@@ -34,18 +34,19 @@ export default function Navbar() {
           <span className="text-[#182B68] font-bold text-lg tracking-tight">DataNauts</span>
         </a>
 
-        <div className="hidden md:flex items-center gap-8">
-          {["Student Login", "Faculty Login", "NBA Login", "Contact"].map((item) => (
-            <a
-              key={item}
-              href={item === "Student Login" ? "/student/login" : "#contact"}
-              target={undefined}
-              rel={undefined}
-              className="text-[#6B4EFF] font-medium text-sm hover:text-[#3D65F4] transition-colors"
-            >
-              {item}
-            </a>
-          ))}
+        <div className="hidden md:flex items-center gap-3">
+          <a
+            href="/student/login"
+            className="px-5 py-2 rounded-full text-sm font-semibold text-[#3D65F4] border border-[#3D65F4] hover:bg-[#EEF2FF] transition-colors"
+          >
+            Student Login
+          </a>
+          <a
+            href="#"
+            className="px-5 py-2 rounded-full text-sm font-semibold text-white bg-[#3D65F4] hover:bg-[#2D55E4] transition-colors shadow-sm"
+          >
+            Faculty Login
+          </a>
         </div>
 
         <button className="md:hidden text-[#182B68]" onClick={() => setMenuOpen(!menuOpen)}>
@@ -59,18 +60,14 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white border-t border-gray-100 px-6 py-4 flex flex-col gap-4"
+            className="md:hidden bg-white border-t border-gray-100 px-6 py-4 flex flex-col gap-3"
           >
-            {["Student Login", "Faculty Login", "NBA Login", "Contact"].map((item) => (
-              <a
-                key={item}
-                href={item === "Student Login" ? "/student/login" : "#contact"}
-                className="text-[#6B4EFF] font-medium text-sm"
-                onClick={() => setMenuOpen(false)}
-              >
-                {item}
-              </a>
-            ))}
+            <a href="/student/login" className="px-4 py-2.5 rounded-xl text-sm font-semibold text-[#3D65F4] border border-[#3D65F4] text-center" onClick={() => setMenuOpen(false)}>
+              Student Login
+            </a>
+            <a href="#" className="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#3D65F4] text-center" onClick={() => setMenuOpen(false)}>
+              Faculty Login
+            </a>
           </motion.div>
         )}
       </AnimatePresence>

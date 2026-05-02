@@ -1,37 +1,45 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { BookOpen, Crown, Zap, FolderOpen, User, LogOut, Home } from "lucide-react";
+import { BookOpen, Crown, Zap, FolderOpen, User, LogOut } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
-const navItems = [
-  { href: "/student/academics", icon: BookOpen, label: "Academics" },
-  { href: "/student/career", icon: Crown, label: "Career" },
-  { href: "/student/practice", icon: Zap, label: "Practice" },
-  { href: "/student/resource", icon: FolderOpen, label: "Resource" },
-  { href: "/student/profile", icon: User, label: "Profile" },
+const NAV = [
+  { href: "/student/academics", icon: BookOpen,  label: "Academics",  bg: "#EEF2FF", ic: "#4F46E5" },
+  { href: "/student/career",    icon: Crown,     label: "Career",     bg: "#F5F3FF", ic: "#7C3AED" },
+  { href: "/student/practice",  icon: Zap,       label: "Practice",   bg: "#E0F9FF", ic: "#0284C7" },
+  { href: "/student/resource",  icon: FolderOpen, label: "Resources", bg: "#ECFDF5", ic: "#059669" },
+  { href: "/student/profile",   icon: User,      label: "Profile",    bg: "#FFF7ED", ic: "#EA580C" },
 ];
 
-function NavItem({ href, icon: Icon, label }: { href: string; icon: React.ElementType; label: string }) {
+function NavItem({ href, icon: Icon, label, bg, ic }: typeof NAV[0]) {
   const [location] = useLocation();
   const active = location.startsWith(href);
   return (
     <Link href={href}>
       <div
-        title={label}
-        className="w-full flex flex-col items-center gap-1 py-3 px-1 rounded-xl cursor-pointer transition-all duration-200 group"
-        style={{
-          background: active ? "rgba(61,101,244,0.9)" : "transparent",
-          boxShadow: active ? "0 4px 14px rgba(61,101,244,0.4)" : "none",
-        }}
+        className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-150"
+        style={active
+          ? { background: bg, boxShadow: `0 2px 8px ${ic}20` }
+          : { background: "transparent" }
+        }
+        onMouseEnter={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = "#F8FAFC"; }}
+        onMouseLeave={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
       >
-        <Icon
-          size={19}
-          strokeWidth={active ? 2.5 : 1.8}
-          className={active ? "text-white" : "text-blue-300 group-hover:text-white transition-colors"}
-        />
-        <span className={`text-[8px] font-extrabold leading-none uppercase tracking-widest transition-colors ${active ? "text-white" : "text-blue-400 group-hover:text-white"}`}>
+        <div
+          className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+          style={{ background: active ? ic : "#F1F5F9" }}
+        >
+          <Icon size={15} strokeWidth={2.5} color={active ? "#fff" : "#94A3B8"} />
+        </div>
+        <span
+          className="text-sm font-bold"
+          style={{ color: active ? ic : "#64748B" }}
+        >
           {label}
         </span>
+        {active && (
+          <div className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: ic }} />
+        )}
       </div>
     </Link>
   );
@@ -40,115 +48,142 @@ function NavItem({ href, icon: Icon, label }: { href: string; icon: React.Elemen
 export default function PortalLayout({ children }: { children: ReactNode }) {
   const { student, logout } = useAuth();
   const [, navigate] = useLocation();
+  const [location] = useLocation();
 
-  function handleLogout() {
-    logout();
-    navigate("/student/login");
-  }
-
+  const handleLogout = () => { logout(); navigate("/student/login"); };
   const initials = student
-    ? `${student.firstName?.[0] || ""}${student.lastName?.[0] || ""}`.toUpperCase()
+    ? (`${student.firstName?.[0] || ""}${student.lastName?.[0] || ""}`).toUpperCase() || "S"
     : "?";
+  const current = NAV.find(n => location.startsWith(n.href));
 
   return (
-    <div className="flex h-screen bg-[#F7F9FF] overflow-hidden" style={{ fontFamily: "'Sora', sans-serif" }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: "#F4F6FB", fontFamily: "'Sora', sans-serif" }}>
 
-      {/* ── Sidebar ── */}
-      <aside className="w-[62px] shrink-0 flex flex-col items-center pt-4 pb-4 gap-1"
-        style={{ background: "linear-gradient(180deg, #0F1A45 0%, #182B68 100%)" }}>
-
-        {/* Logo → home */}
+      {/* Sidebar */}
+      <aside
+        className="w-[220px] shrink-0 flex flex-col py-5 px-3 bg-white border-r border-slate-100"
+        style={{ boxShadow: "2px 0 16px rgba(0,0,0,0.04)" }}
+      >
+        {/* Logo */}
         <Link href="/">
-          <div title="Home" className="mb-3 mt-1 w-9 h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-all">
-            <svg viewBox="0 0 32 32" fill="none" className="w-5 h-5">
-              <rect x="2" y="2" width="12" height="12" rx="2.5" fill="white" />
-              <rect x="18" y="2" width="12" height="12" rx="2.5" fill="white" opacity="0.5" />
-              <rect x="2" y="18" width="12" height="12" rx="2.5" fill="white" opacity="0.5" />
-              <rect x="18" y="18" width="12" height="12" rx="2.5" fill="white" />
-            </svg>
+          <div className="flex items-center gap-2.5 mb-6 px-1 cursor-pointer">
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: "linear-gradient(135deg,#4F46E5,#7C3AED)", boxShadow: "0 4px 12px #4F46E540" }}
+            >
+              <svg viewBox="0 0 32 32" fill="none" className="w-5 h-5">
+                <rect x="3" y="3" width="11" height="11" rx="2.5" fill="white" />
+                <rect x="18" y="3" width="11" height="11" rx="2.5" fill="white" opacity="0.45" />
+                <rect x="3" y="18" width="11" height="11" rx="2.5" fill="white" opacity="0.45" />
+                <rect x="18" y="18" width="11" height="11" rx="2.5" fill="white" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-extrabold text-sm text-slate-800 leading-tight">DataNauts</p>
+              <p className="text-[10px] text-slate-400 font-medium">Student Portal</p>
+            </div>
           </div>
         </Link>
 
-        {/* Divider */}
-        <div className="w-8 h-px bg-white/10 mb-1" />
+        {/* Student card */}
+        {student && (
+          <div className="mb-5 rounded-2xl p-3" style={{ background: "linear-gradient(135deg,#F0F4FF,#F5F0FF)", border: "1px solid #E0E7FF" }}>
+            <div className="flex items-center gap-2.5">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white text-xs font-extrabold"
+                style={{ background: "linear-gradient(135deg,#4F46E5,#7C3AED)", boxShadow: "0 4px 10px #4F46E540" }}
+              >
+                {initials}
+              </div>
+              <div className="min-w-0">
+                <p className="text-slate-800 text-xs font-extrabold truncate">{student.fullName || student.rollNumber}</p>
+                <p className="text-indigo-400 text-[9px] font-bold mt-0.5 truncate">{student.rollNumber}</p>
+              </div>
+            </div>
+            <div className="flex gap-1 mt-2 flex-wrap">
+              {student.year && <span className="text-[9px] font-bold px-2 py-0.5 rounded-lg bg-white text-indigo-600 border border-indigo-100 shadow-sm">{student.year}</span>}
+              {student.semester && <span className="text-[9px] font-bold px-2 py-0.5 rounded-lg bg-white text-emerald-600 border border-emerald-100 shadow-sm">SEM {student.semester}</span>}
+            </div>
+          </div>
+        )}
+
+        <div className="h-px bg-slate-100 mb-4" />
 
         {/* Nav */}
-        {navItems.map((item) => (
-          <NavItem key={item.href} {...item} />
-        ))}
+        <div className="flex flex-col gap-0.5 flex-1">
+          {NAV.map(item => <NavItem key={item.href} {...item} />)}
+        </div>
 
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* Avatar */}
-        {student && (
-          <Link href="/student/profile">
-            <div
-              title={student.fullName}
-              className="w-9 h-9 rounded-full flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-white/30 transition-all mb-1 shrink-0"
-              style={{ background: "linear-gradient(135deg, #3D65F4, #7C5CFC)" }}
-            >
-              <span className="text-white font-extrabold text-xs">{initials}</span>
-            </div>
-          </Link>
-        )}
+        <div className="h-px bg-slate-100 mt-4 mb-3" />
 
         {/* Logout */}
         <button
           onClick={handleLogout}
-          title="Logout"
-          className="w-full flex flex-col items-center gap-1 py-2.5 px-1 rounded-xl text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 transition-all duration-150 w-full text-left"
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#FFF1F2"; (e.currentTarget as HTMLButtonElement).style.color = "#E11D48"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "#94A3B8"; }}
         >
-          <LogOut size={16} strokeWidth={2} />
-          <span className="text-[7px] font-extrabold uppercase tracking-widest">Out</span>
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-50">
+            <LogOut size={14} strokeWidth={2} />
+          </div>
+          <span className="text-sm font-semibold">Sign Out</span>
         </button>
       </aside>
 
-      {/* ── Main area ── */}
-      <div className="flex flex-col flex-1 overflow-hidden min-w-0">
+      {/* Main */}
+      <div className="flex flex-col flex-1 overflow-hidden min-w-0" style={{ background: "#F4F6FB" }}>
 
-        {/* Top bar */}
+        {/* Topbar */}
         {student && (
-          <div className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-100/80 shrink-0"
-            style={{ boxShadow: "0 1px 0 rgba(0,0,0,0.04)" }}>
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                style={{ background: "linear-gradient(135deg, #3D65F4, #7C5CFC)" }}>
-                <span className="text-white font-extrabold text-[11px]">{initials}</span>
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-extrabold text-[#0F1A45] leading-tight truncate">{student.fullName}</p>
-                <p className="text-[10px] text-gray-400 truncate">{student.rollNumber} · {student.college}</p>
+          <div
+            className="flex items-center justify-between px-6 py-3 bg-white shrink-0"
+            style={{ borderBottom: "1px solid #EEF0FF", boxShadow: "0 2px 10px rgba(79,70,229,0.05)" }}
+          >
+            <div className="flex items-center gap-3">
+              {current && (
+                <div
+                  className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: current.ic, boxShadow: `0 4px 12px ${current.ic}40` }}
+                >
+                  <current.icon size={15} strokeWidth={2.5} color="#fff" />
+                </div>
+              )}
+              <div>
+                <p className="text-sm font-extrabold text-slate-800">{current?.label || "Portal"}</p>
+                <p className="text-[10px] text-slate-400 font-medium">{student.college || "Sphoorthy Engineering College"}</p>
               </div>
             </div>
-
-            <div className="flex items-center gap-1.5 shrink-0">
-              {student.year && (
-                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full"
-                  style={{ background: "#EEF2FF", color: "#3D65F4" }}>
-                  {student.year}
-                </span>
-              )}
-              {student.semester && (
-                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full"
-                  style={{ background: "#ECFDF5", color: "#059669" }}>
-                  SEM {student.semester}
-                </span>
-              )}
+            <div className="flex items-center gap-2">
               {student.branch && (
-                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full hidden sm:inline-flex"
-                  style={{ background: "#FFF4EE", color: "#FF6B4A" }}>
-                  {student.branch.includes("Data") ? "Data Science" : student.branch.split(" ")[0]}
+                <span className="hidden sm:flex text-[10px] font-bold px-3 py-1.5 rounded-xl bg-orange-50 text-orange-600 border border-orange-100">
+                  {student.branch.includes("Data") ? "Data Science" : student.branch}
                 </span>
               )}
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-100">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-bold text-emerald-600">Live</span>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Page content */}
         <main className="flex-1 overflow-y-auto">
           {children}
         </main>
+
+        {/* Big Brains branding strip */}
+        <div
+          className="shrink-0 flex items-center justify-center gap-2 py-1.5 px-4"
+          style={{ background: "linear-gradient(90deg,#4F46E5,#7C3AED,#4F46E5)", backgroundSize: "200% 100%" }}
+        >
+          <span className="text-[10px] font-extrabold text-white/90 tracking-wide">⚡ Modified by</span>
+          <span className="text-[10px] font-extrabold text-yellow-300 tracking-wider">BIG BRAINS</span>
+          <span className="text-white/40 text-[10px]">·</span>
+          <span className="text-[10px] text-white/80 font-semibold">Startup initiated by</span>
+          <span className="text-[10px] font-extrabold text-cyan-300">Jashwanth &amp; Team</span>
+          <span className="text-white/40 text-[10px]">·</span>
+          <span className="text-[10px] text-white/60 font-medium">Sphoorthy Engineering College</span>
+        </div>
       </div>
     </div>
   );

@@ -45,7 +45,13 @@ export default function Footer() {
         </div>
         <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
           <p className="text-xs text-blue-400">© 2024 DataNauts. All rights reserved.</p>
-          <p className="text-xs text-blue-400">Made with care in Hyderabad, India</p>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-extrabold text-yellow-400">⚡ BIG BRAINS</span>
+            <span className="text-white/30 text-xs">·</span>
+            <span className="text-xs text-cyan-400 font-semibold">Startup initiated by Jashwanth &amp; Team</span>
+            <span className="text-white/30 text-xs">·</span>
+            <p className="text-xs text-blue-400">Sphoorthy Engineering College</p>
+          </div>
         </div>
       </div>
     </footer>

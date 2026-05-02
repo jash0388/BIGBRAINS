@@ -323,52 +323,59 @@ export default function AcademicsPage() {
             </div>
 
             {/* Course grid */}
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-3">
               {courses.map(course => {
                 const isActive = selectedCourse?.code === course.code;
-                const typeColors: Record<string, { bg: string; text: string }> = {
-                  Theory:   { bg: "#3D65F4", text: "#fff" },
-                  Lab:      { bg: "#059669", text: "#fff" },
-                  Elective: { bg: "#7C5CFC", text: "#fff" },
-                  Project:  { bg: "#FF6B4A", text: "#fff" },
+                const typeGrad: Record<string, { grad: string; glow: string; badge: string; badgeText: string }> = {
+                  Theory:   { grad: "135deg,#4F46E5,#6366F1", glow: "#4F46E530", badge: "rgba(79,70,229,0.12)", badgeText: "#4F46E5" },
+                  Lab:      { grad: "135deg,#059669,#10B981", glow: "#05966930", badge: "rgba(5,150,105,0.12)",  badgeText: "#059669" },
+                  Elective: { grad: "135deg,#7C3AED,#A855F7", glow: "#7C3AED30", badge: "rgba(124,58,237,0.12)", badgeText: "#7C3AED" },
+                  Project:  { grad: "135deg,#EA580C,#F97316", glow: "#EA580C30", badge: "rgba(234,88,12,0.12)",  badgeText: "#EA580C" },
                 };
-                const col = typeColors[course.type] || typeColors.Theory;
+                const t = typeGrad[course.type] || typeGrad.Theory;
                 return (
                   <button
                     key={course.code}
                     onClick={() => handleSelectCourse(course)}
-                    className={`text-left rounded-xl border-2 transition-all overflow-hidden ${
-                      isActive
-                        ? "border-[#3D65F4] bg-[#3D65F4] shadow-md shadow-blue-200"
-                        : "border-gray-200 hover:border-[#3D65F4]/60 hover:shadow-sm bg-white"
-                    }`}
+                    className="text-left rounded-2xl overflow-hidden transition-all duration-200 group"
+                    style={isActive
+                      ? { background: `linear-gradient(${t.grad})`, boxShadow: `0 8px 24px ${t.glow}`, border: "1.5px solid rgba(255,255,255,0.4)" }
+                      : { background: "rgba(255,255,255,0.7)", backdropFilter: "blur(12px)", border: "1.5px solid rgba(255,255,255,0.9)", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }
+                    }
+                    onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 6px 20px ${t.glow}`; }}
+                    onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 2px 12px rgba(0,0,0,0.06)"; }}
                   >
-                    <div className="flex items-stretch">
-                      {/* Code badge – left strip */}
+                    {/* Glass code badge at top */}
+                    <div className="px-3 pt-3 pb-0">
                       <div
-                        className="w-[38px] shrink-0 flex items-center justify-center p-1"
-                        style={{ backgroundColor: isActive ? "rgba(255,255,255,0.15)" : col.bg }}
+                        className="inline-flex items-center px-2.5 py-1 rounded-xl mb-2.5"
+                        style={isActive
+                          ? { background: "rgba(255,255,255,0.25)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.35)" }
+                          : { background: t.badge, border: `1px solid ${t.badgeText}22` }
+                        }
                       >
-                        <span className="text-[8px] font-extrabold text-white leading-tight text-center break-all">
+                        <span
+                          className="text-[9px] font-extrabold tracking-wide leading-tight"
+                          style={{ color: isActive ? "#fff" : t.badgeText }}
+                        >
                           {course.code}
                         </span>
                       </div>
-                      {/* Name */}
-                      <div className="flex-1 p-2.5">
-                        <p className={`text-xs font-semibold leading-tight ${isActive ? "text-white" : "text-[#182B68]"}`}>
-                          {course.name}
-                        </p>
-                        <span className={`inline-block text-[9px] font-bold mt-1 px-1.5 py-0.5 rounded-full ${
-                          isActive
-                            ? "bg-white/20 text-white"
-                            : course.type === "Lab" ? "bg-green-50 text-green-600"
-                            : course.type === "Elective" ? "bg-purple-50 text-purple-600"
-                            : course.type === "Project"  ? "bg-orange-50 text-orange-600"
-                            : "bg-[#EEF2FF] text-[#3D65F4]"
-                        }`}>
-                          {course.type}
-                        </span>
-                      </div>
+                    </div>
+                    {/* Name + type */}
+                    <div className="px-3 pb-3">
+                      <p className={`text-xs font-bold leading-snug mb-1.5 ${isActive ? "text-white" : "text-slate-800"}`}>
+                        {course.name}
+                      </p>
+                      <span
+                        className="inline-flex items-center text-[9px] font-bold px-2 py-0.5 rounded-lg"
+                        style={isActive
+                          ? { background: "rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.9)" }
+                          : { background: t.badge, color: t.badgeText }
+                        }
+                      >
+                        {course.type}
+                      </span>
                     </div>
                   </button>
                 );

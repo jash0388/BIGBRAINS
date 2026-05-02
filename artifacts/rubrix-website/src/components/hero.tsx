@@ -29,12 +29,18 @@ export default function Hero() {
             Improve <span className="text-rubrix-teal">Academics.</span> Maximize <span className="text-rubrix-orange">Placements.</span> Simplify <span className="text-rubrix-purple">Accreditation.</span>
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="h-14 px-8 text-lg rounded-full shadow-lg hover:shadow-xl transition-shadow bg-primary text-white">
-              Request A Demo
-            </Button>
-            <Button variant="ghost" size="lg" className="h-14 px-8 text-lg rounded-full text-rubrix-navy hover:bg-blue-50">
-              Download Brochure <ArrowDown className="ml-2 w-5 h-5" />
-            </Button>
+            <a
+              href="/student/login"
+              className="inline-flex items-center justify-center h-14 px-8 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all bg-primary text-white hover:bg-[#2D55E4]"
+            >
+              Student Login
+            </a>
+            <a
+              href="#"
+              className="inline-flex items-center justify-center h-14 px-8 text-lg font-semibold rounded-full border-2 border-primary text-primary hover:bg-blue-50 transition-all"
+            >
+              Faculty Login
+            </a>
           </div>
         </motion.div>
 

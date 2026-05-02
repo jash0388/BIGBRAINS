@@ -153,17 +153,17 @@ export default function Hero() {
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
         >
           <a
-            href="#contact"
+            href="/student/login"
             className="px-8 py-4 rounded-2xl text-white font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
             style={{ background: "linear-gradient(135deg, #3D65F4, #5B3CF4)" }}
           >
-            Request A Demo
+            Student Login
           </a>
           <a
             href="#"
-            className="flex items-center gap-2 text-[#3D65F4] font-semibold text-base hover:underline underline-offset-4"
+            className="px-8 py-4 rounded-2xl font-semibold text-base border-2 border-[#3D65F4] text-[#3D65F4] hover:bg-[#EEF2FF] transition-all duration-300"
           >
-            Download Brochure <Download size={16} />
+            Faculty Login
           </a>
         </motion.div>
 
