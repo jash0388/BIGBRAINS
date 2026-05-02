@@ -165,11 +165,11 @@ function CodingIDE({ problem, onBack }: { problem: ApiQuestion; onBack: () => vo
   };
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="fixed inset-0 z-50 flex flex-col bg-white" style={{ top: 0, left: 0, right: 0, bottom: 0 }}>
       {/* Top bar */}
       <div className="flex items-center justify-between px-5 py-2.5 border-b border-gray-200 shrink-0">
         <button onClick={onBack}
-          className="flex items-center gap-1.5 text-[#3D65F4] text-sm font-semibold hover:gap-2.5 transition-all">
+          className="flex items-center gap-1.5 text-blue-500 text-sm font-semibold hover:gap-2.5 transition-all">
           <ArrowLeft size={16} /> Back to Practice
         </button>
         <div className="flex items-center gap-2">
