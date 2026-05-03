@@ -2,44 +2,34 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import {
   Users, BarChart3, PlusCircle, LogOut, Search,
-  ChevronRight, BookOpen, CheckCircle2, Clock, Star,
-  Trash2, ShieldCheck, Activity, X,
+  BookOpen, CheckCircle2, Clock, Star, Activity, ChevronRight,
+  Trash2, ShieldCheck, X,
   ClipboardList, FileText, ToggleLeft, ToggleRight, Plus, Eye, ArrowLeft,
+  Code2, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { useFacultyAuth } from "../../context/FacultyAuthContext";
 import { useAuth } from "../../context/AuthContext";
 import {
   getTests, saveTest, deleteTest, toggleTest,
   getSubmissions, getFacultyPracticeQuestions, deleteFacultyPracticeQuestion,
-  getRegisteredStudents, getPracticeAttempts,
+  saveFacultyPracticeQuestion, getRegisteredStudents, getPracticeAttempts,
+  getCodingQuestions, saveCodingQuestion, deleteCodingQuestion,
+  getCodeSubmissions, reviewCodeSubmission,
   FacultyTest, TestQuestion, TestSubmission, RegisteredStudent, PracticeAttempt,
-  FacultyPracticeQuestion,
+  FacultyPracticeQuestion, CodingQuestion, CodeSubmission,
 } from "../../store/facultyDataStore";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-interface ApiQuestion {
-  _id: string;
-  name: string;
-  description: string;
-  difficulty_level: "easy" | "medium" | "hard";
-  tags: string[];
-  time_limit: number;
-  is_active: boolean;
-}
-
 
 const DIFF_COLOR: Record<string, string> = { easy: "#10B981", medium: "#F59E0B", hard: "#EF4444" };
 const DIFF_BG:    Record<string, string> = { easy: "#ECFDF5", medium: "#FFFBEB", hard: "#FEF2F2" };
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 function pad(n: number) { return String(n).padStart(2, "0"); }
 
-// ─── Add Question Form ────────────────────────────────────────────────────────
-function AddQuestionForm({ onAdded }: { onAdded: () => void }) {
+// ─── Add Coding Question Form ─────────────────────────────────────────────────
+function AddCodingQuestionForm({ onAdded }: { onAdded: () => void }) {
   const { faculty } = useFacultyAuth();
   const [form, setForm] = useState({
-    name: "", description: "", difficulty_level: "easy",
-    tags: "", time_limit: 30, memory_limit: 256,
-    sample_input: "", sample_output: "",
+    title: "", description: "", difficulty: "easy", tags: "",
+    starterCode: "", sampleInput: "", expectedOutput: "", language: "python",
   });
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess]       = useState(false);
@@ -47,23 +37,20 @@ function AddQuestionForm({ onAdded }: { onAdded: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.description.trim()) { setError("Name and description are required."); return; }
+    if (!form.title.trim() || !form.description.trim()) { setError("Title and description are required."); return; }
     setSubmitting(true); setError("");
-    try {
-      const payload = {
-        name: form.name.trim(), description: form.description.trim(),
-        difficulty_level: form.difficulty_level,
-        tags: form.tags.split(",").map(t => t.trim()).filter(Boolean),
-        time_limit: Number(form.time_limit), memory_limit: Number(form.memory_limit),
-        sample_testcase: [{ testcase: form.sample_input, output: form.sample_output }],
-        is_active: true, added_by: faculty?.name || "Faculty",
-      };
-      await fetch(`${BASE}/api/proxy/assessments/ourocode/questions`, {
-        method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify(payload),
-      });
-    } catch { /* optimistic */ }
-    setSuccess(true); setSubmitting(false); onAdded();
+    const q: CodingQuestion = {
+      id: `cq_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+      title: form.title.trim(), description: form.description.trim(),
+      difficulty: form.difficulty as "easy" | "medium" | "hard",
+      tags: form.tags.split(",").map(t => t.trim()).filter(Boolean),
+      starterCode: form.starterCode, sampleInput: form.sampleInput,
+      expectedOutput: form.expectedOutput, language: form.language,
+      createdBy: faculty?.name || "Faculty", createdAt: new Date().toISOString(),
+    };
+    await saveCodingQuestion(q);
+    setSuccess(true); setSubmitting(false);
+    setTimeout(() => { setSuccess(false); onAdded(); }, 1000);
   };
 
   if (success) {
@@ -72,9 +59,8 @@ function AddQuestionForm({ onAdded }: { onAdded: () => void }) {
         <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
           <CheckCircle2 size={32} className="text-green-500" />
         </div>
-        <p className="text-lg font-extrabold text-slate-800">Question Added!</p>
-        <p className="text-sm text-gray-400 text-center">The practice question has been submitted to the platform.</p>
-        <button onClick={() => setSuccess(false)} className="mt-2 px-6 py-2.5 rounded-xl bg-blue-500 text-white text-sm font-bold">Add Another</button>
+        <p className="text-lg font-extrabold text-slate-800">Coding Question Added!</p>
+        <p className="text-sm text-gray-400 text-center">Students can now see and submit code for this problem.</p>
       </div>
     );
   }
@@ -82,56 +68,60 @@ function AddQuestionForm({ onAdded }: { onAdded: () => void }) {
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-4 p-4 md:p-6 pb-10">
       <div>
-        <h2 className="text-base font-extrabold text-slate-800 mb-0.5">Add Practice Question</h2>
-        <p className="text-xs text-gray-400">Publish a new coding problem for students</p>
+        <h2 className="text-base font-extrabold text-slate-800 mb-0.5">Add Coding Question</h2>
+        <p className="text-xs text-gray-400">Students will write and submit code — you review and approve/reject</p>
       </div>
       {error && <p className="text-xs text-red-500 font-semibold bg-red-50 px-3 py-2 rounded-xl">{error}</p>}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="md:col-span-2">
-          <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Question Title *</label>
-          <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-            placeholder="e.g. Two Sum, Fibonacci Series..."
+          <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Problem Title *</label>
+          <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+            placeholder="e.g. Fibonacci Series, Find Duplicates..."
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all" />
         </div>
         <div className="md:col-span-2">
           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Problem Description *</label>
           <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-            rows={5} placeholder="Describe the problem clearly with constraints and examples..."
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all resize-none" />
+            rows={4} placeholder="Describe the problem clearly with constraints and examples..."
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 transition-all resize-none" />
         </div>
         <div>
           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Difficulty</label>
-          <select value={form.difficulty_level} onChange={e => setForm(f => ({ ...f, difficulty_level: e.target.value }))}
+          <select value={form.difficulty} onChange={e => setForm(f => ({ ...f, difficulty: e.target.value }))}
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 bg-white">
             <option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option>
           </select>
         </div>
         <div>
+          <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Language</label>
+          <select value={form.language} onChange={e => setForm(f => ({ ...f, language: e.target.value }))}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 bg-white">
+            <option value="python">Python</option><option value="java">Java</option>
+            <option value="c">C</option><option value="cpp">C++</option><option value="javascript">JavaScript</option>
+          </select>
+        </div>
+        <div className="md:col-span-2">
           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Tags (comma separated)</label>
           <input value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))}
-            placeholder="arrays, sorting, dp..."
+            placeholder="loops, functions, arrays..."
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 transition-all" />
         </div>
-        <div>
-          <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Time Limit (seconds)</label>
-          <input type="number" min={1} max={300} value={form.time_limit} onChange={e => setForm(f => ({ ...f, time_limit: Number(e.target.value) }))}
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 transition-all" />
-        </div>
-        <div>
-          <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Memory Limit (MB)</label>
-          <input type="number" min={16} max={1024} value={form.memory_limit} onChange={e => setForm(f => ({ ...f, memory_limit: Number(e.target.value) }))}
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 transition-all" />
+        <div className="md:col-span-2">
+          <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Starter Code (optional)</label>
+          <textarea value={form.starterCode} onChange={e => setForm(f => ({ ...f, starterCode: e.target.value }))} rows={4}
+            placeholder="def solution():&#10;    # write your code here&#10;    pass"
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-mono text-slate-700 focus:outline-none focus:border-blue-400 transition-all resize-none" />
         </div>
         <div>
           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sample Input</label>
-          <textarea value={form.sample_input} onChange={e => setForm(f => ({ ...f, sample_input: e.target.value }))} rows={3}
-            placeholder="5&#10;1 2 3 4 5"
+          <textarea value={form.sampleInput} onChange={e => setForm(f => ({ ...f, sampleInput: e.target.value }))} rows={3}
+            placeholder="5"
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-mono text-slate-700 focus:outline-none focus:border-blue-400 transition-all resize-none" />
         </div>
         <div>
           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Expected Output</label>
-          <textarea value={form.sample_output} onChange={e => setForm(f => ({ ...f, sample_output: e.target.value }))} rows={3}
-            placeholder="15"
+          <textarea value={form.expectedOutput} onChange={e => setForm(f => ({ ...f, expectedOutput: e.target.value }))} rows={3}
+            placeholder="0 1 1 2 3"
             className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-mono text-slate-700 focus:outline-none focus:border-blue-400 transition-all resize-none" />
         </div>
       </div>
@@ -139,7 +129,82 @@ function AddQuestionForm({ onAdded }: { onAdded: () => void }) {
         className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm text-white transition-all disabled:opacity-50"
         style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)", boxShadow: "0 8px 20px rgba(59,130,246,0.3)" }}>
         {submitting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          : <><PlusCircle size={16} /> Publish Question</>}
+          : <><Code2 size={16} /> Publish Coding Problem</>}
+      </button>
+    </form>
+  );
+}
+
+// ─── Add MCQ Form (inline in Questions tab) ───────────────────────────────────
+function AddMcqForm({ onAdded, onCancel }: { onAdded: () => void; onCancel: () => void }) {
+  const { faculty } = useFacultyAuth();
+  const [form, setForm] = useState({
+    title: "", description: "", difficulty: "easy", tags: "",
+    options: ["", "", "", ""], correctAnswer: 0, explanation: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError]           = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.title.trim()) { setError("Title is required."); return; }
+    if (form.options.some(o => !o.trim())) { setError("All 4 options must be filled."); return; }
+    setSubmitting(true); setError("");
+    const q: FacultyPracticeQuestion = {
+      id: `pq_${Date.now()}_${Math.random().toString(36).slice(2)}`,
+      title: form.title.trim(), description: form.description.trim(),
+      difficulty: form.difficulty as "easy" | "medium" | "hard",
+      tags: form.tags.split(",").map(t => t.trim()).filter(Boolean),
+      options: [...form.options], correctAnswer: form.correctAnswer,
+      explanation: form.explanation.trim(),
+      createdBy: faculty?.name || "Faculty", createdAt: new Date().toISOString(),
+    };
+    await saveFacultyPracticeQuestion(q);
+    setSubmitting(false);
+    onAdded();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-blue-50 border border-blue-200 rounded-2xl p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-extrabold text-blue-700 uppercase tracking-wider">New MCQ Question</p>
+        <button type="button" onClick={onCancel}><X size={14} className="text-gray-400 hover:text-gray-600" /></button>
+      </div>
+      {error && <p className="text-[11px] text-red-500 font-semibold bg-red-50 px-3 py-1.5 rounded-xl">{error}</p>}
+      <input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+        placeholder="Question text *" required
+        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-blue-400 transition-all" />
+      <input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+        placeholder="Brief context / description (optional)"
+        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-blue-400 transition-all" />
+      <div className="grid grid-cols-2 gap-2">
+        <select value={form.difficulty} onChange={e => setForm(f => ({ ...f, difficulty: e.target.value }))}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 bg-white focus:outline-none focus:border-blue-400">
+          <option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option>
+        </select>
+        <input value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))}
+          placeholder="tags: python, loops..."
+          className="border border-gray-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-blue-400 transition-all" />
+      </div>
+      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Options — click radio to mark correct</p>
+      <div className="grid grid-cols-2 gap-2">
+        {form.options.map((opt, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <input type="radio" name="correct" checked={form.correctAnswer === i}
+              onChange={() => setForm(f => ({ ...f, correctAnswer: i }))} className="accent-blue-500 shrink-0" />
+            <input value={opt} onChange={e => setForm(f => { const o = [...f.options]; o[i] = e.target.value; return { ...f, options: o }; })}
+              placeholder={`Option ${String.fromCharCode(65 + i)}`}
+              className="flex-1 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-400 transition-all" />
+          </div>
+        ))}
+      </div>
+      <input value={form.explanation} onChange={e => setForm(f => ({ ...f, explanation: e.target.value }))}
+        placeholder="Explanation for correct answer (optional)"
+        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-blue-400 transition-all" />
+      <button type="submit" disabled={submitting}
+        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl font-bold text-xs text-white disabled:opacity-50"
+        style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)" }}>
+        {submitting ? <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Plus size={13} /> Save MCQ Question</>}
       </button>
     </form>
   );
@@ -289,18 +354,22 @@ export default function FacultyDashboard() {
   const { faculty, logout } = useFacultyAuth();
   const { isLoggedIn: isStudentLoggedIn, student } = useAuth();
   const [, navigate] = useLocation();
-  const [tab, setTab] = useState<"overview" | "students" | "questions" | "add" | "tests" | "results" | "reviews">("overview");
+  const [tab, setTab] = useState<"overview" | "students" | "questions" | "coding" | "tests" | "results" | "reviews">("overview");
   const [search, setSearch]       = useState("");
-  const [questions, setQuestions] = useState<ApiQuestion[]>([]);
-  const [qLoading, setQLoading]   = useState(false);
   const [menuOpen, setMenuOpen]   = useState(false);
   const [tests, setTests]             = useState<FacultyTest[]>([]);
   const [submissions, setSubmissions]  = useState<TestSubmission[]>([]);
   const [realStudents, setRealStudents] = useState<RegisteredStudent[]>([]);
   const [practiceAttempts, setPracticeAttempts] = useState<PracticeAttempt[]>([]);
   const [practiceQs, setPracticeQs] = useState<FacultyPracticeQuestion[]>([]);
+  const [codingQs, setCodingQs] = useState<CodingQuestion[]>([]);
+  const [codeSubmissions, setCodeSubmissions] = useState<CodeSubmission[]>([]);
+  const [showAddMcq, setShowAddMcq] = useState(false);
   const [showCreateTest, setShowCreateTest] = useState(false);
   const [resultFilter, setResultFilter] = useState("all");
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [reviewNotes, setReviewNotes] = useState("");
+  const [expandedCode, setExpandedCode] = useState<string | null>(null);
   const [seeding, setSeeding] = useState(false);
   const [seedMsg, setSeedMsg] = useState("");
 
@@ -310,15 +379,18 @@ export default function FacultyDashboard() {
   const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, "");
 
   const loadData = async () => {
-    const [t, s, st, pq, pa] = await Promise.all([
+    const [t, s, st, pq, pa, cq, cs] = await Promise.all([
       getTests(), getSubmissions(), getRegisteredStudents(),
       getFacultyPracticeQuestions(), getPracticeAttempts(),
+      getCodingQuestions(), getCodeSubmissions(),
     ]);
     setTests(t);
     setSubmissions(s);
     setRealStudents(st);
     setPracticeQs(pq);
     setPracticeAttempts(pa);
+    setCodingQs(cq);
+    setCodeSubmissions(cs);
   };
 
   const seedSampleTests = async () => {
@@ -334,17 +406,14 @@ export default function FacultyDashboard() {
     setSeeding(false);
   };
 
-  useEffect(() => { loadData(); }, [tab]);
+  const handleReview = async (id: string, status: "approved" | "rejected") => {
+    await reviewCodeSubmission(id, status, reviewNotes);
+    setReviewingId(null);
+    setReviewNotes("");
+    await loadData();
+  };
 
-  useEffect(() => {
-    if (tab !== "questions" && tab !== "overview") return;
-    setQLoading(true);
-    fetch(`${BASE}/api/proxy/assessments/ourocode/questions`, { headers: { Accept: "application/json" } })
-      .then(r => r.ok ? r.json() : null)
-      .then(data => { const q = data?.questions || data?.data || []; setQuestions(Array.isArray(q) ? q : []); })
-      .catch(() => setQuestions([]))
-      .finally(() => setQLoading(false));
-  }, [tab]);
+  useEffect(() => { loadData(); }, [tab]);
 
   // Merge students from login tracking + test submissions (deduplicated by roll)
   const allStudents: RegisteredStudent[] = [...realStudents];
@@ -374,7 +443,7 @@ export default function FacultyDashboard() {
     { id: "overview",  label: "Overview",  icon: BarChart3     },
     { id: "students",  label: "Students",  icon: Users         },
     { id: "questions", label: "Questions", icon: BookOpen      },
-    { id: "add",       label: "Add Q",     icon: PlusCircle    },
+    { id: "coding",    label: "Coding Q",  icon: Code2         },
     { id: "tests",     label: "Tests",     icon: ClipboardList },
     { id: "results",   label: "Results",   icon: FileText      },
     { id: "reviews",   label: "Reviews",   icon: Eye           },
@@ -665,26 +734,33 @@ export default function FacultyDashboard() {
           </div>
         )}
 
-        {/* QUESTIONS */}
+        {/* QUESTIONS — MCQ */}
         {tab === "questions" && (
           <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-base font-extrabold text-slate-800">Practice Questions</h2>
-                <p className="text-[10px] text-gray-400 mt-0.5">{practiceQs.length} faculty MCQ question{practiceQs.length !== 1 ? "s" : ""} added</p>
+                <h2 className="text-base font-extrabold text-slate-800">MCQ Practice Questions</h2>
+                <p className="text-[10px] text-gray-400 mt-0.5">{practiceQs.length} question{practiceQs.length !== 1 ? "s" : ""} · students see these on the Practice page</p>
               </div>
-              <button onClick={() => setTab("add")}
+              <button onClick={() => setShowAddMcq(s => !s)}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold"
                 style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)" }}>
-                <PlusCircle size={13} /> Add New
+                <PlusCircle size={13} /> {showAddMcq ? "Cancel" : "Add MCQ"}
               </button>
             </div>
 
-            {practiceQs.length === 0 ? (
+            {showAddMcq && (
+              <AddMcqForm
+                onAdded={() => { setShowAddMcq(false); loadData(); }}
+                onCancel={() => setShowAddMcq(false)}
+              />
+            )}
+
+            {practiceQs.length === 0 && !showAddMcq ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-400">
                 <BookOpen size={36} className="opacity-30" />
-                <p className="text-sm font-semibold">No questions yet</p>
-                <button onClick={() => setTab("add")} className="mt-2 px-5 py-2 rounded-xl bg-blue-500 text-white text-xs font-bold">Add a Question</button>
+                <p className="text-sm font-semibold">No MCQ questions yet</p>
+                <button onClick={() => setShowAddMcq(true)} className="mt-2 px-5 py-2 rounded-xl bg-blue-500 text-white text-xs font-bold">Add First Question</button>
               </div>
             ) : (
               <div className="space-y-2">
@@ -692,6 +768,7 @@ export default function FacultyDashboard() {
                   <div key={q.id} className="bg-white rounded-xl p-3 border border-blue-100 flex items-start gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-600">MCQ</span>
                         <p className="text-xs font-bold text-slate-800 truncate">{q.title}</p>
                         <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${q.difficulty === "easy" ? "bg-green-100 text-green-700" : q.difficulty === "medium" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>{q.difficulty}</span>
                       </div>
@@ -707,12 +784,34 @@ export default function FacultyDashboard() {
                 ))}
               </div>
             )}
-
           </div>
         )}
 
-        {/* ADD QUESTION */}
-        {tab === "add" && <AddQuestionForm onAdded={() => setTab("questions")} />}
+        {/* CODING QUESTIONS */}
+        {tab === "coding" && <AddCodingQuestionForm onAdded={() => { loadData(); }} />}
+        {tab === "coding" && codingQs.length > 0 && (
+          <div className="max-w-2xl mx-auto px-4 md:px-6 pb-10 space-y-2">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{codingQs.length} coding problem{codingQs.length !== 1 ? "s" : ""} published</p>
+            {codingQs.map(q => (
+              <div key={q.id} className="bg-white rounded-xl p-3 border border-green-100 flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-green-50 text-green-700">{q.language}</span>
+                    <p className="text-xs font-bold text-slate-800 truncate">{q.title}</p>
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${q.difficulty === "easy" ? "bg-green-100 text-green-700" : q.difficulty === "medium" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>{q.difficulty}</span>
+                  </div>
+                  <p className="text-[10px] text-gray-400 line-clamp-2">{q.description}</p>
+                  <div className="flex gap-1 mt-1 flex-wrap">
+                    {q.tags.map(t => <span key={t} className="text-[9px] bg-green-50 text-green-600 px-1.5 py-0.5 rounded-md font-semibold">{t}</span>)}
+                  </div>
+                </div>
+                <button onClick={() => { deleteCodingQuestion(q.id).then(() => loadData()); }} className="ml-auto shrink-0 p-1">
+                  <Trash2 size={13} className="text-red-400 hover:text-red-600" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* TESTS */}
         {tab === "tests" && (
@@ -862,64 +961,186 @@ export default function FacultyDashboard() {
 
         {/* REVIEWS */}
         {tab === "reviews" && (
-          <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4">
-            <div className="flex items-start justify-between gap-3 flex-wrap">
-              <div>
-                <h2 className="text-base font-extrabold text-slate-800">Practice Reviews</h2>
-                <p className="text-[10px] text-gray-400 mt-0.5">
-                  {practiceAttempts.length} total attempt{practiceAttempts.length !== 1 ? "s" : ""} · {practiceAttempts.filter(a => a.isCorrect).length} correct
-                </p>
+          <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
+
+            {/* ── Code Submissions (with approve/reject) ── */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h2 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                    <Code2 size={16} className="text-green-500" /> Code Submissions
+                  </h2>
+                  <p className="text-[10px] text-gray-400 mt-0.5">
+                    {codeSubmissions.length} submission{codeSubmissions.length !== 1 ? "s" : ""} ·{" "}
+                    {codeSubmissions.filter(s => s.status === "pending").length} pending review
+                  </p>
+                </div>
+                <div className="flex gap-1.5">
+                  <span className="text-[9px] font-bold px-2 py-1 rounded-lg bg-amber-50 text-amber-600 border border-amber-100">
+                    {codeSubmissions.filter(s => s.status === "pending").length} pending
+                  </span>
+                  <span className="text-[9px] font-bold px-2 py-1 rounded-lg bg-green-50 text-green-600 border border-green-100">
+                    {codeSubmissions.filter(s => s.status === "approved").length} approved
+                  </span>
+                  <span className="text-[9px] font-bold px-2 py-1 rounded-lg bg-red-50 text-red-500 border border-red-100">
+                    {codeSubmissions.filter(s => s.status === "rejected").length} rejected
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-3 py-2">
-                <CheckCircle2 size={13} className="text-blue-400" />
-                <span className="text-[11px] font-bold text-blue-600">
-                  {practiceAttempts.length > 0
-                    ? `${Math.round((practiceAttempts.filter(a => a.isCorrect).length / practiceAttempts.length) * 100)}% accuracy`
-                    : "No attempts yet"}
-                </span>
-              </div>
+
+              {codeSubmissions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-3 text-gray-400 bg-white rounded-2xl border border-gray-100">
+                  <Code2 size={28} className="opacity-25" />
+                  <p className="text-sm font-semibold">No code submissions yet</p>
+                  <p className="text-xs text-gray-300 text-center max-w-xs">Students submit code from the Practice page. Add a coding question in the "Coding Q" tab first.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {codeSubmissions.map(sub => {
+                    const statusColor = sub.status === "approved" ? "#10B981" : sub.status === "rejected" ? "#EF4444" : "#F59E0B";
+                    const statusBg    = sub.status === "approved" ? "#ECFDF5" : sub.status === "rejected" ? "#FEF2F2" : "#FFFBEB";
+                    const isReviewing = reviewingId === sub.id;
+                    const isExpanded  = expandedCode === sub.id;
+                    return (
+                      <div key={sub.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div className="flex items-start gap-3 p-4">
+                          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-[10px] font-extrabold shrink-0"
+                            style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)" }}>
+                            {sub.studentName.split(" ").map((w: string) => w[0]).slice(0, 2).join("")}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-sm font-extrabold text-slate-800">{sub.studentName}</p>
+                              <span className="text-[9px] font-mono text-gray-400">{sub.studentRoll}</span>
+                              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+                                style={{ background: statusBg, color: statusColor }}>
+                                {sub.status === "approved" ? "✓ Approved" : sub.status === "rejected" ? "✗ Rejected" : "⏳ Pending"}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-green-600 font-semibold mt-0.5">{sub.questionTitle}</p>
+                            <div className="flex gap-3 mt-1 text-[10px] text-gray-400 flex-wrap">
+                              <span className="bg-gray-100 px-1.5 py-0.5 rounded font-mono">{sub.language}</span>
+                              <span>{new Date(sub.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
+                              <span>{new Date(sub.submittedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                            </div>
+                            {sub.facultyNotes && (
+                              <p className="text-[10px] text-gray-500 mt-1 italic bg-gray-50 px-2 py-1 rounded-lg">{sub.facultyNotes}</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Code viewer */}
+                        <div className="px-4 pb-2">
+                          <button onClick={() => setExpandedCode(isExpanded ? null : sub.id)}
+                            className="flex items-center gap-1.5 text-[10px] font-bold text-blue-500 hover:text-blue-700 transition-colors">
+                            {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                            {isExpanded ? "Hide code" : "View submitted code"}
+                          </button>
+                          {isExpanded && (
+                            <pre className="mt-2 bg-slate-900 text-green-300 text-[11px] font-mono p-3 rounded-xl overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">
+                              {sub.code}
+                            </pre>
+                          )}
+                        </div>
+
+                        {/* Review actions */}
+                        {sub.status === "pending" && !isReviewing && (
+                          <div className="flex gap-2 px-4 pb-4">
+                            <button onClick={() => { setReviewingId(sub.id); setReviewNotes(""); }}
+                              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-white"
+                              style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)" }}>
+                              Review
+                            </button>
+                          </div>
+                        )}
+                        {isReviewing && (
+                          <div className="px-4 pb-4 space-y-2 border-t border-gray-50 pt-3">
+                            <textarea value={reviewNotes} onChange={e => setReviewNotes(e.target.value)}
+                              rows={2} placeholder="Optional notes for student (e.g. 'Good logic!' or 'Fix your loop bounds')"
+                              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-blue-400 resize-none transition-all" />
+                            <div className="flex gap-2">
+                              <button onClick={() => handleReview(sub.id, "approved")}
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white"
+                                style={{ background: "linear-gradient(135deg,#10B981,#059669)" }}>
+                                <ThumbsUp size={12} /> Approve
+                              </button>
+                              <button onClick={() => handleReview(sub.id, "rejected")}
+                                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white"
+                                style={{ background: "linear-gradient(135deg,#EF4444,#DC2626)" }}>
+                                <ThumbsDown size={12} /> Reject
+                              </button>
+                              <button onClick={() => setReviewingId(null)}
+                                className="px-3 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:bg-gray-100 transition-colors">
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
-            {practiceAttempts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
-                <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
-                  <Eye size={24} className="text-gray-300" />
+            {/* ── MCQ Attempts ── */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h2 className="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                    <BookOpen size={15} className="text-blue-500" /> MCQ Attempts
+                  </h2>
+                  <p className="text-[10px] text-gray-400 mt-0.5">
+                    {practiceAttempts.length} attempt{practiceAttempts.length !== 1 ? "s" : ""} · {practiceAttempts.filter(a => a.isCorrect).length} correct
+                  </p>
                 </div>
-                <p className="text-sm font-semibold">No practice attempts yet</p>
-                <p className="text-xs text-gray-300 text-center max-w-xs">
-                  When students attempt MCQ practice questions, their submissions will appear here.
-                </p>
+                {practiceAttempts.length > 0 && (
+                  <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-3 py-2">
+                    <CheckCircle2 size={13} className="text-blue-400" />
+                    <span className="text-[11px] font-bold text-blue-600">
+                      {Math.round((practiceAttempts.filter(a => a.isCorrect).length / practiceAttempts.length) * 100)}% accuracy
+                    </span>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="space-y-2">
-                {[...practiceAttempts].map(a => (
-                  <div key={a.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-                    <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-[10px] font-extrabold shrink-0"
-                        style={{ background: a.isCorrect ? "linear-gradient(135deg,#10B981,#059669)" : "linear-gradient(135deg,#F59E0B,#D97706)" }}>
-                        {a.studentName.split(" ").map((w: string) => w[0]).slice(0, 2).join("")}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-extrabold text-slate-800">{a.studentName}</p>
-                          <span className="text-[9px] font-mono text-gray-400">{a.studentRoll}</span>
-                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${a.isCorrect ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
-                            {a.isCorrect ? "✓ Correct" : "✗ Wrong"}
-                          </span>
+
+              {practiceAttempts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-3 text-gray-400 bg-white rounded-2xl border border-gray-100">
+                  <Eye size={24} className="opacity-25" />
+                  <p className="text-sm font-semibold">No MCQ attempts yet</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {practiceAttempts.map(a => (
+                    <div key={a.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-[10px] font-extrabold shrink-0"
+                          style={{ background: a.isCorrect ? "linear-gradient(135deg,#10B981,#059669)" : "linear-gradient(135deg,#F59E0B,#D97706)" }}>
+                          {a.studentName.split(" ").map((w: string) => w[0]).slice(0, 2).join("")}
                         </div>
-                        <p className="text-[11px] text-blue-600 font-semibold mt-0.5 line-clamp-1">{a.questionTitle}</p>
-                        <div className="flex gap-4 mt-1 text-[11px] text-gray-400 flex-wrap">
-                          <span>Chose: Option {String.fromCharCode(65 + a.chosenAnswer)}</span>
-                          <span>Correct: Option {String.fromCharCode(65 + a.correctAnswer)}</span>
-                          <span>{new Date(a.attemptedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
-                          <span>{new Date(a.attemptedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-extrabold text-slate-800">{a.studentName}</p>
+                            <span className="text-[9px] font-mono text-gray-400">{a.studentRoll}</span>
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${a.isCorrect ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
+                              {a.isCorrect ? "✓ Correct" : "✗ Wrong"}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-blue-600 font-semibold mt-0.5 line-clamp-1">{a.questionTitle}</p>
+                          <div className="flex gap-4 mt-1 text-[11px] text-gray-400 flex-wrap">
+                            <span>Chose: Option {String.fromCharCode(65 + a.chosenAnswer)}</span>
+                            <span>Correct: Option {String.fromCharCode(65 + a.correctAnswer)}</span>
+                            <span>{new Date(a.attemptedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
+                            <span>{new Date(a.attemptedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
+
           </div>
         )}
       </div>

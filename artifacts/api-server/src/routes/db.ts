@@ -109,4 +109,54 @@ router.post("/practice-attempts", async (req: Request, res: Response): Promise<v
   res.json(data);
 });
 
+// ── CODING QUESTIONS ──────────────────────────────────────────────────────────
+router.get("/coding-questions", async (_req: Request, res: Response): Promise<void> => {
+  const { data, error } = await supabase.from("coding_questions").select("*").order("created_at", { ascending: false });
+  if (error) { res.status(500).json({ error: error.message }); return; }
+  res.json(data);
+});
+router.post("/coding-questions", async (req: Request, res: Response): Promise<void> => {
+  const q = req.body;
+  const { data, error } = await supabase.from("coding_questions").upsert({
+    id: q.id, title: q.title, description: q.description,
+    difficulty: q.difficulty, tags: q.tags,
+    starter_code: q.starterCode, sample_input: q.sampleInput,
+    expected_output: q.expectedOutput, language: q.language,
+    created_by: q.createdBy, created_at: q.createdAt,
+  }, { onConflict: "id" }).select().single();
+  if (error) { res.status(500).json({ error: error.message }); return; }
+  res.json(data);
+});
+router.delete("/coding-questions/:id", async (req: Request, res: Response): Promise<void> => {
+  const { error } = await supabase.from("coding_questions").delete().eq("id", req.params.id);
+  if (error) { res.status(500).json({ error: error.message }); return; }
+  res.json({ success: true });
+});
+
+// ── CODE SUBMISSIONS ──────────────────────────────────────────────────────────
+router.get("/code-submissions", async (_req: Request, res: Response): Promise<void> => {
+  const { data, error } = await supabase.from("code_submissions").select("*").order("submitted_at", { ascending: false });
+  if (error) { res.status(500).json({ error: error.message }); return; }
+  res.json(data);
+});
+router.post("/code-submissions", async (req: Request, res: Response): Promise<void> => {
+  const s = req.body;
+  const { data, error } = await supabase.from("code_submissions").insert({
+    id: s.id, question_id: s.questionId, question_title: s.questionTitle,
+    student_roll: s.studentRoll, student_name: s.studentName,
+    code: s.code, language: s.language, status: "pending",
+    submitted_at: s.submittedAt,
+  }).select().single();
+  if (error) { res.status(500).json({ error: error.message }); return; }
+  res.json(data);
+});
+router.patch("/code-submissions/:id/review", async (req: Request, res: Response): Promise<void> => {
+  const { status, facultyNotes } = req.body;
+  const { data, error } = await supabase.from("code_submissions").update({
+    status, faculty_notes: facultyNotes, reviewed_at: new Date().toISOString(),
+  }).eq("id", req.params.id).select().single();
+  if (error) { res.status(500).json({ error: error.message }); return; }
+  res.json(data);
+});
+
 export default router;

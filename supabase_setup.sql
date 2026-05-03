@@ -68,3 +68,33 @@ create table if not exists practice_attempts (
   is_correct boolean default false,
   attempted_at timestamptz not null default now()
 );
+
+-- Coding Questions (faculty-added programming problems)
+create table if not exists coding_questions (
+  id text primary key,
+  title text not null,
+  description text not null,
+  difficulty text default 'easy',
+  tags text[] default '{}',
+  starter_code text,
+  sample_input text,
+  expected_output text,
+  language text default 'python',
+  created_by text,
+  created_at timestamptz not null default now()
+);
+
+-- Code Submissions (student code submitted for coding questions)
+create table if not exists code_submissions (
+  id text primary key,
+  question_id text not null,
+  question_title text,
+  student_roll text not null,
+  student_name text not null,
+  code text not null,
+  language text default 'python',
+  status text not null default 'pending',
+  faculty_notes text,
+  submitted_at timestamptz not null default now(),
+  reviewed_at timestamptz
+);

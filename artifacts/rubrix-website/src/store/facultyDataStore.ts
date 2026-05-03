@@ -47,6 +47,34 @@ export interface FacultyPracticeQuestion {
   createdAt: string;
 }
 
+export interface CodingQuestion {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: "easy" | "medium" | "hard";
+  tags: string[];
+  starterCode: string;
+  sampleInput: string;
+  expectedOutput: string;
+  language: string;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface CodeSubmission {
+  id: string;
+  questionId: string;
+  questionTitle: string;
+  studentRoll: string;
+  studentName: string;
+  code: string;
+  language: string;
+  status: "pending" | "approved" | "rejected";
+  facultyNotes: string;
+  submittedAt: string;
+  reviewedAt: string;
+}
+
 export interface RegisteredStudent {
   rollNumber: string;
   fullName: string;
@@ -102,6 +130,30 @@ function rowToPracticeQ(r: Record<string, unknown>): FacultyPracticeQuestion {
     createdBy: String(r.created_by ?? ""), createdAt: String(r.created_at ?? ""),
   };
 }
+function rowToCodingQ(r: Record<string, unknown>): CodingQuestion {
+  return {
+    id: String(r.id), title: String(r.title), description: String(r.description ?? ""),
+    difficulty: String(r.difficulty ?? "easy") as "easy" | "medium" | "hard",
+    tags: (r.tags as string[]) || [],
+    starterCode: String(r.starter_code ?? ""),
+    sampleInput: String(r.sample_input ?? ""),
+    expectedOutput: String(r.expected_output ?? ""),
+    language: String(r.language ?? "python"),
+    createdBy: String(r.created_by ?? ""), createdAt: String(r.created_at ?? ""),
+  };
+}
+function rowToCodeSubmission(r: Record<string, unknown>): CodeSubmission {
+  return {
+    id: String(r.id), questionId: String(r.question_id),
+    questionTitle: String(r.question_title ?? ""),
+    studentRoll: String(r.student_roll), studentName: String(r.student_name),
+    code: String(r.code ?? ""), language: String(r.language ?? "python"),
+    status: String(r.status ?? "pending") as "pending" | "approved" | "rejected",
+    facultyNotes: String(r.faculty_notes ?? ""),
+    submittedAt: String(r.submitted_at ?? ""),
+    reviewedAt: String(r.reviewed_at ?? ""),
+  };
+}
 function rowToStudent(r: Record<string, unknown>): RegisteredStudent {
   return {
     rollNumber: String(r.roll_number), fullName: String(r.full_name),
@@ -152,7 +204,7 @@ export async function saveSubmission(s: TestSubmission): Promise<void> {
   await fetch(`${DB}/submissions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) });
 }
 
-// ── PRACTICE QUESTIONS ────────────────────────────────────────────────────────
+// ── PRACTICE QUESTIONS (MCQ) ──────────────────────────────────────────────────
 export async function getFacultyPracticeQuestions(): Promise<FacultyPracticeQuestion[]> {
   try {
     const res = await fetch(`${DB}/practice-questions`);
@@ -165,6 +217,40 @@ export async function saveFacultyPracticeQuestion(q: FacultyPracticeQuestion): P
 }
 export async function deleteFacultyPracticeQuestion(id: string): Promise<void> {
   await fetch(`${DB}/practice-questions/${id}`, { method: "DELETE" });
+}
+
+// ── CODING QUESTIONS ──────────────────────────────────────────────────────────
+export async function getCodingQuestions(): Promise<CodingQuestion[]> {
+  try {
+    const res = await fetch(`${DB}/coding-questions`);
+    if (!res.ok) throw new Error(await res.text());
+    return (await res.json() as Record<string, unknown>[]).map(rowToCodingQ);
+  } catch (e) { console.error("getCodingQuestions failed", e); return []; }
+}
+export async function saveCodingQuestion(q: CodingQuestion): Promise<void> {
+  await fetch(`${DB}/coding-questions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(q) });
+}
+export async function deleteCodingQuestion(id: string): Promise<void> {
+  await fetch(`${DB}/coding-questions/${id}`, { method: "DELETE" });
+}
+
+// ── CODE SUBMISSIONS ──────────────────────────────────────────────────────────
+export async function getCodeSubmissions(): Promise<CodeSubmission[]> {
+  try {
+    const res = await fetch(`${DB}/code-submissions`);
+    if (!res.ok) throw new Error(await res.text());
+    return (await res.json() as Record<string, unknown>[]).map(rowToCodeSubmission);
+  } catch (e) { console.error("getCodeSubmissions failed", e); return []; }
+}
+export async function saveCodeSubmission(s: CodeSubmission): Promise<void> {
+  await fetch(`${DB}/code-submissions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) });
+}
+export async function reviewCodeSubmission(id: string, status: "approved" | "rejected", facultyNotes: string): Promise<void> {
+  await fetch(`${DB}/code-submissions/${id}/review`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status, facultyNotes }),
+  });
 }
 
 // ── STUDENTS ──────────────────────────────────────────────────────────────────
