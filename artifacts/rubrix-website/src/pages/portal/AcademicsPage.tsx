@@ -557,7 +557,7 @@ function CourseOutline({
               <div
                 className="absolute pointer-events-none"
                 style={{
-                  left: 4,
+                  left: 8,
                   top: 10,
                   bottom: 10,
                   width: 2,
@@ -572,7 +572,7 @@ function CourseOutline({
                   <div
                     className="absolute rounded-full bg-white z-10"
                     style={{
-                      left: -1,
+                      left: 4,
                       top: "50%",
                       transform: "translateY(-50%)",
                       width: 10,
