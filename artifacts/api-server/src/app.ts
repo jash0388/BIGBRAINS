@@ -1,6 +1,8 @@
 import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
+import path from "path";
+import { fileURLToPath } from "url";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
@@ -29,6 +31,19 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// API routes first
 app.use("/api", router);
+
+// Serve the built Vite frontend in production (Railway)
+// __dirname points to artifacts/api-server/dist/ at runtime
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const frontendDist = path.resolve(__dirname, "../../rubrix-website/dist/public");
+
+app.use(express.static(frontendDist));
+
+// SPA fallback — all unmatched routes serve index.html (Express 5 syntax)
+app.get("/{*path}", (_req, res) => {
+  res.sendFile(path.join(frontendDist, "index.html"));
+});
 
 export default app;

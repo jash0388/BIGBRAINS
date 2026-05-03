@@ -6,6 +6,7 @@ import {
   BookOpen, Zap, CheckCircle2, Shield
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import PWAInstallBanner from "../components/PWAInstallBanner";
 
 /* ─── Floating background orbs ─── */
 function Orb({ cx, cy, r, opacity }: { cx: string; cy: string; r: number; opacity: number }) {
@@ -248,6 +249,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex" style={{ fontFamily: "'Sora', sans-serif", background: "#F7F9FF" }}>
+      <PWAInstallBanner />
       {/* Left panel — 55% width */}
       <div className="flex-1" style={{ minWidth: 0 }}>
         <div className="h-full" style={{ minHeight: "100vh" }}>

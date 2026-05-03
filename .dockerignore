@@ -1,0 +1,9 @@
+.git
+.gitignore
+node_modules
+attached_assets
+artifacts/mockup-sandbox
+artifacts/rubrix-website/dist
+artifacts/api-server/dist
+**/.DS_Store
+*.log

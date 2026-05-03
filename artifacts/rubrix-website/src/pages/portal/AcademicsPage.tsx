@@ -1,10 +1,277 @@
-import { useState, useEffect } from "react";
-import { ChevronDown, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ChevronDown, BookOpen, ChevronLeft, ChevronRight, Clock, CheckCircle2, XCircle, FileText, Upload, AlertCircle } from "lucide-react";
 import { curriculum, type Course } from "../../data/curriculum";
 import { useAuth } from "../../context/AuthContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface SelectedTopic { unitTitle: string; topicName: string; }
+interface UnitTarget { course: Course; unit: { title: string; topics: string[] }; }
+
+// ─── MCQ question generator (based on real topic names) ───────────────────────
+function buildQuestions(unit: { title: string; topics: string[] }) {
+  const t = unit.topics;
+  const shuffled = [...t].sort(() => Math.random() - 0.5).slice(0, 5);
+  return shuffled.map((topic, i) => {
+    const wrongs = t.filter(x => x !== topic).sort(() => Math.random() - 0.5).slice(0, 3);
+    const opts = [topic, ...wrongs].sort(() => Math.random() - 0.5);
+    const templates = [
+      `Which concept is a fundamental part of ${unit.title.replace(/^Unit \w+: /, "")}?`,
+      `What does the topic "${topic}" primarily focus on?`,
+      `In the context of this unit, which of the following represents "${topic}"?`,
+      `Which of the following best describes "${topic}"?`,
+      `Which term is directly related to "${topic}" in this unit?`,
+    ];
+    return {
+      id: i,
+      question: templates[i % templates.length],
+      options: opts,
+      answer: topic,
+    };
+  });
+}
+
+// ─── Unit Test View ───────────────────────────────────────────────────────────
+function UnitTestView({ target, onBack }: { target: UnitTarget; onBack: () => void }) {
+  const [questions] = useState(() => buildQuestions(target.unit));
+  const [selected, setSelected] = useState<Record<number, string>>({});
+  const [submitted, setSubmitted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 min
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (submitted) { if (timerRef.current) clearInterval(timerRef.current); return; }
+    timerRef.current = setInterval(() => {
+      setTimeLeft(t => {
+        if (t <= 1) { clearInterval(timerRef.current!); setSubmitted(true); return 0; }
+        return t - 1;
+      });
+    }, 1000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [submitted]);
+
+  const score = questions.filter(q => selected[q.id] === q.answer).length;
+  const pct = Math.round((score / questions.length) * 100);
+  const mm = String(Math.floor(timeLeft / 60)).padStart(2, "0");
+  const ss = String(timeLeft % 60).padStart(2, "0");
+  const timerRed = timeLeft < 120;
+
+  return (
+    <div className="h-full overflow-y-auto bg-white">
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-xs font-bold text-blue-500">
+          <ChevronLeft size={15} /> Back
+        </button>
+        <div className="text-center">
+          <p className="text-xs font-extrabold text-slate-800">Unit Test</p>
+          <p className="text-[10px] text-gray-400">{target.unit.title.replace(/^Unit \w+: /, "")}</p>
+        </div>
+        {!submitted ? (
+          <div className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg ${timerRed ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"}`}>
+            <Clock size={11} /> {mm}:{ss}
+          </div>
+        ) : (
+          <div className="w-16" />
+        )}
+      </div>
+
+      {submitted ? (
+        /* ── Results ── */
+        <div className="max-w-xl mx-auto px-4 py-8">
+          <div className={`rounded-2xl p-6 mb-6 text-center ${pct >= 60 ? "bg-green-50 border border-green-100" : "bg-red-50 border border-red-100"}`}>
+            <div className={`text-5xl font-extrabold mb-1 ${pct >= 60 ? "text-green-600" : "text-red-500"}`}>{pct}%</div>
+            <p className={`text-sm font-bold ${pct >= 60 ? "text-green-700" : "text-red-600"}`}>
+              {pct >= 80 ? "Excellent!" : pct >= 60 ? "Good job!" : "Needs improvement"}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">{score} / {questions.length} correct</p>
+          </div>
+          <div className="space-y-3">
+            {questions.map((q, i) => {
+              const userAns = selected[q.id];
+              const correct = userAns === q.answer;
+              return (
+                <div key={i} className={`rounded-xl p-4 border ${correct ? "border-green-200 bg-green-50" : "border-red-200 bg-red-50"}`}>
+                  <div className="flex items-start gap-2 mb-2">
+                    {correct ? <CheckCircle2 size={15} className="text-green-500 mt-0.5 shrink-0" /> : <XCircle size={15} className="text-red-400 mt-0.5 shrink-0" />}
+                    <p className="text-xs font-semibold text-gray-800">{q.question}</p>
+                  </div>
+                  {!correct && (
+                    <div className="ml-5 space-y-1">
+                      <p className="text-[10px] text-red-500">Your answer: <span className="font-bold">{userAns || "Not answered"}</span></p>
+                      <p className="text-[10px] text-green-600">Correct: <span className="font-bold">{q.answer}</span></p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <button onClick={onBack} className="mt-6 w-full py-3 rounded-xl bg-blue-500 text-white text-sm font-bold">
+            Back to Course
+          </button>
+        </div>
+      ) : (
+        /* ── Questions ── */
+        <div className="max-w-xl mx-auto px-4 py-4 space-y-5 pb-32">
+          <div className="flex items-center justify-between text-[10px] text-gray-400 mb-2">
+            <span>{target.course.name}</span>
+            <span>{Object.keys(selected).length}/{questions.length} answered</span>
+          </div>
+          {questions.map((q, i) => (
+            <div key={i} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
+              <p className="text-xs font-bold text-slate-800 mb-1">Q{i + 1}.</p>
+              <p className="text-sm text-gray-700 mb-3 leading-relaxed">{q.question}</p>
+              <div className="space-y-2">
+                {q.options.map((opt, oi) => {
+                  const letter = ["A", "B", "C", "D"][oi];
+                  const isChosen = selected[q.id] === opt;
+                  return (
+                    <button
+                      key={oi}
+                      onClick={() => setSelected(s => ({ ...s, [q.id]: opt }))}
+                      className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl border text-xs transition-all ${
+                        isChosen
+                          ? "border-blue-400 bg-blue-50 text-blue-700 font-semibold"
+                          : "border-gray-100 hover:border-blue-200 hover:bg-blue-50/50 text-gray-600"
+                      }`}
+                    >
+                      <span className={`w-5 h-5 rounded-full border flex items-center justify-center text-[10px] font-extrabold shrink-0 ${isChosen ? "border-blue-400 bg-blue-500 text-white" : "border-gray-300 text-gray-400"}`}>
+                        {letter}
+                      </span>
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Submit bar */}
+      {!submitted && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3 flex items-center gap-3" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}>
+          <div className="flex-1 bg-gray-100 rounded-full h-1.5">
+            <div className="bg-blue-500 h-1.5 rounded-full transition-all" style={{ width: `${(Object.keys(selected).length / questions.length) * 100}%` }} />
+          </div>
+          <button
+            onClick={() => setSubmitted(true)}
+            disabled={Object.keys(selected).length === 0}
+            className="px-5 py-2 rounded-xl bg-blue-500 text-white text-xs font-bold disabled:opacity-40 transition-opacity"
+          >
+            Submit
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Assignment View ───────────────────────────────────────────────────────────
+function AssignmentView({ target, onBack }: { target: UnitTarget; onBack: () => void }) {
+  const [answer, setAnswer] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const unitNum = target.unit.title.match(/Unit (\w+)/)?.[1] || "I";
+  const deadline = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+
+  return (
+    <div className="h-full overflow-y-auto bg-white">
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-xs font-bold text-blue-500">
+          <ChevronLeft size={15} /> Back
+        </button>
+        <div>
+          <p className="text-xs font-extrabold text-slate-800">Assignment — Unit {unitNum}</p>
+          <p className="text-[10px] text-gray-400">{target.course.name}</p>
+        </div>
+      </div>
+
+      <div className="max-w-xl mx-auto px-4 py-5 space-y-4 pb-10">
+        {/* Meta */}
+        <div className="flex gap-3">
+          <div className="flex-1 bg-orange-50 border border-orange-100 rounded-xl p-3 text-center">
+            <p className="text-[10px] text-orange-500 font-bold mb-0.5">DUE DATE</p>
+            <p className="text-xs font-extrabold text-orange-700">{deadline}</p>
+          </div>
+          <div className="flex-1 bg-blue-50 border border-blue-100 rounded-xl p-3 text-center">
+            <p className="text-[10px] text-blue-500 font-bold mb-0.5">MAX MARKS</p>
+            <p className="text-xs font-extrabold text-blue-700">20</p>
+          </div>
+          <div className="flex-1 bg-green-50 border border-green-100 rounded-xl p-3 text-center">
+            <p className="text-[10px] text-green-500 font-bold mb-0.5">STATUS</p>
+            <p className="text-xs font-extrabold text-green-700">{submitted ? "Submitted" : "Pending"}</p>
+          </div>
+        </div>
+
+        {/* Description */}
+        <div className="border border-gray-100 rounded-2xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <FileText size={14} className="text-blue-500" />
+            <p className="text-xs font-extrabold text-slate-800">Assignment Description</p>
+          </div>
+          <p className="text-sm text-gray-700 leading-relaxed mb-3">
+            This assignment covers the key concepts from <strong>{target.unit.title.replace(/^Unit \w+: /, "")}</strong> in <em>{target.course.name}</em>.
+          </p>
+          <div className="space-y-2">
+            {target.unit.topics.map((topic, i) => (
+              <div key={i} className="flex items-start gap-2 text-xs text-gray-600">
+                <span className="text-blue-400 font-bold mt-0.5">Q{i + 1}.</span>
+                <span>Explain the concept of <strong>{topic}</strong> with a suitable example. How does it apply in real-world scenarios?</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Guidelines */}
+        <div className="bg-amber-50 border border-amber-100 rounded-xl p-3">
+          <div className="flex items-center gap-1.5 mb-2">
+            <AlertCircle size={13} className="text-amber-500" />
+            <p className="text-[10px] font-bold text-amber-700">SUBMISSION GUIDELINES</p>
+          </div>
+          <ul className="space-y-1 text-[10px] text-amber-700">
+            <li>• Answer all questions clearly and concisely</li>
+            <li>• Include diagrams or examples where applicable</li>
+            <li>• Plagiarism will result in zero marks</li>
+            <li>• Submit before the deadline to avoid late penalty</li>
+          </ul>
+        </div>
+
+        {/* Submission box */}
+        {submitted ? (
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-6 text-center">
+            <CheckCircle2 size={36} className="text-green-500 mx-auto mb-3" />
+            <p className="text-sm font-extrabold text-green-700 mb-1">Assignment Submitted!</p>
+            <p className="text-xs text-green-600">Your response has been recorded. Results will be published after evaluation.</p>
+          </div>
+        ) : (
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-2">Your Answer</label>
+            <textarea
+              value={answer}
+              onChange={e => setAnswer(e.target.value)}
+              placeholder="Write your answers here... (Q1, Q2, Q3...)"
+              rows={8}
+              className="w-full border border-gray-200 rounded-xl p-3 text-xs text-gray-700 resize-none focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
+            />
+            <div className="flex items-center gap-3 mt-3">
+              <button className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-gray-600 hover:border-blue-300 transition-colors">
+                <Upload size={13} /> Attach File
+              </button>
+              <button
+                onClick={() => { if (answer.trim()) setSubmitted(true); }}
+                disabled={!answer.trim()}
+                className="flex-1 py-2 rounded-xl bg-blue-500 text-white text-xs font-bold disabled:opacity-40 transition-opacity"
+              >
+                Submit Assignment
+              </button>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-2 text-center">Your submission will be timestamped automatically</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // ─── Topic Learn View ─────────────────────────────────────────────────────────
 function TopicLearnView({
@@ -19,7 +286,6 @@ function TopicLearnView({
   const [tab, setTab] = useState<"learn" | "quiz">("learn");
   const [studyMode, setStudyMode] = useState(false);
   const [markedDone, setMarkedDone] = useState(false);
-
   const [showTopicsDrawer, setShowTopicsDrawer] = useState(false);
 
   return (
@@ -191,9 +457,7 @@ function TopicLearnView({
       {/* ── Mobile Topics Drawer (bottom sheet) ── */}
       {showTopicsDrawer && (
         <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end">
-          {/* Backdrop */}
           <div className="absolute inset-0 bg-black/30" onClick={() => setShowTopicsDrawer(false)} />
-          {/* Sheet */}
           <div className="relative bg-white rounded-t-3xl max-h-[70vh] flex flex-col shadow-2xl">
             <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-gray-100">
               <p className="text-sm font-extrabold text-slate-800">Topics — {course.name}</p>
@@ -230,10 +494,14 @@ function TopicLearnView({
 function CourseOutline({
   course,
   onSelectTopic,
+  onUnitTest,
+  onAssignment,
   onBack,
 }: {
   course: Course;
   onSelectTopic: (t: SelectedTopic) => void;
+  onUnitTest: (unit: { title: string; topics: string[] }) => void;
+  onAssignment: (unit: { title: string; topics: string[] }) => void;
   onBack?: () => void;
 }) {
   return (
@@ -270,7 +538,7 @@ function CourseOutline({
 
             {/* Topics — timeline with continuous line */}
             <div className="relative pl-5">
-              {/* Continuous vertical line — from top of first dot to bottom of last dot */}
+              {/* Continuous vertical line */}
               <div
                 className="absolute"
                 style={{
@@ -285,7 +553,7 @@ function CourseOutline({
 
               {unit.topics.map((topic, ti) => (
                 <div key={ti} className="relative flex items-start gap-3 mb-2">
-                  {/* Dot — centered on the line */}
+                  {/* Dot */}
                   <div
                     className="absolute rounded-full bg-white z-10"
                     style={{
@@ -308,14 +576,20 @@ function CourseOutline({
               ))}
             </div>
 
-            {/* Unit Test + Assignment — outside the timeline, as floating badges */}
+            {/* Unit Test + Assignment — real buttons */}
             <div className="flex gap-2 mt-2 ml-8">
-              <div className="flex-1 px-3 py-1.5 rounded-lg border border-yellow-200 bg-yellow-50 text-[10px] font-bold text-yellow-700 text-center">
+              <button
+                onClick={() => onUnitTest(unit)}
+                className="flex-1 px-3 py-1.5 rounded-lg border border-yellow-200 bg-yellow-50 text-[10px] font-bold text-yellow-700 text-center hover:bg-yellow-100 hover:border-yellow-300 active:scale-95 transition-all cursor-pointer"
+              >
                 📝 Unit Test
-              </div>
-              <div className="flex-1 px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-[10px] font-bold text-red-600 text-center">
+              </button>
+              <button
+                onClick={() => onAssignment(unit)}
+                className="flex-1 px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-[10px] font-bold text-red-600 text-center hover:bg-red-100 hover:border-red-300 active:scale-95 transition-all cursor-pointer"
+              >
                 📋 Assignment
-              </div>
+              </button>
             </div>
           </div>
         ))}
@@ -358,11 +632,13 @@ function CourseCardSkeleton() {
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function AcademicsPage() {
   const { student } = useAuth();
-  const [selectedSem, setSelectedSem]       = useState(4);
-  const [showPractical, setShowPractical]   = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const [selectedTopic, setSelectedTopic]   = useState<SelectedTopic | null>(null);
-  const [gridLoading, setGridLoading]       = useState(true);
+  const [selectedSem, setSelectedSem]         = useState(4);
+  const [showPractical, setShowPractical]     = useState(false);
+  const [selectedCourse, setSelectedCourse]   = useState<Course | null>(null);
+  const [selectedTopic, setSelectedTopic]     = useState<SelectedTopic | null>(null);
+  const [unitTestTarget, setUnitTestTarget]   = useState<UnitTarget | null>(null);
+  const [assignmentTarget, setAssignmentTarget] = useState<UnitTarget | null>(null);
+  const [gridLoading, setGridLoading]         = useState(true);
 
   const semData    = curriculum.find(s => s.sem === selectedSem);
   const allCourses = semData?.courses || [];
@@ -371,12 +647,10 @@ export default function AcademicsPage() {
   const branch  = student?.branch  || "B.Tech CSE (Data Science)";
   const college = student?.college || "Sphoorthy Engineering College";
 
-  // Navigate between sems
-  const semIndex   = curriculum.findIndex(s => s.sem === selectedSem);
-  const prevSem    = semIndex > 0 ? curriculum[semIndex - 1] : null;
-  const nextSem    = semIndex < curriculum.length - 1 ? curriculum[semIndex + 1] : null;
+  const semIndex = curriculum.findIndex(s => s.sem === selectedSem);
+  const prevSem  = semIndex > 0 ? curriculum[semIndex - 1] : null;
+  const nextSem  = semIndex < curriculum.length - 1 ? curriculum[semIndex + 1] : null;
 
-  // Trigger skeleton whenever sem changes
   useEffect(() => {
     setGridLoading(true);
     const t = setTimeout(() => setGridLoading(false), 650);
@@ -386,9 +660,31 @@ export default function AcademicsPage() {
   const handleSelectCourse = (c: Course) => {
     setSelectedCourse(c);
     setSelectedTopic(null);
+    setUnitTestTarget(null);
+    setAssignmentTarget(null);
   };
 
-  // If a topic is selected — show the 3-panel Learn view
+  const handleUnitTest = (course: Course, unit: { title: string; topics: string[] }) => {
+    setUnitTestTarget({ course, unit });
+    setAssignmentTarget(null);
+    setSelectedTopic(null);
+  };
+
+  const handleAssignment = (course: Course, unit: { title: string; topics: string[] }) => {
+    setAssignmentTarget({ course, unit });
+    setUnitTestTarget(null);
+    setSelectedTopic(null);
+  };
+
+  // Full-screen overlay views (highest priority)
+  if (unitTestTarget) {
+    return <UnitTestView target={unitTestTarget} onBack={() => setUnitTestTarget(null)} />;
+  }
+  if (assignmentTarget) {
+    return <AssignmentView target={assignmentTarget} onBack={() => setAssignmentTarget(null)} />;
+  }
+
+  // Topic learn view
   if (selectedTopic && selectedCourse) {
     return (
       <TopicLearnView
@@ -407,7 +703,7 @@ export default function AcademicsPage() {
       </div>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* ── Left panel: Course grid ── (hidden on mobile when a course is selected) */}
+        {/* ── Left panel: Course grid ── */}
         <div className={`shrink-0 border-r border-gray-100 overflow-y-auto transition-all
           ${selectedCourse
             ? "hidden md:block md:w-[400px]"
@@ -419,8 +715,6 @@ export default function AcademicsPage() {
                 <h1 className="text-base font-extrabold text-[#182B68]">My Academic Courses</h1>
                 <p className="text-[11px] text-gray-400 mt-0.5">{branch} · {college}</p>
               </div>
-
-              {/* Semester selector */}
               <div className="relative">
                 <select
                   value={selectedSem}
@@ -488,7 +782,6 @@ export default function AcademicsPage() {
                     onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 6px 20px ${t.glow}`; }}
                     onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 2px 12px rgba(0,0,0,0.06)"; }}
                   >
-                    {/* Glass code badge at top */}
                     <div className="px-3 pt-3 pb-0">
                       <div
                         className="inline-flex items-center px-2.5 py-1 rounded-xl mb-2.5"
@@ -505,7 +798,6 @@ export default function AcademicsPage() {
                         </span>
                       </div>
                     </div>
-                    {/* Name + type */}
                     <div className="px-3 pb-3">
                       <p className={`text-xs font-bold leading-snug mb-1.5 ${isActive ? "text-white" : "text-slate-800"}`}>
                         {course.name}
@@ -527,12 +819,14 @@ export default function AcademicsPage() {
           </div>
         </div>
 
-        {/* ── Right panel: Course outline OR empty (always visible on desktop, full-screen on mobile) ── */}
+        {/* ── Right panel: Course outline OR empty ── */}
         <div className={`flex-1 overflow-hidden ${selectedCourse ? "block" : "hidden md:flex"}`}>
           {selectedCourse ? (
             <CourseOutline
               course={selectedCourse}
               onSelectTopic={t => setSelectedTopic(t)}
+              onUnitTest={unit => handleUnitTest(selectedCourse, unit)}
+              onAssignment={unit => handleAssignment(selectedCourse, unit)}
               onBack={() => setSelectedCourse(null)}
             />
           ) : (
