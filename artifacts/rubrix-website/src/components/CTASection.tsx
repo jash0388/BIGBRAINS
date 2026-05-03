@@ -1,75 +1,103 @@
-import { motion } from "framer-motion";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
+import { Mail, Phone, MapPin, ArrowUpRight } from "lucide-react";
+
+const fadeUp = {
+  hidden:  { opacity: 0, y: 28 },
+  visible: (i: number) => ({
+    opacity: 1, y: 0,
+    transition: { duration: 0.7, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] },
+  }),
+};
 
 export default function CTASection() {
-  return (
-    <section id="contact" className="py-16 md:py-24 bg-[#F9FBFF]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-          {/* Left */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl md:text-4xl font-extrabold text-[#182B68] mb-4 leading-tight">
-              Built for Sphoorthy.<br />
-              <span style={{ color: "#3D65F4" }}>By Students. For Everyone.</span>
-            </h2>
-            <p className="text-gray-500 mb-8 leading-relaxed text-sm md:text-base">
-              Rubrix is a student-led initiative by Big Brains — a startup born inside Sphoorthy Engineering College. We're building the tools we wished we had: smarter practice, faster feedback, and real results.
-            </p>
-            <div className="space-y-4">
-              {[
-                { icon: Mail,   label: "bigbrains@sphoorthyengg.ac.in"          },
-                { icon: Phone,  label: "+91 80747 72823"                         },
-                { icon: MapPin, label: "Sphoorthy Engineering College, Hyderabad" },
-              ].map((item) => (
-                <div key={item.label} className="flex items-center gap-3 text-gray-600">
-                  <div className="w-9 h-9 rounded-lg bg-[#EEF2FF] flex items-center justify-center shrink-0">
-                    <item.icon size={16} className="text-[#3D65F4]" />
-                  </div>
-                  <span className="text-sm font-medium">{item.label}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
 
-          {/* Right — login CTA */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            className="bg-white rounded-3xl p-6 md:p-10 border border-blue-100 shadow-xl flex flex-col items-center text-center gap-6"
+  return (
+    <section ref={ref} id="contact" style={{ background: "#000", padding: "7rem 1.5rem 10rem", position: "relative", overflow: "hidden" }}>
+      <div style={{
+        position: "absolute", bottom: "0", left: "50%", transform: "translateX(-50%)",
+        width: "60vw", height: "40vh",
+        background: "radial-gradient(ellipse, rgba(61,101,244,0.12) 0%, transparent 70%)",
+        pointerEvents: "none",
+      }} />
+
+      <div style={{ maxWidth: "48rem", margin: "0 auto", textAlign: "center", position: "relative", zIndex: 1 }}>
+        <motion.div custom={0} variants={fadeUp} initial="hidden" animate={inView ? "visible" : "hidden"}
+          style={{ display: "flex", justifyContent: "center", marginBottom: "1.5rem" }}>
+          <span className="section-badge">Get Started</span>
+        </motion.div>
+
+        <motion.h2 custom={1} variants={fadeUp} initial="hidden" animate={inView ? "visible" : "hidden"}
+          style={{
+            fontFamily: "'Instrument Serif', serif", fontStyle: "italic",
+            fontSize: "clamp(2.5rem, 7vw, 4.5rem)",
+            lineHeight: 0.95, letterSpacing: "-0.03em",
+            color: "rgba(255,255,255,0.96)",
+            marginBottom: "1.5rem",
+          }}>
+          Built for Sphoorthy.<br />
+          <span style={{ color: "rgba(255,255,255,0.35)" }}>By students. For everyone.</span>
+        </motion.h2>
+
+        <motion.p custom={2} variants={fadeUp} initial="hidden" animate={inView ? "visible" : "hidden"}
+          style={{
+            fontFamily: "'Barlow', sans-serif", fontWeight: 300,
+            fontSize: "1rem", color: "rgba(255,255,255,0.38)",
+            marginBottom: "3rem", lineHeight: 1.7, maxWidth: "34rem", margin: "0 auto 3rem",
+          }}>
+          Rubrix is a student-led startup by Big Brains — born inside Sphoorthy Engineering College. Log in and start your journey.
+        </motion.p>
+
+        <motion.div custom={3} variants={fadeUp} initial="hidden" animate={inView ? "visible" : "hidden"}
+          style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap", marginBottom: "4rem" }}>
+          <a href="/student/login" className="liquid-glass-strong" style={{
+            display: "inline-flex", alignItems: "center", gap: "0.5rem",
+            padding: "1rem 2.25rem", borderRadius: "999px",
+            fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: "1rem",
+            color: "rgba(255,255,255,0.92)", textDecoration: "none",
+            transition: "transform 0.2s",
+          }}
+            onMouseEnter={e => (e.currentTarget.style.transform = "translateY(-2px)")}
+            onMouseLeave={e => (e.currentTarget.style.transform = "translateY(0)")}
           >
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg,#3D65F4,#0EA5E9)" }}>
-              <svg viewBox="0 0 32 32" fill="none" className="w-8 h-8">
-                <rect x="2" y="2" width="12" height="12" rx="3" fill="white"/>
-                <rect x="18" y="2" width="12" height="12" rx="3" fill="white" opacity="0.6"/>
-                <rect x="2" y="18" width="12" height="12" rx="3" fill="white" opacity="0.6"/>
-                <rect x="18" y="18" width="12" height="12" rx="3" fill="white"/>
-              </svg>
+            Student Login <ArrowUpRight size={16} />
+          </a>
+          <a href="/faculty/login" style={{
+            display: "inline-flex", alignItems: "center", gap: "0.5rem",
+            padding: "1rem 2.25rem", borderRadius: "999px",
+            fontFamily: "'Barlow', sans-serif", fontWeight: 500, fontSize: "1rem",
+            color: "rgba(255,255,255,0.55)",
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            textDecoration: "none",
+            transition: "color 0.2s, border-color 0.2s",
+          }}
+            onMouseEnter={e => { e.currentTarget.style.color = "#fff"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.55)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"; }}
+          >
+            Faculty Login
+          </a>
+        </motion.div>
+
+        {/* Contact row */}
+        <motion.div custom={4} variants={fadeUp} initial="hidden" animate={inView ? "visible" : "hidden"}
+          style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "1.5rem" }}>
+          {[
+            { icon: Mail,   label: "bigbrains@sphoorthyengg.ac.in"          },
+            { icon: Phone,  label: "+91 80747 72823"                         },
+            { icon: MapPin, label: "Sphoorthy Engineering College, Hyderabad" },
+          ].map(item => (
+            <div key={item.label} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <item.icon size={13} color="rgba(255,255,255,0.3)" />
+              <span style={{
+                fontFamily: "'Barlow', sans-serif", fontWeight: 300,
+                fontSize: "0.8rem", color: "rgba(255,255,255,0.3)",
+              }}>{item.label}</span>
             </div>
-            <div>
-              <h3 className="text-xl font-extrabold text-[#182B68] mb-2">Ready to get started?</h3>
-              <p className="text-sm text-gray-400 leading-relaxed">
-                Log in with your roll number as a student, or use the faculty code to access the dashboard.
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 w-full">
-              <a href="/student/login"
-                className="flex-1 py-3.5 rounded-xl text-white font-semibold text-sm text-center shadow-md hover:shadow-lg transition-all hover:-translate-y-0.5"
-                style={{ background: "linear-gradient(135deg,#3D65F4,#0EA5E9)" }}>
-                Student Login
-              </a>
-              <a href="/faculty/login"
-                className="flex-1 py-3.5 rounded-xl font-semibold text-sm text-center border-2 border-[#3D65F4] text-[#3D65F4] hover:bg-[#EEF2FF] transition-all">
-                Faculty Login
-              </a>
-            </div>
-          </motion.div>
-        </div>
+          ))}
+        </motion.div>
       </div>
     </section>
   );

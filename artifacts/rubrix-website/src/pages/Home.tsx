@@ -1,3 +1,4 @@
+import PageLoader from "../components/PageLoader";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import TrustedBy from "../components/TrustedBy";
@@ -10,7 +11,9 @@ import Footer from "../components/Footer";
 
 export default function Home() {
   return (
-    <div className="min-h-screen" style={{ fontFamily: "'Sora', sans-serif" }}>
+    <div style={{ background: "#000", minHeight: "100vh" }}>
+      <div className="grain-overlay" />
+      <PageLoader />
       <Navbar />
       <Hero />
       <TrustedBy />

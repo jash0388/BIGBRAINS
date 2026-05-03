@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
 
 const departments = [
   "CSE – Data Science",
@@ -12,33 +13,67 @@ const departments = [
 ];
 
 export default function TrustedBy() {
-  return (
-    <section className="py-16 bg-white border-y border-blue-50">
-      <div className="max-w-7xl mx-auto px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-3"
-        >
-          <p className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-1">
-            Powering All Departments at
-          </p>
-          <p className="text-xl font-extrabold text-[#182B68]">Sphoorthy Engineering College</p>
-          <p className="text-xs text-gray-400 mt-1">Hyderabad, Telangana · Approved by AICTE · Affiliated to JNTUH</p>
-        </motion.div>
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
 
-        <div className="flex flex-wrap justify-center gap-3 mt-8 items-center">
+  return (
+    <section ref={ref} style={{ background: "#000", padding: "5rem 1.5rem 6rem", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+      <div style={{ maxWidth: "56rem", margin: "0 auto", textAlign: "center" }}>
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.7 }}
+          style={{
+            fontFamily: "'Barlow', sans-serif", fontWeight: 300,
+            fontSize: "0.75rem", letterSpacing: "0.15em", textTransform: "uppercase",
+            color: "rgba(255,255,255,0.28)", marginBottom: "0.5rem",
+          }}
+        >
+          Powering all departments at
+        </motion.p>
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.7, delay: 0.1 }}
+          style={{
+            fontFamily: "'Instrument Serif', serif", fontStyle: "italic",
+            fontSize: "clamp(1.5rem, 4vw, 2.25rem)",
+            color: "rgba(255,255,255,0.85)", marginBottom: "0.5rem",
+          }}
+        >
+          Sphoorthy Engineering College
+        </motion.p>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.7, delay: 0.2 }}
+          style={{
+            fontFamily: "'Barlow', sans-serif", fontWeight: 300,
+            fontSize: "0.8rem", color: "rgba(255,255,255,0.25)",
+            marginBottom: "2.5rem",
+          }}
+        >
+          Hyderabad, Telangana · AICTE Approved · JNTUH Affiliated
+        </motion.p>
+
+        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0.625rem" }}>
           {departments.map((name, i) => (
             <motion.div
               key={name}
               initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.05 }}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#F9FBFF] border border-blue-100 text-[#182B68] font-semibold text-sm hover:border-[#3D65F4] hover:shadow-sm transition-all"
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, delay: 0.3 + i * 0.05 }}
+              style={{
+                display: "flex", alignItems: "center", gap: "0.5rem",
+                padding: "0.5rem 1.1rem",
+                borderRadius: "999px",
+                background: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.09)",
+                fontFamily: "'Barlow', sans-serif", fontWeight: 400,
+                fontSize: "0.82rem", color: "rgba(255,255,255,0.55)",
+              }}
             >
-              <div className="w-5 h-5 rounded bg-gradient-to-br from-[#3D65F4] to-[#182B68] opacity-80" />
+              <span style={{ width: 5, height: 5, borderRadius: "50%", background: "rgba(107,159,255,0.7)", flexShrink: 0, display: "inline-block" }} />
               {name}
             </motion.div>
           ))}

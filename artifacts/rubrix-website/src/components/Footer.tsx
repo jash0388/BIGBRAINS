@@ -2,60 +2,71 @@ import { Linkedin, Twitter, Mail } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#0F1A45] text-blue-200 py-12 md:py-14">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-10 mb-10">
-          <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7">
-                <svg viewBox="0 0 32 32" fill="none">
-                  <rect x="2" y="2" width="12" height="12" rx="3" fill="#3D65F4"/>
-                  <rect x="18" y="2" width="12" height="12" rx="3" fill="#3D65F4" opacity="0.6"/>
-                  <rect x="2" y="18" width="12" height="12" rx="3" fill="#3D65F4" opacity="0.6"/>
-                  <rect x="18" y="18" width="12" height="12" rx="3" fill="#3D65F4"/>
-                </svg>
-              </div>
-              <span className="text-white font-bold text-base">DataNauts</span>
-            </div>
-            <p className="text-xs text-blue-300 leading-relaxed mb-4">India's First Institutional Excellence Platform — powering academics, placements, and accreditation.</p>
-            <div className="flex gap-3">
-              {[Linkedin, Twitter, Mail].map((Icon, i) => (
-                <a key={i} href="#" className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center hover:bg-[#3D65F4] transition-colors">
-                  <Icon size={14} className="text-white" />
-                </a>
-              ))}
-            </div>
-          </div>
-          {[
-            { title: "Platform", links: ["Student Portal", "Faculty Portal", "NBA Module", "Analytics"] },
-            { title: "Company",  links: ["About Us", "Careers", "Blog", "Contact"] },
-            { title: "Legal",    links: ["Privacy Policy", "Terms of Service", "Cookie Policy"] },
-          ].map((col) => (
-            <div key={col.title}>
-              <p className="text-white font-semibold text-sm mb-4">{col.title}</p>
-              <ul className="space-y-2">
-                {col.links.map((link) => (
-                  <li key={link}>
-                    <a href="#" className="text-xs text-blue-300 hover:text-white transition-colors">{link}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
+    <footer style={{ background: "#000", borderTop: "1px solid rgba(255,255,255,0.06)", padding: "3rem 1.5rem" }}>
+      <div style={{ maxWidth: "56rem", margin: "0 auto", textAlign: "center" }}>
+        {/* Brand */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+          <svg viewBox="0 0 32 32" fill="none" style={{ width: 22, height: 22 }}>
+            <rect x="2" y="2" width="12" height="12" rx="3" fill="#6B9FFF"/>
+            <rect x="18" y="2" width="12" height="12" rx="3" fill="#6B9FFF" opacity="0.5"/>
+            <rect x="2" y="18" width="12" height="12" rx="3" fill="#6B9FFF" opacity="0.5"/>
+            <rect x="18" y="18" width="12" height="12" rx="3" fill="#6B9FFF"/>
+          </svg>
+          <span style={{
+            fontFamily: "'Instrument Serif', serif", fontStyle: "italic",
+            fontSize: "1.1rem", color: "rgba(255,255,255,0.7)",
+          }}>Rubrix</span>
+        </div>
+
+        <p style={{
+          fontFamily: "'Barlow', sans-serif", fontWeight: 300,
+          fontSize: "0.78rem", color: "rgba(255,255,255,0.25)",
+          marginBottom: "1.5rem",
+        }}>
+          Student excellence platform — built at Sphoorthy Engineering College.
+        </p>
+
+        {/* Social */}
+        <div style={{ display: "flex", justifyContent: "center", gap: "0.625rem", marginBottom: "2rem" }}>
+          {[Linkedin, Twitter, Mail].map((Icon, i) => (
+            <a key={i} href="#" style={{
+              width: "2rem", height: "2rem", borderRadius: "0.5rem",
+              background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "background 0.2s",
+            }}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(107,159,255,0.15)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
+            >
+              <Icon size={13} color="rgba(255,255,255,0.45)" />
+            </a>
           ))}
         </div>
-        <div className="border-t border-white/10 pt-6 flex flex-col gap-3 items-center text-center">
-          <p className="text-xs text-blue-400">© 2024 DataNauts. All rights reserved.</p>
-          <p className="text-[10px] flex flex-wrap items-center justify-center gap-1.5" style={{ color: "rgba(255,255,255,0.35)" }}>
-            <span>Modified by</span>
-            <span
-              className="font-black tracking-widest uppercase text-[10px]"
-              style={{ background: "linear-gradient(90deg,#818CF8,#A78BFA)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
-            >Big Brains</span>
-            <span className="text-white/15">·</span>
-            <span>Startup by</span>
-            <span style={{ color: "rgba(167,139,250,0.8)", fontWeight: 700 }}>Jashwanth &amp; Team</span>
-            <span className="text-white/15">·</span>
-            <span>Sphoorthy Engineering College</span>
+
+        {/* Bottom line */}
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "1.5rem" }}>
+          <p style={{
+            fontFamily: "'Barlow', sans-serif", fontWeight: 300,
+            fontSize: "0.72rem", color: "rgba(255,255,255,0.2)",
+            marginBottom: "0.5rem",
+          }}>
+            © 2025 Rubrix. All rights reserved.
+          </p>
+          <p style={{
+            fontFamily: "'Barlow', sans-serif", fontWeight: 300,
+            fontSize: "0.68rem",
+            display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0.375rem",
+            color: "rgba(255,255,255,0.18)",
+          }}>
+            <span>A</span>
+            <span style={{
+              background: "linear-gradient(90deg,#818CF8,#A78BFA)",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+              fontWeight: 700,
+            }}>Big Brains</span>
+            <span>initiative ·</span>
+            <span style={{ color: "rgba(167,139,250,0.6)", fontWeight: 500 }}>Jashwanth & Team</span>
+            <span>· Sphoorthy Engineering College</span>
           </p>
         </div>
       </div>

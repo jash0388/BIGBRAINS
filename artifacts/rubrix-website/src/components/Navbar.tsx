@@ -7,67 +7,150 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => setScrolled(window.scrollY > 30);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
     <motion.nav
-      initial={{ y: -20, opacity: 0 }}
+      initial={{ y: -18, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? "bg-white/90 backdrop-blur-md shadow-sm" : "bg-transparent"
-      }`}
+      transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+      style={{
+        position: "fixed", top: 0, left: 0, right: 0,
+        zIndex: 100,
+        display: "flex",
+        justifyContent: "center",
+        padding: "1rem 1.5rem",
+      }}
     >
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <a href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8">
-            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="2" y="2" width="12" height="12" rx="3" fill="#3D65F4"/>
-              <rect x="18" y="2" width="12" height="12" rx="3" fill="#3D65F4" opacity="0.6"/>
-              <rect x="2" y="18" width="12" height="12" rx="3" fill="#3D65F4" opacity="0.6"/>
-              <rect x="18" y="18" width="12" height="12" rx="3" fill="#3D65F4"/>
+      {/* Pill container */}
+      <div
+        style={{
+          width: "100%", maxWidth: "56rem",
+          height: "3.5rem",
+          borderRadius: "999px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 1.25rem",
+          background: scrolled ? "rgba(10,10,10,0.85)" : "rgba(255,255,255,0.06)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          boxShadow: scrolled
+            ? "0 8px 40px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,0.06) inset"
+            : "0 4px 24px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.08) inset",
+          transition: "box-shadow 0.3s, background 0.3s",
+        }}
+      >
+        {/* Logo */}
+        <a href="/" style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}>
+          <div style={{ width: 28, height: 28 }}>
+            <svg viewBox="0 0 32 32" fill="none">
+              <rect x="2" y="2" width="12" height="12" rx="3" fill="#6B9FFF"/>
+              <rect x="18" y="2" width="12" height="12" rx="3" fill="#6B9FFF" opacity="0.5"/>
+              <rect x="2" y="18" width="12" height="12" rx="3" fill="#6B9FFF" opacity="0.5"/>
+              <rect x="18" y="18" width="12" height="12" rx="3" fill="#6B9FFF"/>
             </svg>
           </div>
-          <span className="text-[#182B68] font-bold text-lg tracking-tight">DataNauts</span>
+          <span style={{
+            fontFamily: "'Instrument Serif', serif",
+            fontStyle: "italic",
+            fontSize: "1.1rem",
+            color: "rgba(255,255,255,0.92)",
+            letterSpacing: "-0.01em",
+          }}>Rubrix</span>
         </a>
 
-        <div className="hidden md:flex items-center gap-3">
-          <a
-            href="/student/login"
-            className="px-5 py-2 rounded-full text-sm font-semibold text-[#3D65F4] border border-[#3D65F4] hover:bg-[#EEF2FF] transition-colors"
-          >
+        {/* Desktop buttons */}
+        <div className="hidden md:flex items-center gap-2">
+          <a href="/student/login" style={{
+            padding: "0.45rem 1.1rem",
+            borderRadius: "999px",
+            fontFamily: "'Barlow', sans-serif",
+            fontWeight: 500,
+            fontSize: "0.85rem",
+            color: "rgba(255,255,255,0.75)",
+            background: "rgba(255,255,255,0.07)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            textDecoration: "none",
+            transition: "background 0.2s",
+          }}>
             Student Login
           </a>
-          <a
-            href="/faculty/login"
-            className="px-5 py-2 rounded-full text-sm font-semibold text-white bg-[#3D65F4] hover:bg-[#2D55E4] transition-colors shadow-sm"
-          >
+          <a href="/faculty/login" style={{
+            padding: "0.45rem 1.25rem",
+            borderRadius: "999px",
+            fontFamily: "'Barlow', sans-serif",
+            fontWeight: 600,
+            fontSize: "0.85rem",
+            color: "#000",
+            background: "rgba(255,255,255,0.92)",
+            border: "1px solid rgba(255,255,255,0.2)",
+            textDecoration: "none",
+            transition: "background 0.2s",
+          }}>
             Faculty Login
           </a>
         </div>
 
-        <button className="md:hidden text-[#182B68]" onClick={() => setMenuOpen(!menuOpen)}>
-          {menuOpen ? <X size={24} /> : <Menu size={24} />}
+        {/* Mobile hamburger */}
+        <button
+          className="md:hidden"
+          onClick={() => setMenuOpen(!menuOpen)}
+          style={{ color: "rgba(255,255,255,0.7)", background: "none", border: "none", cursor: "pointer" }}
+        >
+          {menuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
+      {/* Mobile menu */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white border-t border-gray-100 px-6 py-4 flex flex-col gap-3"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            style={{
+              position: "absolute",
+              top: "5rem",
+              left: "1.5rem",
+              right: "1.5rem",
+              borderRadius: "1.25rem",
+              padding: "1rem",
+              background: "rgba(10,10,10,0.92)",
+              backdropFilter: "blur(24px)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.625rem",
+            }}
           >
-            <a href="/student/login" className="px-4 py-2.5 rounded-xl text-sm font-semibold text-[#3D65F4] border border-[#3D65F4] text-center" onClick={() => setMenuOpen(false)}>
-              Student Login
-            </a>
-            <a href="/faculty/login" className="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#3D65F4] text-center" onClick={() => setMenuOpen(false)}>
-              Faculty Login
-            </a>
+            <a href="/student/login" onClick={() => setMenuOpen(false)} style={{
+              padding: "0.75rem 1.25rem",
+              borderRadius: "0.75rem",
+              fontFamily: "'Barlow', sans-serif",
+              fontWeight: 500,
+              fontSize: "0.875rem",
+              color: "rgba(255,255,255,0.8)",
+              background: "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              textDecoration: "none",
+              textAlign: "center",
+            }}>Student Login</a>
+            <a href="/faculty/login" onClick={() => setMenuOpen(false)} style={{
+              padding: "0.75rem 1.25rem",
+              borderRadius: "0.75rem",
+              fontFamily: "'Barlow', sans-serif",
+              fontWeight: 600,
+              fontSize: "0.875rem",
+              color: "#000",
+              background: "rgba(255,255,255,0.92)",
+              textDecoration: "none",
+              textAlign: "center",
+            }}>Faculty Login</a>
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600;700&family=Sora:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
@@ -43,6 +43,8 @@
   --font-sans: var(--app-font-sans);
   --font-serif: var(--app-font-serif);
   --font-mono: var(--app-font-mono);
+  --font-heading: 'Instrument Serif', serif;
+  --font-body: 'Barlow', sans-serif;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -132,6 +134,81 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+}
+
+/* ── Cinematic landing styles ───────────────────────────────────── */
+
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+.liquid-glass {
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 20px 60px rgba(0,0,0,0.4);
+}
+
+.liquid-glass-strong {
+  background: rgba(255,255,255,0.10);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.12) inset, 0 24px 64px rgba(0,0,0,0.5);
+}
+
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.875rem;
+  border-radius: 999px;
+  font-family: 'Barlow', sans-serif;
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+.font-display {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+}
+
+.font-barlow {
+  font-family: 'Barlow', sans-serif;
+}
+
+/* Floating mote animation */
+@keyframes mote-drift {
+  0%   { transform: translateY(0px) translateX(0px); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.6; }
+  100% { transform: translateY(-120px) translateX(20px); opacity: 0; }
+}
+
+.mote {
+  position: absolute;
+  border-radius: 50%;
+  background: white;
+  pointer-events: none;
+  animation: mote-drift linear infinite;
+}
+
+/* Glow pulse */
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.7; }
 }
 
 @keyframes shimmer {
