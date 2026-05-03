@@ -158,7 +158,7 @@ export default function Hero() {
             Student Login
           </a>
           <a
-            href="#"
+            href="/faculty/login"
             className="w-full sm:w-auto px-8 py-4 rounded-2xl font-semibold text-base border-2 border-[#3D65F4] text-[#3D65F4] hover:bg-[#EEF2FF] transition-all duration-300 text-center"
           >
             Faculty Login
