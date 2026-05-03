@@ -4,7 +4,6 @@ import TrustedBy from "../components/TrustedBy";
 import StudentFeatures from "../components/StudentFeatures";
 import FacultyFeatures from "../components/FacultyFeatures";
 import NBASection from "../components/NBASection";
-import Stats from "../components/Stats";
 import Testimonials from "../components/Testimonials";
 import CTASection from "../components/CTASection";
 import Footer from "../components/Footer";
@@ -18,7 +17,6 @@ export default function Home() {
       <StudentFeatures />
       <FacultyFeatures />
       <NBASection />
-      <Stats />
       <Testimonials />
       <CTASection />
       <Footer />
