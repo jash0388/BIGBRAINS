@@ -42,7 +42,7 @@ export default function Navbar() {
             Student Login
           </a>
           <a
-            href="#"
+            href="/faculty/login"
             className="px-5 py-2 rounded-full text-sm font-semibold text-white bg-[#3D65F4] hover:bg-[#2D55E4] transition-colors shadow-sm"
           >
             Faculty Login
@@ -65,7 +65,7 @@ export default function Navbar() {
             <a href="/student/login" className="px-4 py-2.5 rounded-xl text-sm font-semibold text-[#3D65F4] border border-[#3D65F4] text-center" onClick={() => setMenuOpen(false)}>
               Student Login
             </a>
-            <a href="#" className="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#3D65F4] text-center" onClick={() => setMenuOpen(false)}>
+            <a href="/faculty/login" className="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#3D65F4] text-center" onClick={() => setMenuOpen(false)}>
               Faculty Login
             </a>
           </motion.div>

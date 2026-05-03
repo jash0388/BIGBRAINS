@@ -450,10 +450,19 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <div className="px-8 py-5 border-t border-gray-100 text-center">
+        <div className="px-8 py-5 border-t border-gray-100 text-center space-y-2">
           <p className="text-[11px] text-gray-400">
             Powered by <span className="font-bold text-[#3D65F4]">DataNauts</span> · Student Portal
           </p>
+          <a
+            href="/faculty/login"
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-gray-400 hover:text-[#3D65F4] transition-colors"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            Faculty Login →
+          </a>
         </div>
       </div>
     </div>
