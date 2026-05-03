@@ -24,8 +24,8 @@
 }
 
 @layer base {
-  * { @apply border-border; }
-  body { @apply font-sans antialiased bg-background text-foreground; }
+  * { box-sizing: border-box; }
+  body { @apply font-sans antialiased bg-background text-foreground; margin: 0; }
 }
 
 .grain-overlay { display: none; }
