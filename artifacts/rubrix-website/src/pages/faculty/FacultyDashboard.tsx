@@ -4,9 +4,10 @@ import {
   Users, BarChart3, PlusCircle, LogOut, Search,
   ChevronRight, BookOpen, CheckCircle2, Clock, Star,
   Trash2, ShieldCheck, Activity, X,
-  ClipboardList, FileText, ToggleLeft, ToggleRight, Plus, Eye,
+  ClipboardList, FileText, ToggleLeft, ToggleRight, Plus, Eye, ArrowLeft,
 } from "lucide-react";
 import { useFacultyAuth } from "../../context/FacultyAuthContext";
+import { useAuth } from "../../context/AuthContext";
 import {
   getTests, saveTest, deleteTest, toggleTest,
   getSubmissions, getFacultyPracticeQuestions, deleteFacultyPracticeQuestion,
@@ -286,6 +287,7 @@ function CreateTestForm({ onSaved, faculty }: { onSaved: () => void; faculty: { 
 // ─── Main Faculty Dashboard ───────────────────────────────────────────────────
 export default function FacultyDashboard() {
   const { faculty, logout } = useFacultyAuth();
+  const { isLoggedIn: isStudentLoggedIn, student } = useAuth();
   const [, navigate] = useLocation();
   const [tab, setTab] = useState<"overview" | "students" | "questions" | "add" | "tests" | "results" | "reviews">("overview");
   const [search, setSearch]       = useState("");
@@ -303,6 +305,7 @@ export default function FacultyDashboard() {
   const [seedMsg, setSeedMsg] = useState("");
 
   const handleLogout = () => { logout(); navigate("/faculty/login"); };
+  const handleBackToPortal = () => { navigate("/student/academics"); };
 
   const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -400,6 +403,19 @@ export default function FacultyDashboard() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {/* Back to Portal — only visible when the user came from the student portal */}
+          {isStudentLoggedIn && student && (
+            <button
+              onClick={handleBackToPortal}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all"
+              style={{ background: "linear-gradient(135deg,#EFF6FF,#F0F9FF)", border: "1.5px solid #BFDBFE", color: "#2563EB" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg,#3B82F6,#0EA5E9)"; (e.currentTarget as HTMLButtonElement).style.color = "white"; (e.currentTarget as HTMLButtonElement).style.border = "1.5px solid #3B82F6"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg,#EFF6FF,#F0F9FF)"; (e.currentTarget as HTMLButtonElement).style.color = "#2563EB"; (e.currentTarget as HTMLButtonElement).style.border = "1.5px solid #BFDBFE"; }}
+            >
+              <ArrowLeft size={12} strokeWidth={2.5} />
+              <span className="hidden sm:inline">My Portal</span>
+            </button>
+          )}
           <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-100">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[9px] font-bold text-emerald-600">Live</span>
@@ -424,6 +440,20 @@ export default function FacultyDashboard() {
             </div>
           </div>
           <div className="text-[10px] text-gray-400 mb-3 font-mono bg-gray-50 px-2 py-1 rounded-lg">Code: {faculty?.code}</div>
+
+          {/* Back to student portal — only shown for admin students */}
+          {isStudentLoggedIn && student && (
+            <button
+              onClick={() => { setMenuOpen(false); handleBackToPortal(); }}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold mb-1 transition-colors"
+              style={{ background: "linear-gradient(135deg,#EFF6FF,#F0F9FF)", color: "#2563EB", border: "1px solid #BFDBFE" }}
+            >
+              <ArrowLeft size={13} />
+              Back to My Portal
+              <span className="ml-auto text-[9px] bg-blue-100 text-blue-500 px-1.5 py-0.5 rounded-md font-bold truncate max-w-[80px]">{student.rollNumber}</span>
+            </button>
+          )}
+
           <button onClick={handleLogout}
             className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-red-500 text-xs font-bold hover:bg-red-50 transition-colors">
             <LogOut size={13} /> Sign Out
