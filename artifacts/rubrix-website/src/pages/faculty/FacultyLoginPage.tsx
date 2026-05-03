@@ -159,12 +159,6 @@ export default function FacultyLoginPage() {
           </button>
         </form>
 
-        {/* Hint */}
-        <div className="mt-6 rounded-xl p-3" style={{ background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)" }}>
-          <p className="text-[10px] text-blue-300/70 leading-relaxed">
-            <span className="font-bold text-blue-300">Demo codes:</span> Try <span className="font-mono">1234567890</span> (Admin) or any 10-digit number for guest access.
-          </p>
-        </div>
       </div>
 
       {/* Footer */}
