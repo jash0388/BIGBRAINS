@@ -3,6 +3,12 @@ import { ChevronDown, BookOpen, ChevronLeft, ChevronRight, Clock, CheckCircle2, 
 import { curriculum, type Course } from "../../data/curriculum";
 import { useAuth } from "../../context/AuthContext";
 
+const RESOURCES = [
+  { title: "Introduction to Data Structures", url: "https://www.youtube.com/watch?v=RBSGKlAvoiM", topic: "DSA fundamentals" },
+  { title: "Object-Oriented Programming Basics", url: "https://www.youtube.com/watch?v=BSVKUk58K6U", topic: "OOP concepts" },
+  { title: "Database Design in SQL", url: "https://www.youtube.com/watch?v=HXV3zeQKqGY", topic: "SQL and DBMS" },
+];
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface SelectedTopic { unitTitle: string; topicName: string; }
 interface UnitTarget { course: Course; unit: { title: string; topics: string[] }; }
@@ -433,12 +439,21 @@ function TopicLearnView({
                 <span className="text-[#FFB800]">⭐</span>
                 <p className="text-xs font-bold text-gray-700">Resources</p>
               </div>
-              <div className="bg-black rounded-xl overflow-hidden aspect-video flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity group">
-                <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <div className="w-0 h-0 border-t-[10px] border-b-[10px] border-l-[18px] border-t-transparent border-b-transparent border-l-white ml-1" />
-                </div>
+              <div className="space-y-3">
+                {RESOURCES.map(resource => (
+                  <a
+                    key={resource.url}
+                    href={resource.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block rounded-xl border border-gray-200 bg-white p-3 hover:border-[#3D65F4] hover:bg-[#F9FBFF] transition-colors"
+                  >
+                    <p className="text-xs font-bold text-gray-800">{resource.title}</p>
+                    <p className="text-[11px] text-gray-500 mt-1">{resource.topic}</p>
+                    <p className="text-[10px] text-[#3D65F4] font-semibold mt-2">Watch on YouTube</p>
+                  </a>
+                ))}
               </div>
-              <p className="text-xs text-gray-500 mt-2 font-medium">{topic.topicName} — Video Lecture</p>
             </div>
           </div>
         ) : (
@@ -537,14 +552,14 @@ function CourseOutline({
             </p>
 
             {/* Topics — timeline with continuous line */}
-            <div className="relative pl-5">
+            <div className="relative pl-5 overflow-hidden">
               {/* Continuous vertical line */}
               <div
-                className="absolute"
+                className="absolute pointer-events-none"
                 style={{
-                  left: 9,
-                  top: 9,
-                  bottom: 9,
+                  left: 4,
+                  top: 10,
+                  bottom: 10,
                   width: 2,
                   background: "rgba(59,130,246,0.18)",
                   borderRadius: 2,
@@ -557,7 +572,7 @@ function CourseOutline({
                   <div
                     className="absolute rounded-full bg-white z-10"
                     style={{
-                      left: 0,
+                      left: -1,
                       top: "50%",
                       transform: "translateY(-50%)",
                       width: 10,
