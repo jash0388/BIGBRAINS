@@ -1055,11 +1055,18 @@ export default function FacultyDashboard() {
                           </div>
                         )}
                         {isReviewing && (
-                          <div className="px-4 pb-4 space-y-2 border-t border-gray-50 pt-3">
-                            <textarea value={reviewNotes} onChange={e => setReviewNotes(e.target.value)}
-                              rows={2} placeholder="Optional notes for student (e.g. 'Good logic!' or 'Fix your loop bounds')"
-                              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-blue-400 resize-none transition-all" />
-                            <div className="flex gap-2">
+                          <div className="px-4 pb-4 space-y-2.5 border-t border-gray-100 pt-3">
+                            <div>
+                              <p className="text-[10px] font-bold text-slate-500 mb-1 flex items-center gap-1">
+                                Note to student
+                                <span className="font-normal text-gray-400">(optional — shown to the student)</span>
+                              </p>
+                              <textarea value={reviewNotes} onChange={e => setReviewNotes(e.target.value)}
+                                rows={2}
+                                placeholder="e.g. 'Great logic, clean code!' or 'Your loop goes out of bounds on line 4, fix and resubmit.'"
+                                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs text-slate-700 focus:outline-none focus:border-blue-400 resize-none" />
+                            </div>
+                            <div className="flex gap-2 flex-wrap">
                               <button onClick={() => handleReview(sub.id, "approved")}
                                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white"
                                 style={{ background: "linear-gradient(135deg,#10B981,#059669)" }}>
