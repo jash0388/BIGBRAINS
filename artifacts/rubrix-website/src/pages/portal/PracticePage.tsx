@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, ChevronLeft, ChevronRight, Loader2, ArrowLeft, Play, Send, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { useRubrixData } from "../../hooks/useRubrixData";
 import { useAuth } from "../../context/AuthContext";
@@ -471,7 +471,8 @@ function PracticeListView({ onSelect }: { onSelect: (q: ApiQuestion) => void }) 
 
 // ─── Faculty MCQ Section ───────────────────────────────────────────────────────
 function FacultyMCQSection() {
-  const questions = getFacultyPracticeQuestions();
+  const [questions, setQuestions] = useState<FacultyPracticeQuestion[]>([]);
+  useEffect(() => { getFacultyPracticeQuestions().then(setQuestions); }, []);
   const [answers, setAnswers] = useState<Record<string, number | null>>({});
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
 

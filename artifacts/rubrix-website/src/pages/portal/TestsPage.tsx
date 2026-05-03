@@ -3,10 +3,8 @@ import { ClipboardList, Clock, CheckCircle2, XCircle, ArrowLeft, AlertTriangle, 
 import { useAuth } from "../../context/AuthContext";
 import {
   getTests, saveSubmission, getSubmissions,
-  FacultyTest, TestQuestion, TestSubmission,
+  FacultyTest, TestSubmission,
 } from "../../store/facultyDataStore";
-
-const DIFF_COLOR: Record<string, string> = { easy: "#10B981", medium: "#F59E0B", hard: "#EF4444" };
 
 function pad(n: number) { return String(n).padStart(2, "0"); }
 
@@ -58,12 +56,9 @@ function ResultScreen({ sub, onBack }: { sub: TestSubmission; onBack: () => void
           </div>
         ))}
       </div>
-      <p className="text-xs text-gray-400 text-center">Your result has been submitted to your faculty. Great job!</p>
-      <button
-        onClick={onBack}
-        className="px-6 py-3 rounded-2xl font-bold text-sm text-white"
-        style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)" }}
-      >
+      <p className="text-xs text-gray-400 text-center">Your result has been saved to Supabase and sent to your faculty!</p>
+      <button onClick={onBack} className="px-6 py-3 rounded-2xl font-bold text-sm text-white"
+        style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)" }}>
         Back to Tests
       </button>
     </div>
@@ -74,38 +69,34 @@ function TakeTest({ test, studentName, studentRoll, onDone }: {
   test: FacultyTest; studentName: string; studentRoll: string; onDone: (sub: TestSubmission) => void;
 }) {
   const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [submitted, setSubmitted] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  const [saving, setSaving]   = useState(false);
   const startRef = useRef(Date.now());
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    setSaving(true);
     const timeTaken = Math.floor((Date.now() - startRef.current) / 1000);
-    let score = 0;
-    let totalMarks = 0;
+    let score = 0, totalMarks = 0;
     test.questions.forEach(q => {
       totalMarks += q.marks;
       if (answers[q.id] === q.correctAnswer) score += q.marks;
     });
     const sub: TestSubmission = {
       id: `sub_${Date.now()}`,
-      testId: test.id,
-      testTitle: test.title,
-      studentName,
-      studentRoll,
-      answers,
-      score,
-      totalMarks,
+      testId: test.id, testTitle: test.title,
+      studentName, studentRoll,
+      answers, score, totalMarks,
       percentage: totalMarks > 0 ? Math.round((score / totalMarks) * 100) : 0,
       timeTaken,
       submittedAt: new Date().toISOString(),
     };
-    saveSubmission(sub);
-    setSubmitted(true);
+    await saveSubmission(sub);
+    setSaving(false);
     onDone(sub);
   };
 
   const answered = Object.keys(answers).length;
-  const total = test.questions.length;
+  const total    = test.questions.length;
 
   return (
     <div className="flex-1 overflow-y-auto p-4 md:p-6 max-w-2xl mx-auto w-full">
@@ -129,21 +120,16 @@ function TakeTest({ test, studentName, studentRoll, onDone }: {
               {q.options.map((opt, oi) => {
                 const selected = answers[q.id] === oi;
                 return (
-                  <button
-                    key={oi}
-                    onClick={() => setAnswers(a => ({ ...a, [q.id]: oi }))}
+                  <button key={oi} onClick={() => setAnswers(a => ({ ...a, [q.id]: oi }))}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left text-sm transition-all"
                     style={{
                       borderColor: selected ? "#3B82F6" : "#E5E7EB",
-                      background: selected ? "#EFF6FF" : "white",
-                      color: selected ? "#1D4ED8" : "#374151",
-                      fontWeight: selected ? 700 : 500,
-                    }}
-                  >
-                    <span
-                      className="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 text-[10px] font-bold"
-                      style={{ borderColor: selected ? "#3B82F6" : "#D1D5DB", background: selected ? "#3B82F6" : "white", color: "white" }}
-                    >
+                      background:  selected ? "#EFF6FF" : "white",
+                      color:       selected ? "#1D4ED8" : "#374151",
+                      fontWeight:  selected ? 700 : 500,
+                    }}>
+                    <span className="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 text-[10px] font-bold"
+                      style={{ borderColor: selected ? "#3B82F6" : "#D1D5DB", background: selected ? "#3B82F6" : "white", color: "white" }}>
                       {selected ? "✓" : String.fromCharCode(65 + oi)}
                     </span>
                     {opt}
@@ -165,15 +151,16 @@ function TakeTest({ test, studentName, studentRoll, onDone }: {
             <p className="text-xs text-amber-700">You've answered {answered} of {total} questions. You cannot change answers after submitting.</p>
             <div className="flex gap-2">
               <button onClick={() => setConfirm(false)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-600">Cancel</button>
-              <button onClick={handleSubmit} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style={{ background: "#10B981" }}>Confirm Submit</button>
+              <button onClick={handleSubmit} disabled={saving}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2" style={{ background: "#10B981" }}>
+                {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Confirm Submit"}
+              </button>
             </div>
           </div>
         ) : (
-          <button
-            onClick={() => setConfirm(true)}
+          <button onClick={() => setConfirm(true)}
             className="w-full py-3.5 rounded-2xl font-bold text-sm text-white"
-            style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)", boxShadow: "0 8px 20px rgba(59,130,246,0.3)" }}
-          >
+            style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)", boxShadow: "0 8px 20px rgba(59,130,246,0.3)" }}>
             Submit Test
           </button>
         )}
@@ -184,21 +171,29 @@ function TakeTest({ test, studentName, studentRoll, onDone }: {
 
 export default function TestsPage() {
   const { student } = useAuth();
-  const [tests, setTests] = useState<FacultyTest[]>([]);
-  const [active, setActive] = useState<FacultyTest | null>(null);
-  const [result, setResult] = useState<TestSubmission | null>(null);
+  const [tests, setTests]           = useState<FacultyTest[]>([]);
+  const [submissions, setSubmissions] = useState<TestSubmission[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [active, setActive]         = useState<FacultyTest | null>(null);
+  const [result, setResult]         = useState<TestSubmission | null>(null);
   const myRoll = student?.rollNumber || "";
 
-  const loadTests = () => setTests(getTests().filter(t => t.isActive));
-  useEffect(() => { loadTests(); }, []);
+  const loadAll = async () => {
+    setLoading(true);
+    const [allTests, allSubs] = await Promise.all([getTests(), getSubmissions()]);
+    setTests(allTests.filter(t => t.isActive));
+    setSubmissions(allSubs.filter(s => s.studentRoll === myRoll));
+    setLoading(false);
+  };
 
-  const mySubmissions = getSubmissions().filter(s => s.studentRoll === myRoll);
-  const attempted = new Set(mySubmissions.map(s => s.testId));
+  useEffect(() => { loadAll(); }, [myRoll]);
+
+  const attempted = new Set(submissions.map(s => s.testId));
 
   if (result) {
     return (
       <div className="flex flex-col h-full">
-        <ResultScreen sub={result} onBack={() => { setResult(null); setActive(null); loadTests(); }} />
+        <ResultScreen sub={result} onBack={() => { setResult(null); setActive(null); loadAll(); }} />
       </div>
     );
   }
@@ -232,7 +227,12 @@ export default function TestsPage() {
         <p className="text-xs text-gray-400 mt-0.5">Tests assigned by your faculty. Submit to send results directly to them.</p>
       </div>
 
-      {tests.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center py-20 gap-2 text-gray-400 text-sm">
+          <div className="w-5 h-5 border-2 border-blue-200 border-t-blue-500 rounded-full animate-spin" />
+          Loading tests…
+        </div>
+      ) : tests.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
           <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
             <ClipboardList size={24} className="text-gray-300" />
@@ -243,8 +243,8 @@ export default function TestsPage() {
       ) : (
         <div className="space-y-3">
           {tests.map(test => {
-            const done = attempted.has(test.id);
-            const mySub = mySubmissions.find(s => s.testId === test.id);
+            const done  = attempted.has(test.id);
+            const mySub = submissions.find(s => s.testId === test.id);
             return (
               <div key={test.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:border-blue-200 transition-all">
                 <div className="flex items-start justify-between gap-3">
@@ -268,18 +268,14 @@ export default function TestsPage() {
                       <div className="mt-2 flex gap-3 text-[11px] flex-wrap">
                         <span className="font-bold text-blue-600">Score: {mySub.score}/{mySub.totalMarks}</span>
                         <span className="font-bold" style={{ color: mySub.percentage >= 60 ? "#10B981" : "#EF4444" }}>{mySub.percentage}%</span>
-                        <span className="text-gray-400">
-                          {Math.floor(mySub.timeTaken / 60)}m {pad(mySub.timeTaken % 60)}s
-                        </span>
+                        <span className="text-gray-400">{Math.floor(mySub.timeTaken / 60)}m {pad(mySub.timeTaken % 60)}s</span>
                       </div>
                     )}
                   </div>
                   {!done ? (
-                    <button
-                      onClick={() => setActive(test)}
+                    <button onClick={() => setActive(test)}
                       className="shrink-0 px-4 py-2 rounded-xl text-xs font-bold text-white"
-                      style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)" }}
-                    >
+                      style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)" }}>
                       Start Test
                     </button>
                   ) : (
@@ -294,11 +290,11 @@ export default function TestsPage() {
         </div>
       )}
 
-      {mySubmissions.length > 0 && (
+      {submissions.length > 0 && (
         <div className="mt-6">
           <p className="text-xs font-extrabold text-gray-500 uppercase tracking-wider mb-3">My Past Results</p>
           <div className="space-y-2">
-            {[...mySubmissions].reverse().map(s => (
+            {[...submissions].reverse().map(s => (
               <div key={s.id} className="bg-white rounded-xl border border-gray-100 px-4 py-3 flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
                   style={{ background: s.percentage >= 60 ? "#ECFDF5" : "#FEF2F2" }}>

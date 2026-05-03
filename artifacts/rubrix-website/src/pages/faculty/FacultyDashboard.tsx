@@ -160,7 +160,7 @@ function CreateTestForm({ onSaved, faculty }: { onSaved: () => void; faculty: { 
     setQForm({ question: "", options: ["", "", "", ""], correctAnswer: 0, marks: 1 });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!meta.title.trim()) { setError("Test title is required."); return; }
     if (questions.length === 0) { setError("Add at least one question."); return; }
     const test: FacultyTest = {
@@ -171,7 +171,7 @@ function CreateTestForm({ onSaved, faculty }: { onSaved: () => void; faculty: { 
       createdAt: new Date().toISOString(),
       isActive: true,
     };
-    saveTest(test);
+    await saveTest(test);
     setSaved(true);
     setTimeout(() => { setSaved(false); onSaved(); }, 1200);
   };
@@ -299,10 +299,11 @@ export default function FacultyDashboard() {
 
   const handleLogout = () => { logout(); navigate("/faculty/login"); };
 
-  const loadData = () => {
-    setTests(getTests());
-    setSubmissions(getSubmissions());
-    setRealStudents(getRegisteredStudents());
+  const loadData = async () => {
+    const [t, s, st] = await Promise.all([getTests(), getSubmissions(), getRegisteredStudents()]);
+    setTests(t);
+    setSubmissions(s);
+    setRealStudents(st);
   };
 
   useEffect(() => { loadData(); }, [tab]);
@@ -638,7 +639,7 @@ export default function FacultyDashboard() {
                           {q.tags.map(t => <span key={t} className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-md font-semibold">{t}</span>)}
                         </div>
                       </div>
-                      <button onClick={() => { deleteFacultyPracticeQuestion(q.id); loadData(); }} className="ml-auto shrink-0">
+                      <button onClick={() => { deleteFacultyPracticeQuestion(q.id).then(() => loadData()); }} className="ml-auto shrink-0">
                         <Trash2 size={13} className="text-red-400 hover:text-red-600" />
                       </button>
                     </div>
@@ -751,11 +752,11 @@ export default function FacultyDashboard() {
                               </div>
                             </div>
                             <div className="flex flex-col items-end gap-2 shrink-0">
-                              <button onClick={() => { toggleTest(test.id); loadData(); }}
+                              <button onClick={() => { toggleTest(test.id).then(() => loadData()); }}
                                 className="text-gray-400 hover:text-blue-500 transition-colors">
                                 {test.isActive ? <ToggleRight size={22} className="text-green-500" /> : <ToggleLeft size={22} />}
                               </button>
-                              <button onClick={() => { deleteTest(test.id); loadData(); }}>
+                              <button onClick={() => { deleteTest(test.id).then(() => loadData()); }}>
                                 <Trash2 size={14} className="text-red-400 hover:text-red-600" />
                               </button>
                             </div>
