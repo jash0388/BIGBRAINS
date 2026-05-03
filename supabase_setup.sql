@@ -1,4 +1,4 @@
--- Run this in your Supabase Dashboard → SQL Editor
+-- Run this entire script in Supabase Dashboard → SQL Editor → New Query → Run
 
 -- Faculty Tests
 create table if not exists faculty_tests (
@@ -27,12 +27,12 @@ create table if not exists test_submissions (
   submitted_at timestamptz not null default now()
 );
 
--- Practice Questions
+-- Practice Questions (MCQ)
 create table if not exists practice_questions (
   id text primary key,
   title text not null,
   description text,
-  difficulty text check (difficulty in ('easy','medium','hard')) default 'easy',
+  difficulty text default 'easy',
   tags text[] default '{}',
   options jsonb not null default '[]',
   correct_answer integer not null default 0,
@@ -56,14 +56,15 @@ create table if not exists registered_students (
   last_login_at timestamptz not null default now()
 );
 
--- Enable Row Level Security (open for now since we use service_role on server)
-alter table faculty_tests       enable row level security;
-alter table test_submissions    enable row level security;
-alter table practice_questions  enable row level security;
-alter table registered_students enable row level security;
-
--- Allow all operations via service_role (server-side only)
-create policy "service_role full access" on faculty_tests       for all using (true);
-create policy "service_role full access" on test_submissions    for all using (true);
-create policy "service_role full access" on practice_questions  for all using (true);
-create policy "service_role full access" on registered_students for all using (true);
+-- Practice Attempts (tracks which student answered which MCQ)
+create table if not exists practice_attempts (
+  id text primary key,
+  student_roll text not null,
+  student_name text not null,
+  question_id text not null,
+  question_title text,
+  chosen_answer integer,
+  correct_answer integer,
+  is_correct boolean default false,
+  attempted_at timestamptz not null default now()
+);

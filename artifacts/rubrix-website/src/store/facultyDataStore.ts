@@ -1,6 +1,3 @@
-// All data is now persisted in Supabase via the API server.
-// localStorage is kept only as a fallback cache while the request is in-flight.
-
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
 const DB   = `${BASE}/api/db`;
 
@@ -64,64 +61,64 @@ export interface RegisteredStudent {
   lastLoginAt: string;
 }
 
+export interface PracticeAttempt {
+  id: string;
+  studentRoll: string;
+  studentName: string;
+  questionId: string;
+  questionTitle: string;
+  chosenAnswer: number;
+  correctAnswer: number;
+  isCorrect: boolean;
+  attemptedAt: string;
+}
+
 // ── helpers ───────────────────────────────────────────────────────────────────
 function rowToTest(r: Record<string, unknown>): FacultyTest {
   return {
-    id:          String(r.id),
-    title:       String(r.title),
-    description: String(r.description ?? ""),
-    duration:    Number(r.duration),
-    questions:   (r.questions as TestQuestion[]) || [],
-    createdBy:   String(r.created_by ?? ""),
-    createdAt:   String(r.created_at ?? ""),
-    isActive:    Boolean(r.is_active),
+    id: String(r.id), title: String(r.title),
+    description: String(r.description ?? ""), duration: Number(r.duration),
+    questions: (r.questions as TestQuestion[]) || [],
+    createdBy: String(r.created_by ?? ""), createdAt: String(r.created_at ?? ""),
+    isActive: Boolean(r.is_active),
   };
 }
-
 function rowToSubmission(r: Record<string, unknown>): TestSubmission {
   return {
-    id:          String(r.id),
-    testId:      String(r.test_id),
-    testTitle:   String(r.test_title ?? ""),
-    studentName: String(r.student_name),
-    studentRoll: String(r.student_roll),
-    answers:     (r.answers as Record<string, number>) || {},
-    score:       Number(r.score),
-    totalMarks:  Number(r.total_marks),
-    percentage:  Number(r.percentage),
-    timeTaken:   Number(r.time_taken ?? 0),
+    id: String(r.id), testId: String(r.test_id), testTitle: String(r.test_title ?? ""),
+    studentName: String(r.student_name), studentRoll: String(r.student_roll),
+    answers: (r.answers as Record<string, number>) || {},
+    score: Number(r.score), totalMarks: Number(r.total_marks),
+    percentage: Number(r.percentage), timeTaken: Number(r.time_taken ?? 0),
     submittedAt: String(r.submitted_at),
   };
 }
-
 function rowToPracticeQ(r: Record<string, unknown>): FacultyPracticeQuestion {
   return {
-    id:            String(r.id),
-    title:         String(r.title),
-    description:   String(r.description ?? ""),
-    difficulty:    String(r.difficulty ?? "easy") as "easy" | "medium" | "hard",
-    tags:          (r.tags as string[]) || [],
-    options:       (r.options as string[]) || [],
-    correctAnswer: Number(r.correct_answer),
-    explanation:   String(r.explanation ?? ""),
-    createdBy:     String(r.created_by ?? ""),
-    createdAt:     String(r.created_at ?? ""),
+    id: String(r.id), title: String(r.title), description: String(r.description ?? ""),
+    difficulty: String(r.difficulty ?? "easy") as "easy" | "medium" | "hard",
+    tags: (r.tags as string[]) || [], options: (r.options as string[]) || [],
+    correctAnswer: Number(r.correct_answer), explanation: String(r.explanation ?? ""),
+    createdBy: String(r.created_by ?? ""), createdAt: String(r.created_at ?? ""),
   };
 }
-
 function rowToStudent(r: Record<string, unknown>): RegisteredStudent {
   return {
-    rollNumber:  String(r.roll_number),
-    fullName:    String(r.full_name),
-    email:       String(r.email ?? ""),
-    mobile:      String(r.mobile ?? ""),
-    college:     String(r.college ?? ""),
-    branch:      String(r.branch ?? ""),
-    year:        String(r.year ?? ""),
-    semester:    String(r.semester ?? ""),
-    section:     String(r.section ?? ""),
-    cgpa:        String(r.cgpa ?? ""),
+    rollNumber: String(r.roll_number), fullName: String(r.full_name),
+    email: String(r.email ?? ""), mobile: String(r.mobile ?? ""),
+    college: String(r.college ?? ""), branch: String(r.branch ?? ""),
+    year: String(r.year ?? ""), semester: String(r.semester ?? ""),
+    section: String(r.section ?? ""), cgpa: String(r.cgpa ?? ""),
     lastLoginAt: String(r.last_login_at ?? new Date().toISOString()),
+  };
+}
+function rowToAttempt(r: Record<string, unknown>): PracticeAttempt {
+  return {
+    id: String(r.id), studentRoll: String(r.student_roll),
+    studentName: String(r.student_name), questionId: String(r.question_id),
+    questionTitle: String(r.question_title ?? ""),
+    chosenAnswer: Number(r.chosen_answer), correctAnswer: Number(r.correct_answer),
+    isCorrect: Boolean(r.is_correct), attemptedAt: String(r.attempted_at),
   };
 }
 
@@ -130,26 +127,15 @@ export async function getTests(): Promise<FacultyTest[]> {
   try {
     const res = await fetch(`${DB}/tests`);
     if (!res.ok) throw new Error(await res.text());
-    const rows = await res.json() as Record<string, unknown>[];
-    return rows.map(rowToTest);
-  } catch (e) {
-    console.error("getTests failed", e);
-    return [];
-  }
+    return (await res.json() as Record<string, unknown>[]).map(rowToTest);
+  } catch (e) { console.error("getTests failed", e); return []; }
 }
-
 export async function saveTest(t: FacultyTest): Promise<void> {
-  await fetch(`${DB}/tests`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(t),
-  });
+  await fetch(`${DB}/tests`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(t) });
 }
-
 export async function deleteTest(id: string): Promise<void> {
   await fetch(`${DB}/tests/${id}`, { method: "DELETE" });
 }
-
 export async function toggleTest(id: string): Promise<void> {
   await fetch(`${DB}/tests/${id}/toggle`, { method: "PATCH" });
 }
@@ -159,20 +145,11 @@ export async function getSubmissions(): Promise<TestSubmission[]> {
   try {
     const res = await fetch(`${DB}/submissions`);
     if (!res.ok) throw new Error(await res.text());
-    const rows = await res.json() as Record<string, unknown>[];
-    return rows.map(rowToSubmission);
-  } catch (e) {
-    console.error("getSubmissions failed", e);
-    return [];
-  }
+    return (await res.json() as Record<string, unknown>[]).map(rowToSubmission);
+  } catch (e) { console.error("getSubmissions failed", e); return []; }
 }
-
 export async function saveSubmission(s: TestSubmission): Promise<void> {
-  await fetch(`${DB}/submissions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(s),
-  });
+  await fetch(`${DB}/submissions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) });
 }
 
 // ── PRACTICE QUESTIONS ────────────────────────────────────────────────────────
@@ -180,22 +157,12 @@ export async function getFacultyPracticeQuestions(): Promise<FacultyPracticeQues
   try {
     const res = await fetch(`${DB}/practice-questions`);
     if (!res.ok) throw new Error(await res.text());
-    const rows = await res.json() as Record<string, unknown>[];
-    return rows.map(rowToPracticeQ);
-  } catch (e) {
-    console.error("getFacultyPracticeQuestions failed", e);
-    return [];
-  }
+    return (await res.json() as Record<string, unknown>[]).map(rowToPracticeQ);
+  } catch (e) { console.error("getFacultyPracticeQuestions failed", e); return []; }
 }
-
 export async function saveFacultyPracticeQuestion(q: FacultyPracticeQuestion): Promise<void> {
-  await fetch(`${DB}/practice-questions`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(q),
-  });
+  await fetch(`${DB}/practice-questions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(q) });
 }
-
 export async function deleteFacultyPracticeQuestion(id: string): Promise<void> {
   await fetch(`${DB}/practice-questions/${id}`, { method: "DELETE" });
 }
@@ -205,18 +172,21 @@ export async function getRegisteredStudents(): Promise<RegisteredStudent[]> {
   try {
     const res = await fetch(`${DB}/students`);
     if (!res.ok) throw new Error(await res.text());
-    const rows = await res.json() as Record<string, unknown>[];
-    return rows.map(rowToStudent);
-  } catch (e) {
-    console.error("getRegisteredStudents failed", e);
-    return [];
-  }
+    return (await res.json() as Record<string, unknown>[]).map(rowToStudent);
+  } catch (e) { console.error("getRegisteredStudents failed", e); return []; }
+}
+export async function upsertRegisteredStudent(s: RegisteredStudent): Promise<void> {
+  await fetch(`${DB}/students/upsert`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) });
 }
 
-export async function upsertRegisteredStudent(s: RegisteredStudent): Promise<void> {
-  await fetch(`${DB}/students/upsert`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(s),
-  });
+// ── PRACTICE ATTEMPTS ─────────────────────────────────────────────────────────
+export async function getPracticeAttempts(): Promise<PracticeAttempt[]> {
+  try {
+    const res = await fetch(`${DB}/practice-attempts`);
+    if (!res.ok) throw new Error(await res.text());
+    return (await res.json() as Record<string, unknown>[]).map(rowToAttempt);
+  } catch (e) { console.error("getPracticeAttempts failed", e); return []; }
+}
+export async function savePracticeAttempt(a: PracticeAttempt): Promise<void> {
+  await fetch(`${DB}/practice-attempts`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(a) });
 }

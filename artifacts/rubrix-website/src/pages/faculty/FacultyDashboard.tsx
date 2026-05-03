@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import {
-  Users, Zap, BarChart3, PlusCircle, LogOut, Search,
+  Users, BarChart3, PlusCircle, LogOut, Search,
   ChevronRight, BookOpen, CheckCircle2, Clock, Star,
-  Trash2, ShieldCheck, TrendingUp, Activity, X,
-  ClipboardList, FileText, ToggleLeft, ToggleRight, Plus,
+  Trash2, ShieldCheck, Activity, X,
+  ClipboardList, FileText, ToggleLeft, ToggleRight, Plus, Eye,
 } from "lucide-react";
 import { useFacultyAuth } from "../../context/FacultyAuthContext";
 import {
   getTests, saveTest, deleteTest, toggleTest,
   getSubmissions, getFacultyPracticeQuestions, deleteFacultyPracticeQuestion,
-  getRegisteredStudents,
-  FacultyTest, TestQuestion, TestSubmission, RegisteredStudent,
+  getRegisteredStudents, getPracticeAttempts,
+  FacultyTest, TestQuestion, TestSubmission, RegisteredStudent, PracticeAttempt,
+  FacultyPracticeQuestion,
 } from "../../store/facultyDataStore";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -286,7 +287,7 @@ function CreateTestForm({ onSaved, faculty }: { onSaved: () => void; faculty: { 
 export default function FacultyDashboard() {
   const { faculty, logout } = useFacultyAuth();
   const [, navigate] = useLocation();
-  const [tab, setTab] = useState<"overview" | "students" | "questions" | "add" | "tests" | "results">("overview");
+  const [tab, setTab] = useState<"overview" | "students" | "questions" | "add" | "tests" | "results" | "reviews">("overview");
   const [search, setSearch]       = useState("");
   const [questions, setQuestions] = useState<ApiQuestion[]>([]);
   const [qLoading, setQLoading]   = useState(false);
@@ -294,16 +295,40 @@ export default function FacultyDashboard() {
   const [tests, setTests]             = useState<FacultyTest[]>([]);
   const [submissions, setSubmissions]  = useState<TestSubmission[]>([]);
   const [realStudents, setRealStudents] = useState<RegisteredStudent[]>([]);
+  const [practiceAttempts, setPracticeAttempts] = useState<PracticeAttempt[]>([]);
+  const [practiceQs, setPracticeQs] = useState<FacultyPracticeQuestion[]>([]);
   const [showCreateTest, setShowCreateTest] = useState(false);
   const [resultFilter, setResultFilter] = useState("all");
+  const [seeding, setSeeding] = useState(false);
+  const [seedMsg, setSeedMsg] = useState("");
 
   const handleLogout = () => { logout(); navigate("/faculty/login"); };
 
+  const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, "");
+
   const loadData = async () => {
-    const [t, s, st] = await Promise.all([getTests(), getSubmissions(), getRegisteredStudents()]);
+    const [t, s, st, pq, pa] = await Promise.all([
+      getTests(), getSubmissions(), getRegisteredStudents(),
+      getFacultyPracticeQuestions(), getPracticeAttempts(),
+    ]);
     setTests(t);
     setSubmissions(s);
     setRealStudents(st);
+    setPracticeQs(pq);
+    setPracticeAttempts(pa);
+  };
+
+  const seedSampleTests = async () => {
+    setSeeding(true);
+    setSeedMsg("");
+    try {
+      const res = await fetch(`${BASE_URL}/api/setup/seed-tests`, { method: "POST" });
+      const data = await res.json();
+      const seeded = Object.values(data.results).filter((v: unknown) => v === "Seeded").length;
+      setSeedMsg(`✓ ${seeded} sample test${seeded !== 1 ? "s" : ""} seeded!`);
+      await loadData();
+    } catch { setSeedMsg("Error seeding tests."); }
+    setSeeding(false);
   };
 
   useEffect(() => { loadData(); }, [tab]);
@@ -349,6 +374,7 @@ export default function FacultyDashboard() {
     { id: "add",       label: "Add Q",     icon: PlusCircle    },
     { id: "tests",     label: "Tests",     icon: ClipboardList },
     { id: "results",   label: "Results",   icon: FileText      },
+    { id: "reviews",   label: "Reviews",   icon: Eye           },
   ] as const;
 
   const initials = faculty?.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase() || "F";
@@ -356,8 +382,6 @@ export default function FacultyDashboard() {
   const filteredSubs = resultFilter === "all"
     ? submissions
     : submissions.filter(s => s.testId === resultFilter);
-
-  const facultyPracticeQs = getFacultyPracticeQuestions();
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#F4F6FB", fontFamily: "'Sora', sans-serif" }}>
@@ -617,7 +641,7 @@ export default function FacultyDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-base font-extrabold text-slate-800">Practice Questions</h2>
-                <p className="text-[10px] text-gray-400 mt-0.5">Live from Rubrix Assessments API · {facultyPracticeQs.length} faculty MCQ added</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">{practiceQs.length} faculty MCQ question{practiceQs.length !== 1 ? "s" : ""} added</p>
               </div>
               <button onClick={() => setTab("add")}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold"
@@ -626,67 +650,34 @@ export default function FacultyDashboard() {
               </button>
             </div>
 
-            {facultyPracticeQs.length > 0 && (
-              <div>
-                <p className="text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-2">Faculty Added (MCQ)</p>
-                <div className="space-y-2">
-                  {facultyPracticeQs.map(q => (
-                    <div key={q.id} className="bg-white rounded-xl p-3 border border-blue-100 flex items-start gap-3">
-                      <div>
-                        <p className="text-xs font-bold text-slate-800">{q.title}</p>
-                        <p className="text-[10px] text-gray-400 mt-0.5 truncate max-w-xs">{q.description}</p>
-                        <div className="flex gap-1 mt-1 flex-wrap">
-                          {q.tags.map(t => <span key={t} className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-md font-semibold">{t}</span>)}
-                        </div>
-                      </div>
-                      <button onClick={() => { deleteFacultyPracticeQuestion(q.id).then(() => loadData()); }} className="ml-auto shrink-0">
-                        <Trash2 size={13} className="text-red-400 hover:text-red-600" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {qLoading ? (
-              <div className="flex items-center justify-center py-16">
-                <div className="w-6 h-6 border-2 border-blue-200 border-t-blue-500 rounded-full animate-spin" />
-              </div>
-            ) : questions.length === 0 ? (
+            {practiceQs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-400">
                 <BookOpen size={36} className="opacity-30" />
-                <p className="text-sm font-semibold">No API questions found</p>
+                <p className="text-sm font-semibold">No questions yet</p>
                 <button onClick={() => setTab("add")} className="mt-2 px-5 py-2 rounded-xl bg-blue-500 text-white text-xs font-bold">Add a Question</button>
               </div>
             ) : (
               <div className="space-y-2">
-                {questions.map((q, i) => (
-                  <div key={q._id || i} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-lg"
-                            style={{ background: DIFF_BG[q.difficulty_level] || "#F9FAFB", color: DIFF_COLOR[q.difficulty_level] || "#6B7280" }}>
-                            {q.difficulty_level?.toUpperCase()}
-                          </span>
-                          <div className={`w-1.5 h-1.5 rounded-full ${q.is_active ? "bg-green-500" : "bg-gray-300"}`} />
-                        </div>
-                        <p className="text-sm font-bold text-slate-800">{q.name}</p>
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {(q.tags || []).slice(0, 5).map((tag, ti) => (
-                            <span key={ti} className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-600">{tag}</span>
-                          ))}
-                        </div>
+                {practiceQs.map(q => (
+                  <div key={q.id} className="bg-white rounded-xl p-3 border border-blue-100 flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="text-xs font-bold text-slate-800 truncate">{q.title}</p>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${q.difficulty === "easy" ? "bg-green-100 text-green-700" : q.difficulty === "medium" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>{q.difficulty}</span>
                       </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-[9px] text-gray-400">Time</p>
-                        <p className="text-[10px] font-bold text-slate-600 flex items-center gap-0.5"><Clock size={9} /> {q.time_limit}s</p>
+                      <p className="text-[10px] text-gray-400 truncate max-w-xs">{q.description}</p>
+                      <div className="flex gap-1 mt-1 flex-wrap">
+                        {q.tags.map(t => <span key={t} className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-md font-semibold">{t}</span>)}
                       </div>
                     </div>
+                    <button onClick={() => { deleteFacultyPracticeQuestion(q.id).then(() => loadData()); }} className="ml-auto shrink-0 p-1">
+                      <Trash2 size={13} className="text-red-400 hover:text-red-600" />
+                    </button>
                   </div>
                 ))}
               </div>
             )}
+
           </div>
         )}
 
@@ -718,12 +709,19 @@ export default function FacultyDashboard() {
                       <ClipboardList size={24} className="text-gray-300" />
                     </div>
                     <p className="text-sm font-semibold">No tests created yet</p>
-                    <p className="text-xs text-gray-300">Create your first test and assign it to students.</p>
-                    <button onClick={() => setShowCreateTest(true)}
-                      className="mt-2 px-5 py-2.5 rounded-xl text-white text-xs font-bold"
-                      style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)" }}>
-                      Create First Test
-                    </button>
+                    <p className="text-xs text-gray-300">Create your first test or load our 4 sample tests.</p>
+                    <div className="flex gap-2 mt-2 flex-wrap justify-center">
+                      <button onClick={() => setShowCreateTest(true)}
+                        className="px-5 py-2.5 rounded-xl text-white text-xs font-bold"
+                        style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)" }}>
+                        Create First Test
+                      </button>
+                      <button onClick={seedSampleTests} disabled={seeding}
+                        className="px-5 py-2.5 rounded-xl text-xs font-bold border border-blue-200 text-blue-600 bg-blue-50 disabled:opacity-50">
+                        {seeding ? "Loading…" : "Load 4 Sample Tests"}
+                      </button>
+                    </div>
+                    {seedMsg && <p className="text-xs font-bold text-green-600">{seedMsg}</p>}
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -827,6 +825,69 @@ export default function FacultyDashboard() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* REVIEWS */}
+        {tab === "reviews" && (
+          <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div>
+                <h2 className="text-base font-extrabold text-slate-800">Practice Reviews</h2>
+                <p className="text-[10px] text-gray-400 mt-0.5">
+                  {practiceAttempts.length} total attempt{practiceAttempts.length !== 1 ? "s" : ""} · {practiceAttempts.filter(a => a.isCorrect).length} correct
+                </p>
+              </div>
+              <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-3 py-2">
+                <CheckCircle2 size={13} className="text-blue-400" />
+                <span className="text-[11px] font-bold text-blue-600">
+                  {practiceAttempts.length > 0
+                    ? `${Math.round((practiceAttempts.filter(a => a.isCorrect).length / practiceAttempts.length) * 100)}% accuracy`
+                    : "No attempts yet"}
+                </span>
+              </div>
+            </div>
+
+            {practiceAttempts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
+                <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
+                  <Eye size={24} className="text-gray-300" />
+                </div>
+                <p className="text-sm font-semibold">No practice attempts yet</p>
+                <p className="text-xs text-gray-300 text-center max-w-xs">
+                  When students attempt MCQ practice questions, their submissions will appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {[...practiceAttempts].map(a => (
+                  <div key={a.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-[10px] font-extrabold shrink-0"
+                        style={{ background: a.isCorrect ? "linear-gradient(135deg,#10B981,#059669)" : "linear-gradient(135deg,#F59E0B,#D97706)" }}>
+                        {a.studentName.split(" ").map((w: string) => w[0]).slice(0, 2).join("")}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-extrabold text-slate-800">{a.studentName}</p>
+                          <span className="text-[9px] font-mono text-gray-400">{a.studentRoll}</span>
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${a.isCorrect ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
+                            {a.isCorrect ? "✓ Correct" : "✗ Wrong"}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-blue-600 font-semibold mt-0.5 line-clamp-1">{a.questionTitle}</p>
+                        <div className="flex gap-4 mt-1 text-[11px] text-gray-400 flex-wrap">
+                          <span>Chose: Option {String.fromCharCode(65 + a.chosenAnswer)}</span>
+                          <span>Correct: Option {String.fromCharCode(65 + a.correctAnswer)}</span>
+                          <span>{new Date(a.attemptedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</span>
+                          <span>{new Date(a.attemptedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
