@@ -29,7 +29,7 @@
 }
 
 .grain-overlay { display: none; }
-.liquid-glass, .liquid-glass-strong { background: rgba(255,255,255,0.75); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(61,101,244,0.12); box-shadow: 0 10px 30px rgba(61,101,244,0.08); }
-.section-badge { display: inline-flex; align-items: center; gap: .375rem; padding: .28rem .9rem; border-radius: 999px; font-family: 'Barlow', sans-serif; font-weight: 600; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: #3D65F4; background: rgba(61,101,244,0.08); border: 1px solid rgba(61,101,244,0.14); }
+.liquid-glass, .liquid-glass-strong { background: rgba(255,255,255,0.82); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid rgba(61,101,244,0.12); box-shadow: 0 10px 30px rgba(61,101,244,0.08); }
+.section-badge { display: inline-flex; align-items: center; gap: .375rem; padding: .28rem .9rem; border-radius: 999px; font-family: 'Barlow', sans-serif; font-weight: 700; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: #3D65F4; background: rgba(61,101,244,0.08); border: 1px solid rgba(61,101,244,0.14); }
 .font-display { font-family: 'Instrument Serif', serif; font-style: italic; }
 .font-barlow { font-family: 'Barlow', sans-serif; }
