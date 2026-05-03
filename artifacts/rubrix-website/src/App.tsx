@@ -13,6 +13,7 @@ import PracticePage from "@/pages/portal/PracticePage";
 import TestsPage from "@/pages/portal/TestsPage";
 import ResourcePage from "@/pages/portal/ResourcePage";
 import ProfilePage from "@/pages/portal/ProfilePage";
+import LeaderboardPage from "@/pages/portal/LeaderboardPage";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { FacultyAuthProvider, useFacultyAuth } from "@/context/FacultyAuthContext";
 import FacultyLoginPage from "@/pages/faculty/FacultyLoginPage";
@@ -41,13 +42,14 @@ function PortalRouter() {
     <ProtectedPortal>
       <PortalLayout>
         <Switch>
-          <Route path="/student/academics" component={AcademicsPage} />
-          <Route path="/student/career"    component={CareerPage} />
-          <Route path="/student/practice"  component={PracticePage} />
-          <Route path="/student/tests"     component={TestsPage} />
-          <Route path="/student/resource"  component={ResourcePage} />
-          <Route path="/student/profile"   component={ProfilePage} />
-          <Route path="/student"           component={AcademicsPage} />
+          <Route path="/student/academics"   component={AcademicsPage} />
+          <Route path="/student/career"      component={CareerPage} />
+          <Route path="/student/practice"    component={PracticePage} />
+          <Route path="/student/tests"       component={TestsPage} />
+          <Route path="/student/leaderboard" component={LeaderboardPage} />
+          <Route path="/student/resource"    component={ResourcePage} />
+          <Route path="/student/profile"     component={ProfilePage} />
+          <Route path="/student"             component={AcademicsPage} />
         </Switch>
       </PortalLayout>
     </ProtectedPortal>
