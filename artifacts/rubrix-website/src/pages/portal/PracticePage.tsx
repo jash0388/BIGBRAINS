@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
-import { Search, ChevronLeft, ChevronRight, Loader2, ArrowLeft, Play, Send } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Loader2, ArrowLeft, Play, Send, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { useRubrixData } from "../../hooks/useRubrixData";
 import { useAuth } from "../../context/AuthContext";
+import { getFacultyPracticeQuestions, FacultyPracticeQuestion } from "../../store/facultyDataStore";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ApiQuestion {
@@ -422,7 +423,10 @@ function PracticeListView({ onSelect }: { onSelect: (q: ApiQuestion) => void }) 
           </div>
         )}
 
-        {/* Problems list */}
+        {/* Faculty MCQ questions */}
+        <FacultyMCQSection />
+
+        {/* API Problems list */}
         <div className="space-y-3">
           {filtered.map(q => (
             <div
@@ -460,6 +464,93 @@ function PracticeListView({ onSelect }: { onSelect: (q: ApiQuestion) => void }) 
       {/* Sidebar — hidden on mobile */}
       <div className="hidden md:block w-60 shrink-0">
         <PracticeStatsSidebar />
+      </div>
+    </div>
+  );
+}
+
+// ─── Faculty MCQ Section ───────────────────────────────────────────────────────
+function FacultyMCQSection() {
+  const questions = getFacultyPracticeQuestions();
+  const [answers, setAnswers] = useState<Record<string, number | null>>({});
+  const [revealed, setRevealed] = useState<Record<string, boolean>>({});
+
+  if (questions.length === 0) return null;
+
+  const DIFF_BADGE: Record<string, string> = {
+    easy:   "bg-green-100 text-green-700",
+    medium: "bg-orange-100 text-orange-700",
+    hard:   "bg-red-100 text-red-700",
+  };
+
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-5 h-5 rounded-lg bg-blue-500 flex items-center justify-center">
+          <ShieldCheck size={11} color="white" />
+        </div>
+        <p className="text-xs font-extrabold text-blue-600 uppercase tracking-wider">Faculty Added Questions</p>
+        <span className="text-[10px] bg-blue-100 text-blue-600 font-bold px-2 py-0.5 rounded-full">{questions.length} MCQ</span>
+      </div>
+      <div className="space-y-3">
+        {questions.map((q: FacultyPracticeQuestion) => {
+          const chosen = answers[q.id] ?? null;
+          const isRevealed = revealed[q.id];
+          return (
+            <div key={q.id} className="bg-white border border-blue-100 rounded-xl p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <p className="text-sm font-bold text-slate-800">{q.title}</p>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${DIFF_BADGE[q.difficulty] || "bg-gray-100 text-gray-600"}`}>
+                  {q.difficulty}
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mb-3 leading-relaxed">{q.description}</p>
+              <div className="space-y-1.5">
+                {q.options.map((opt, oi) => {
+                  let style = "border-gray-200 bg-white text-gray-700";
+                  if (isRevealed) {
+                    if (oi === q.correctAnswer) style = "border-green-400 bg-green-50 text-green-800 font-bold";
+                    else if (chosen === oi) style = "border-red-300 bg-red-50 text-red-700";
+                  } else if (chosen === oi) {
+                    style = "border-blue-400 bg-blue-50 text-blue-800 font-bold";
+                  }
+                  return (
+                    <button key={oi} disabled={isRevealed}
+                      onClick={() => setAnswers(a => ({ ...a, [q.id]: oi }))}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border text-xs text-left transition-all ${style}`}>
+                      <span className="w-4 h-4 rounded-full border border-current flex items-center justify-center shrink-0 text-[9px] font-bold">
+                        {isRevealed && oi === q.correctAnswer ? "✓" : String.fromCharCode(65 + oi)}
+                      </span>
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="flex items-center gap-2 mt-3">
+                {!isRevealed ? (
+                  <button
+                    onClick={() => setRevealed(r => ({ ...r, [q.id]: true }))}
+                    disabled={chosen === null}
+                    className="text-[11px] font-bold px-3 py-1.5 rounded-lg disabled:opacity-40 transition-all"
+                    style={{ background: chosen !== null ? "linear-gradient(135deg,#3B82F6,#0EA5E9)" : "#F1F5F9", color: chosen !== null ? "white" : "#94A3B8" }}>
+                    Check Answer
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    {chosen === q.correctAnswer
+                      ? <><CheckCircle2 size={13} className="text-green-500" /><span className="text-[11px] font-bold text-green-600">Correct!</span></>
+                      : <><span className="text-[11px] font-bold text-red-600">Wrong.</span></>
+                    }
+                    {q.explanation && <span className="text-[10px] text-gray-400 ml-1">{q.explanation}</span>}
+                  </div>
+                )}
+                {q.tags.slice(0, 2).map(t => (
+                  <span key={t} className="ml-auto text-[9px] bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-md font-semibold">{t}</span>
+                ))}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

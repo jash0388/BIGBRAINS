@@ -1,14 +1,15 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { BookOpen, Crown, Zap, FolderOpen, User, LogOut } from "lucide-react";
+import { BookOpen, Crown, Zap, FolderOpen, User, LogOut, ClipboardList } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const NAV = [
-  { href: "/student/academics", icon: BookOpen,   label: "Academics", color: "#3B82F6", bg: "#EFF6FF", glow: "#3B82F620" },
-  { href: "/student/career",    icon: Crown,      label: "Career",    color: "#EC4899", bg: "#FDF2F8", glow: "#EC489920" },
-  { href: "/student/practice",  icon: Zap,        label: "Practice",  color: "#F59E0B", bg: "#FFFBEB", glow: "#F59E0B20" },
-  { href: "/student/resource",  icon: FolderOpen, label: "Resources", color: "#10B981", bg: "#ECFDF5", glow: "#10B98120" },
-  { href: "/student/profile",   icon: User,       label: "Profile",   color: "#06B6D4", bg: "#ECFEFF", glow: "#06B6D420" },
+  { href: "/student/academics", icon: BookOpen,     label: "Academics", color: "#3B82F6", bg: "#EFF6FF", glow: "#3B82F620" },
+  { href: "/student/career",    icon: Crown,        label: "Career",    color: "#EC4899", bg: "#FDF2F8", glow: "#EC489920" },
+  { href: "/student/practice",  icon: Zap,          label: "Practice",  color: "#F59E0B", bg: "#FFFBEB", glow: "#F59E0B20" },
+  { href: "/student/tests",     icon: ClipboardList,label: "Tests",     color: "#0EA5E9", bg: "#F0F9FF", glow: "#0EA5E920" },
+  { href: "/student/resource",  icon: FolderOpen,   label: "Resources", color: "#10B981", bg: "#ECFDF5", glow: "#10B98120" },
+  { href: "/student/profile",   icon: User,         label: "Profile",   color: "#06B6D4", bg: "#ECFEFF", glow: "#06B6D420" },
 ];
 
 /* ── Desktop sidebar item ───────────────────────────────────────────── */

@@ -10,6 +10,7 @@ import PortalLayout from "@/components/portal/PortalLayout";
 import AcademicsPage from "@/pages/portal/AcademicsPage";
 import CareerPage from "@/pages/portal/CareerPage";
 import PracticePage from "@/pages/portal/PracticePage";
+import TestsPage from "@/pages/portal/TestsPage";
 import ResourcePage from "@/pages/portal/ResourcePage";
 import ProfilePage from "@/pages/portal/ProfilePage";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
@@ -43,6 +44,7 @@ function PortalRouter() {
           <Route path="/student/academics" component={AcademicsPage} />
           <Route path="/student/career"    component={CareerPage} />
           <Route path="/student/practice"  component={PracticePage} />
+          <Route path="/student/tests"     component={TestsPage} />
           <Route path="/student/resource"  component={ResourcePage} />
           <Route path="/student/profile"   component={ProfilePage} />
           <Route path="/student"           component={AcademicsPage} />

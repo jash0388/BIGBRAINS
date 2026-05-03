@@ -3,9 +3,15 @@ import { useLocation } from "wouter";
 import {
   Users, Zap, BarChart3, PlusCircle, LogOut, Search,
   ChevronRight, BookOpen, CheckCircle2, Clock, Star,
-  Trash2, ShieldCheck, TrendingUp, Activity, Menu, X
+  Trash2, ShieldCheck, TrendingUp, Activity, X,
+  ClipboardList, FileText, ToggleLeft, ToggleRight, Plus,
 } from "lucide-react";
 import { useFacultyAuth } from "../../context/FacultyAuthContext";
+import {
+  getTests, saveTest, deleteTest, toggleTest,
+  getSubmissions, getFacultyPracticeQuestions, deleteFacultyPracticeQuestion,
+  FacultyTest, TestQuestion, TestSubmission,
+} from "../../store/facultyDataStore";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ApiQuestion {
@@ -18,7 +24,7 @@ interface ApiQuestion {
   is_active: boolean;
 }
 
-// ─── Mock student data (realistic for Sphoorthy CSE-DS batch) ────────────────
+// ─── Mock student data ────────────────────────────────────────────────────────
 const MOCK_STUDENTS = [
   { roll: "24N81A6758", name: "Neanavth Jashwanth Singh", year: "2nd", sem: "IV", cgpa: "8.2",  section: "A", active: true,  lastSeen: "Today",       progress: 78, solved: 24, streak: 7  },
   { roll: "24N81A6701", name: "Aditi Sharma",             year: "2nd", sem: "IV", cgpa: "9.1",  section: "A", active: true,  lastSeen: "Today",       progress: 91, solved: 41, streak: 14 },
@@ -32,18 +38,10 @@ const MOCK_STUDENTS = [
   { roll: "24N81A6709", name: "Divya Krishnan",           year: "2nd", sem: "IV", cgpa: "8.4",  section: "A", active: false, lastSeen: "Yesterday",   progress: 70, solved: 28, streak: 3  },
 ];
 
-const DIFF_COLOR: Record<string, string> = {
-  easy:   "#10B981",
-  medium: "#F59E0B",
-  hard:   "#EF4444",
-};
-const DIFF_BG: Record<string, string> = {
-  easy:   "#ECFDF5",
-  medium: "#FFFBEB",
-  hard:   "#FEF2F2",
-};
-
+const DIFF_COLOR: Record<string, string> = { easy: "#10B981", medium: "#F59E0B", hard: "#EF4444" };
+const DIFF_BG:    Record<string, string> = { easy: "#ECFDF5", medium: "#FFFBEB", hard: "#FEF2F2" };
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+function pad(n: number) { return String(n).padStart(2, "0"); }
 
 // ─── Add Question Form ────────────────────────────────────────────────────────
 function AddQuestionForm({ onAdded }: { onAdded: () => void }) {
@@ -59,43 +57,23 @@ function AddQuestionForm({ onAdded }: { onAdded: () => void }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.description.trim()) {
-      setError("Name and description are required.");
-      return;
-    }
-    setSubmitting(true);
-    setError("");
+    if (!form.name.trim() || !form.description.trim()) { setError("Name and description are required."); return; }
+    setSubmitting(true); setError("");
     try {
       const payload = {
-        name: form.name.trim(),
-        description: form.description.trim(),
+        name: form.name.trim(), description: form.description.trim(),
         difficulty_level: form.difficulty_level,
         tags: form.tags.split(",").map(t => t.trim()).filter(Boolean),
-        time_limit: Number(form.time_limit),
-        memory_limit: Number(form.memory_limit),
+        time_limit: Number(form.time_limit), memory_limit: Number(form.memory_limit),
         sample_testcase: [{ testcase: form.sample_input, output: form.sample_output }],
-        is_active: true,
-        added_by: faculty?.name || "Faculty",
+        is_active: true, added_by: faculty?.name || "Faculty",
       };
-      const res = await fetch(`${BASE}/api/proxy/assessments/ourocode/questions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+      await fetch(`${BASE}/api/proxy/assessments/ourocode/questions`, {
+        method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(payload),
       });
-      if (res.ok) {
-        setSuccess(true);
-        onAdded();
-      } else {
-        // Optimistic success since API might require auth
-        setSuccess(true);
-        onAdded();
-      }
-    } catch {
-      setSuccess(true); // optimistic
-      onAdded();
-    } finally {
-      setSubmitting(false);
-    }
+    } catch { /* optimistic */ }
+    setSuccess(true); setSubmitting(false); onAdded();
   };
 
   if (success) {
@@ -106,9 +84,7 @@ function AddQuestionForm({ onAdded }: { onAdded: () => void }) {
         </div>
         <p className="text-lg font-extrabold text-slate-800">Question Added!</p>
         <p className="text-sm text-gray-400 text-center">The practice question has been submitted to the platform.</p>
-        <button onClick={() => setSuccess(false)} className="mt-2 px-6 py-2.5 rounded-xl bg-blue-500 text-white text-sm font-bold">
-          Add Another
-        </button>
+        <button onClick={() => setSuccess(false)} className="mt-2 px-6 py-2.5 rounded-xl bg-blue-500 text-white text-sm font-bold">Add Another</button>
       </div>
     );
   }
@@ -119,118 +95,202 @@ function AddQuestionForm({ onAdded }: { onAdded: () => void }) {
         <h2 className="text-base font-extrabold text-slate-800 mb-0.5">Add Practice Question</h2>
         <p className="text-xs text-gray-400">Publish a new coding problem for students</p>
       </div>
-
       {error && <p className="text-xs text-red-500 font-semibold bg-red-50 px-3 py-2 rounded-xl">{error}</p>}
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {/* Title */}
         <div className="md:col-span-2">
           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Question Title *</label>
-          <input
-            value={form.name}
-            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+          <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
             placeholder="e.g. Two Sum, Fibonacci Series..."
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-          />
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all" />
         </div>
-
-        {/* Description */}
         <div className="md:col-span-2">
           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Problem Description *</label>
-          <textarea
-            value={form.description}
-            onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-            rows={5}
-            placeholder="Describe the problem clearly with constraints and examples..."
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all resize-none"
-          />
+          <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+            rows={5} placeholder="Describe the problem clearly with constraints and examples..."
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all resize-none" />
         </div>
-
-        {/* Difficulty */}
         <div>
           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Difficulty</label>
-          <select
-            value={form.difficulty_level}
-            onChange={e => setForm(f => ({ ...f, difficulty_level: e.target.value }))}
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 bg-white"
-          >
-            <option value="easy">Easy (Beginner)</option>
-            <option value="medium">Medium (Intermediate)</option>
-            <option value="hard">Hard (Advanced)</option>
+          <select value={form.difficulty_level} onChange={e => setForm(f => ({ ...f, difficulty_level: e.target.value }))}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 bg-white">
+            <option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option>
           </select>
         </div>
-
-        {/* Tags */}
         <div>
           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Tags (comma separated)</label>
-          <input
-            value={form.tags}
-            onChange={e => setForm(f => ({ ...f, tags: e.target.value }))}
+          <input value={form.tags} onChange={e => setForm(f => ({ ...f, tags: e.target.value }))}
             placeholder="arrays, sorting, dp..."
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 transition-all"
-          />
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 transition-all" />
         </div>
-
-        {/* Time limit */}
         <div>
           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Time Limit (seconds)</label>
-          <input
-            type="number" min={1} max={300}
-            value={form.time_limit}
-            onChange={e => setForm(f => ({ ...f, time_limit: Number(e.target.value) }))}
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 transition-all"
-          />
+          <input type="number" min={1} max={300} value={form.time_limit} onChange={e => setForm(f => ({ ...f, time_limit: Number(e.target.value) }))}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 transition-all" />
         </div>
-
-        {/* Memory limit */}
         <div>
           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Memory Limit (MB)</label>
-          <input
-            type="number" min={16} max={1024}
-            value={form.memory_limit}
-            onChange={e => setForm(f => ({ ...f, memory_limit: Number(e.target.value) }))}
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 transition-all"
-          />
+          <input type="number" min={16} max={1024} value={form.memory_limit} onChange={e => setForm(f => ({ ...f, memory_limit: Number(e.target.value) }))}
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 transition-all" />
         </div>
-
-        {/* Sample input */}
         <div>
           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Sample Input</label>
-          <textarea
-            value={form.sample_input}
-            onChange={e => setForm(f => ({ ...f, sample_input: e.target.value }))}
-            rows={3}
+          <textarea value={form.sample_input} onChange={e => setForm(f => ({ ...f, sample_input: e.target.value }))} rows={3}
             placeholder="5&#10;1 2 3 4 5"
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-mono text-slate-700 focus:outline-none focus:border-blue-400 transition-all resize-none"
-          />
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-mono text-slate-700 focus:outline-none focus:border-blue-400 transition-all resize-none" />
         </div>
-
-        {/* Sample output */}
         <div>
           <label className="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1">Expected Output</label>
-          <textarea
-            value={form.sample_output}
-            onChange={e => setForm(f => ({ ...f, sample_output: e.target.value }))}
-            rows={3}
+          <textarea value={form.sample_output} onChange={e => setForm(f => ({ ...f, sample_output: e.target.value }))} rows={3}
             placeholder="15"
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-mono text-slate-700 focus:outline-none focus:border-blue-400 transition-all resize-none"
-          />
+            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-mono text-slate-700 focus:outline-none focus:border-blue-400 transition-all resize-none" />
+        </div>
+      </div>
+      <button type="submit" disabled={submitting}
+        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm text-white transition-all disabled:opacity-50"
+        style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)", boxShadow: "0 8px 20px rgba(59,130,246,0.3)" }}>
+        {submitting ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          : <><PlusCircle size={16} /> Publish Question</>}
+      </button>
+    </form>
+  );
+}
+
+// ─── Create Test Form ─────────────────────────────────────────────────────────
+function CreateTestForm({ onSaved, faculty }: { onSaved: () => void; faculty: { name: string } | null }) {
+  const [meta, setMeta] = useState({ title: "", description: "", duration: 30 });
+  const [questions, setQuestions] = useState<TestQuestion[]>([]);
+  const [qForm, setQForm] = useState({ question: "", options: ["", "", "", ""], correctAnswer: 0, marks: 1 });
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState("");
+
+  const addQuestion = () => {
+    if (!qForm.question.trim()) { setError("Question text is required."); return; }
+    if (qForm.options.some(o => !o.trim())) { setError("All 4 options must be filled."); return; }
+    setError("");
+    const q: TestQuestion = { id: `q_${Date.now()}_${Math.random()}`, ...qForm, options: [...qForm.options] };
+    setQuestions(qs => [...qs, q]);
+    setQForm({ question: "", options: ["", "", "", ""], correctAnswer: 0, marks: 1 });
+  };
+
+  const handleSave = () => {
+    if (!meta.title.trim()) { setError("Test title is required."); return; }
+    if (questions.length === 0) { setError("Add at least one question."); return; }
+    const test: FacultyTest = {
+      id: `test_${Date.now()}`,
+      ...meta,
+      questions,
+      createdBy: faculty?.name || "Faculty",
+      createdAt: new Date().toISOString(),
+      isActive: true,
+    };
+    saveTest(test);
+    setSaved(true);
+    setTimeout(() => { setSaved(false); onSaved(); }, 1200);
+  };
+
+  if (saved) {
+    return (
+      <div className="max-w-xl mx-auto flex flex-col items-center justify-center py-16 gap-4">
+        <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+          <CheckCircle2 size={32} className="text-green-500" />
+        </div>
+        <p className="text-lg font-extrabold text-slate-800">Test Published!</p>
+        <p className="text-sm text-gray-400 text-center">Students can now see and take this test.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto p-4 md:p-6 pb-12 space-y-5">
+      <div>
+        <h2 className="text-base font-extrabold text-slate-800">Create New Test</h2>
+        <p className="text-xs text-gray-400">Students will see this in their Tests section</p>
+      </div>
+      {error && <p className="text-xs text-red-500 font-semibold bg-red-50 px-3 py-2 rounded-xl">{error}</p>}
+
+      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm space-y-3">
+        <p className="text-xs font-extrabold text-gray-500 uppercase tracking-wider">Test Details</p>
+        <input value={meta.title} onChange={e => setMeta(m => ({ ...m, title: e.target.value }))}
+          placeholder="Test Title e.g. Unit Test 1 — Arrays & Sorting"
+          className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 transition-all" />
+        <textarea value={meta.description} onChange={e => setMeta(m => ({ ...m, description: e.target.value }))}
+          rows={2} placeholder="Brief description of what this test covers..."
+          className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 transition-all resize-none" />
+        <div className="flex items-center gap-3">
+          <label className="text-xs font-bold text-gray-500">Duration (minutes):</label>
+          <input type="number" min={5} max={180} value={meta.duration}
+            onChange={e => setMeta(m => ({ ...m, duration: Number(e.target.value) }))}
+            className="w-24 border border-gray-200 rounded-xl px-3 py-2 text-sm text-slate-800 focus:outline-none focus:border-blue-400 transition-all" />
         </div>
       </div>
 
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={submitting}
-        className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl font-bold text-sm text-white transition-all disabled:opacity-50"
-        style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)", boxShadow: "0 8px 20px rgba(59,130,246,0.3)" }}
-      >
-        {submitting
-          ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-          : <><PlusCircle size={16} /> Publish Question</>
-        }
+      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm space-y-3">
+        <p className="text-xs font-extrabold text-gray-500 uppercase tracking-wider">Add Question</p>
+        <textarea value={qForm.question} onChange={e => setQForm(f => ({ ...f, question: e.target.value }))}
+          rows={2} placeholder="Question text..."
+          className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:outline-none focus:border-blue-400 transition-all resize-none" />
+        <div className="grid grid-cols-2 gap-2">
+          {qForm.options.map((opt, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="correct"
+                checked={qForm.correctAnswer === i}
+                onChange={() => setQForm(f => ({ ...f, correctAnswer: i }))}
+                className="accent-blue-500 shrink-0"
+                title="Mark as correct answer"
+              />
+              <input value={opt}
+                onChange={e => setQForm(f => { const o = [...f.options]; o[i] = e.target.value; return { ...f, options: o }; })}
+                placeholder={`Option ${String.fromCharCode(65 + i)}`}
+                className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-400 transition-all" />
+            </div>
+          ))}
+        </div>
+        <p className="text-[10px] text-gray-400">Select the radio button next to the correct answer</p>
+        <div className="flex items-center gap-3">
+          <label className="text-xs font-bold text-gray-500">Marks:</label>
+          <input type="number" min={1} max={10} value={qForm.marks}
+            onChange={e => setQForm(f => ({ ...f, marks: Number(e.target.value) }))}
+            className="w-20 border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-400 transition-all" />
+          <button type="button" onClick={addQuestion}
+            className="ml-auto flex items-center gap-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold"
+            style={{ background: "linear-gradient(135deg,#10B981,#059669)" }}>
+            <Plus size={13} /> Add Question
+          </button>
+        </div>
+      </div>
+
+      {questions.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-extrabold text-gray-500 uppercase tracking-wider">{questions.length} Question{questions.length !== 1 ? "s" : ""} Added</p>
+          {questions.map((q, i) => (
+            <div key={q.id} className="bg-white rounded-xl px-4 py-3 border border-gray-100 flex items-start gap-3">
+              <span className="w-5 h-5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-extrabold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-slate-800 truncate">{q.question}</p>
+                <p className="text-[10px] text-green-600 mt-0.5 font-semibold">Correct: {q.options[q.correctAnswer]}</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-[10px] text-gray-400">{q.marks}m</span>
+                <button onClick={() => setQuestions(qs => qs.filter(x => x.id !== q.id))}>
+                  <Trash2 size={13} className="text-red-400 hover:text-red-600" />
+                </button>
+              </div>
+            </div>
+          ))}
+          <div className="pt-1">
+            <p className="text-[10px] text-gray-400">Total: {questions.reduce((a, q) => a + q.marks, 0)} marks · {meta.duration} min</p>
+          </div>
+        </div>
+      )}
+
+      <button onClick={handleSave}
+        className="w-full py-3.5 rounded-2xl font-bold text-sm text-white"
+        style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)", boxShadow: "0 8px 20px rgba(59,130,246,0.3)" }}>
+        Publish Test to Students
       </button>
-    </form>
+    </div>
   );
 }
 
@@ -238,24 +298,31 @@ function AddQuestionForm({ onAdded }: { onAdded: () => void }) {
 export default function FacultyDashboard() {
   const { faculty, logout } = useFacultyAuth();
   const [, navigate] = useLocation();
-  const [tab, setTab]           = useState<"overview" | "students" | "questions" | "add">("overview");
-  const [search, setSearch]     = useState("");
+  const [tab, setTab] = useState<"overview" | "students" | "questions" | "add" | "tests" | "results">("overview");
+  const [search, setSearch]       = useState("");
   const [questions, setQuestions] = useState<ApiQuestion[]>([]);
-  const [qLoading, setQLoading] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [qLoading, setQLoading]   = useState(false);
+  const [menuOpen, setMenuOpen]   = useState(false);
+  const [tests, setTests]         = useState<FacultyTest[]>([]);
+  const [submissions, setSubmissions] = useState<TestSubmission[]>([]);
+  const [showCreateTest, setShowCreateTest] = useState(false);
+  const [resultFilter, setResultFilter] = useState("all");
 
   const handleLogout = () => { logout(); navigate("/faculty/login"); };
 
-  // Fetch questions from Rubrix assessments API
+  const loadData = () => {
+    setTests(getTests());
+    setSubmissions(getSubmissions());
+  };
+
+  useEffect(() => { loadData(); }, [tab]);
+
   useEffect(() => {
     if (tab !== "questions" && tab !== "overview") return;
     setQLoading(true);
     fetch(`${BASE}/api/proxy/assessments/ourocode/questions`, { headers: { Accept: "application/json" } })
       .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        const q = data?.questions || data?.data || [];
-        setQuestions(Array.isArray(q) ? q : []);
-      })
+      .then(data => { const q = data?.questions || data?.data || []; setQuestions(Array.isArray(q) ? q : []); })
       .catch(() => setQuestions([]))
       .finally(() => setQLoading(false));
   }, [tab]);
@@ -265,33 +332,36 @@ export default function FacultyDashboard() {
     s.roll.toLowerCase().includes(search.toLowerCase())
   );
 
-  const activeCount   = MOCK_STUDENTS.filter(s => s.active).length;
-  const avgProgress   = Math.round(MOCK_STUDENTS.reduce((a, s) => a + s.progress, 0) / MOCK_STUDENTS.length);
-  const avgCgpa       = (MOCK_STUDENTS.reduce((a, s) => a + parseFloat(s.cgpa), 0) / MOCK_STUDENTS.length).toFixed(1);
+  const activeCount = MOCK_STUDENTS.filter(s => s.active).length;
+  const avgProgress = Math.round(MOCK_STUDENTS.reduce((a, s) => a + s.progress, 0) / MOCK_STUDENTS.length);
+  const avgCgpa     = (MOCK_STUDENTS.reduce((a, s) => a + parseFloat(s.cgpa), 0) / MOCK_STUDENTS.length).toFixed(1);
 
   const TABS = [
-    { id: "overview",   label: "Overview",   icon: BarChart3   },
-    { id: "students",   label: "Students",   icon: Users       },
-    { id: "questions",  label: "Questions",  icon: BookOpen    },
-    { id: "add",        label: "Add Q",      icon: PlusCircle  },
+    { id: "overview",  label: "Overview",  icon: BarChart3     },
+    { id: "students",  label: "Students",  icon: Users         },
+    { id: "questions", label: "Questions", icon: BookOpen      },
+    { id: "add",       label: "Add Q",     icon: PlusCircle    },
+    { id: "tests",     label: "Tests",     icon: ClipboardList },
+    { id: "results",   label: "Results",   icon: FileText      },
   ] as const;
 
   const initials = faculty?.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase() || "F";
 
+  const filteredSubs = resultFilter === "all"
+    ? submissions
+    : submissions.filter(s => s.testId === resultFilter);
+
+  const facultyPracticeQs = getFacultyPracticeQuestions();
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#F4F6FB", fontFamily: "'Sora', sans-serif" }}>
 
-      {/* ── Top header ────────────────────────────────────────────────── */}
-      <header
-        className="sticky top-0 z-40 flex items-center justify-between px-4 md:px-6 shrink-0 bg-white"
-        style={{ height: 58, borderBottom: "1px solid #F1F5F9", boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}
-      >
-        {/* Left: brand */}
+      {/* ── Top header ──────────────────────────────────────────────── */}
+      <header className="sticky top-0 z-40 flex items-center justify-between px-4 md:px-6 shrink-0 bg-white"
+        style={{ height: 58, borderBottom: "1px solid #F1F5F9", boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}>
         <div className="flex items-center gap-3">
-          <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)", boxShadow: "0 4px 12px rgba(59,130,246,0.35)" }}
-          >
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)", boxShadow: "0 4px 12px rgba(59,130,246,0.35)" }}>
             <ShieldCheck size={15} color="white" strokeWidth={2.5} />
           </div>
           <div>
@@ -299,46 +369,33 @@ export default function FacultyDashboard() {
             <p className="text-[9px] text-slate-400 font-medium">BigBrains · Sphoorthy Engg College</p>
           </div>
         </div>
-
-        {/* Right */}
         <div className="flex items-center gap-2">
           <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-100">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[9px] font-bold text-emerald-600">Live</span>
           </div>
-          <div
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-[10px] font-extrabold shrink-0 cursor-pointer"
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-[10px] font-extrabold shrink-0 cursor-pointer"
             style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)" }}
-            onClick={() => setMenuOpen(m => !m)}
-          >
+            onClick={() => setMenuOpen(m => !m)}>
             {initials}
           </div>
         </div>
       </header>
 
-      {/* Faculty info dropdown */}
       {menuOpen && (
-        <div
-          className="fixed top-[62px] right-4 z-50 rounded-2xl p-4 w-64 shadow-2xl"
-          style={{ background: "white", border: "1px solid #E2E8F0" }}
-        >
+        <div className="fixed top-[62px] right-4 z-50 rounded-2xl p-4 w-64 shadow-2xl"
+          style={{ background: "white", border: "1px solid #E2E8F0" }}>
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-700 font-extrabold text-sm">
-              {initials}
-            </div>
+            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-700 font-extrabold text-sm">{initials}</div>
             <div>
               <p className="text-sm font-extrabold text-slate-800">{faculty?.name}</p>
               <p className="text-[10px] text-blue-500 font-semibold">{faculty?.role}</p>
               <p className="text-[9px] text-gray-400">{faculty?.department}</p>
             </div>
           </div>
-          <div className="text-[10px] text-gray-400 mb-3 font-mono bg-gray-50 px-2 py-1 rounded-lg">
-            Code: {faculty?.code}
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-red-500 text-xs font-bold hover:bg-red-50 transition-colors"
-          >
+          <div className="text-[10px] text-gray-400 mb-3 font-mono bg-gray-50 px-2 py-1 rounded-lg">Code: {faculty?.code}</div>
+          <button onClick={handleLogout}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-red-500 text-xs font-bold hover:bg-red-50 transition-colors">
             <LogOut size={13} /> Sign Out
           </button>
         </div>
@@ -350,12 +407,9 @@ export default function FacultyDashboard() {
         {TABS.map(t => {
           const active = tab === t.id;
           return (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
+            <button key={t.id} onClick={() => { setTab(t.id); setShowCreateTest(false); }}
               className="flex items-center gap-1.5 px-4 py-3 text-xs font-bold border-b-2 transition-all shrink-0"
-              style={{ borderColor: active ? "#3B82F6" : "transparent", color: active ? "#3B82F6" : "#94A3B8" }}
-            >
+              style={{ borderColor: active ? "#3B82F6" : "transparent", color: active ? "#3B82F6" : "#94A3B8" }}>
               <t.icon size={13} /> {t.label}
             </button>
           );
@@ -368,32 +422,24 @@ export default function FacultyDashboard() {
         {/* OVERVIEW */}
         {tab === "overview" && (
           <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-5">
-            {/* Welcome banner */}
-            <div
-              className="rounded-3xl p-5 flex items-center justify-between"
-              style={{ background: "linear-gradient(135deg,#1E3A5F,#3B82F6)", boxShadow: "0 12px 32px rgba(59,130,246,0.25)" }}
-            >
+            <div className="rounded-3xl p-5 flex items-center justify-between"
+              style={{ background: "linear-gradient(135deg,#1E3A5F,#3B82F6)", boxShadow: "0 12px 32px rgba(59,130,246,0.25)" }}>
               <div>
                 <p className="text-white/60 text-xs font-semibold mb-0.5">Welcome back,</p>
                 <p className="text-white font-extrabold text-lg">{faculty?.name} 👋</p>
                 <p className="text-white/50 text-[10px] mt-1">{faculty?.role} · {faculty?.department}</p>
               </div>
-              <div
-                className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-extrabold text-xl"
-                style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)" }}
-              >
-                {initials}
-              </div>
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-extrabold text-xl"
+                style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)" }}>{initials}</div>
             </div>
 
-            {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
-                { label: "Total Students",    value: MOCK_STUDENTS.length, icon: Users,      color: "#3B82F6", bg: "#EFF6FF" },
-                { label: "Active Today",      value: activeCount,          icon: Activity,   color: "#10B981", bg: "#ECFDF5" },
-                { label: "Avg. Progress",     value: `${avgProgress}%`,   icon: TrendingUp, color: "#F59E0B", bg: "#FFFBEB" },
-                { label: "Questions Pool",    value: qLoading ? "…" : questions.length || "—", icon: BookOpen, color: "#EC4899", bg: "#FDF2F8" },
-              ].map((s) => (
+                { label: "Total Students",  value: MOCK_STUDENTS.length,                                   icon: Users,         color: "#3B82F6", bg: "#EFF6FF" },
+                { label: "Active Today",    value: activeCount,                                             icon: Activity,      color: "#10B981", bg: "#ECFDF5" },
+                { label: "Faculty Tests",   value: tests.length,                                            icon: ClipboardList, color: "#F59E0B", bg: "#FFFBEB" },
+                { label: "Submissions",     value: submissions.length,                                      icon: FileText,      color: "#EC4899", bg: "#FDF2F8" },
+              ].map(s => (
                 <div key={s.label} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3" style={{ background: s.bg }}>
                     <s.icon size={15} color={s.color} />
@@ -404,7 +450,6 @@ export default function FacultyDashboard() {
               ))}
             </div>
 
-            {/* Quick student list */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                 <p className="text-sm font-extrabold text-slate-800">Top Performers</p>
@@ -432,19 +477,44 @@ export default function FacultyDashboard() {
               ))}
             </div>
 
-            {/* Avg CGPA */}
+            {submissions.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                  <p className="text-sm font-extrabold text-slate-800">Recent Test Submissions</p>
+                  <button onClick={() => setTab("results")} className="text-[10px] text-blue-500 font-bold flex items-center gap-1">
+                    View all <ChevronRight size={11} />
+                  </button>
+                </div>
+                {[...submissions].reverse().slice(0, 4).map(s => (
+                  <div key={s.id} className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 last:border-0">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white text-[9px] font-extrabold shrink-0">
+                      {s.studentName.split(" ").map(w => w[0]).slice(0, 2).join("")}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-slate-800 truncate">{s.studentName}</p>
+                      <p className="text-[9px] text-gray-400">{s.testTitle}</p>
+                    </div>
+                    <span className="text-xs font-extrabold shrink-0"
+                      style={{ color: s.percentage >= 60 ? "#10B981" : "#EF4444" }}>
+                      {s.percentage}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-white rounded-2xl p-4 text-center border border-blue-50 shadow-sm">
                 <p className="text-2xl font-extrabold text-blue-600">{avgCgpa}</p>
                 <p className="text-[10px] text-gray-400 mt-0.5">Avg CGPA</p>
               </div>
               <div className="bg-white rounded-2xl p-4 text-center border border-green-50 shadow-sm">
-                <p className="text-2xl font-extrabold text-green-600">{MOCK_STUDENTS.filter(s => parseFloat(s.cgpa) >= 8).length}</p>
-                <p className="text-[10px] text-gray-400 mt-0.5">CGPA ≥ 8</p>
+                <p className="text-2xl font-extrabold text-green-600">{avgProgress}%</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">Avg Progress</p>
               </div>
               <div className="bg-white rounded-2xl p-4 text-center border border-amber-50 shadow-sm">
-                <p className="text-2xl font-extrabold text-amber-600">{MOCK_STUDENTS.reduce((a, s) => a + s.streak, 0)}</p>
-                <p className="text-[10px] text-gray-400 mt-0.5">Total Streak Days</p>
+                <p className="text-2xl font-extrabold text-amber-600">{MOCK_STUDENTS.filter(s => parseFloat(s.cgpa) >= 8).length}</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">CGPA ≥ 8</p>
               </div>
             </div>
           </div>
@@ -453,15 +523,11 @@ export default function FacultyDashboard() {
         {/* STUDENTS */}
         {tab === "students" && (
           <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4">
-            {/* Search */}
             <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-2.5 border border-gray-100 shadow-sm">
               <Search size={15} className="text-gray-300 shrink-0" />
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
+              <input value={search} onChange={e => setSearch(e.target.value)}
                 placeholder="Search by name or roll number…"
-                className="flex-1 bg-transparent text-sm text-slate-800 placeholder:text-gray-300 focus:outline-none"
-              />
+                className="flex-1 bg-transparent text-sm text-slate-800 placeholder:text-gray-300 focus:outline-none" />
               {search && <button onClick={() => setSearch("")} className="text-gray-300 hover:text-gray-500"><X size={13} /></button>}
             </div>
 
@@ -469,61 +535,56 @@ export default function FacultyDashboard() {
               {filteredStudents.length} student{filteredStudents.length !== 1 ? "s" : ""} · B.Tech CSE (Data Science) · Sem IV
             </p>
 
-            {/* Student cards */}
             <div className="space-y-2">
-              {filteredStudents.map(s => (
-                <div key={s.roll} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-                  <div className="flex items-start gap-3">
-                    {/* Avatar */}
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-xs font-extrabold shrink-0"
-                      style={{ background: "linear-gradient(135deg,#3B82F6,#EC4899)" }}
-                    >
-                      {s.name.split(" ").map(w => w[0]).slice(0, 2).join("")}
-                    </div>
-
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-extrabold text-slate-800">{s.name}</p>
-                        <div className={`w-1.5 h-1.5 rounded-full ${s.active ? "bg-green-500" : "bg-gray-300"}`} />
-                        <span className="text-[9px] font-semibold text-gray-400">{s.lastSeen}</span>
+              {filteredStudents.map(s => {
+                const myTestSubs = submissions.filter(sub => sub.studentRoll === s.roll);
+                return (
+                  <div key={s.roll} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-xs font-extrabold shrink-0"
+                        style={{ background: "linear-gradient(135deg,#3B82F6,#EC4899)" }}>
+                        {s.name.split(" ").map(w => w[0]).slice(0, 2).join("")}
                       </div>
-                      <p className="text-[10px] text-gray-400 font-mono">{s.roll} · Sec {s.section} · Year {s.year}</p>
-
-                      {/* Stats row */}
-                      <div className="flex items-center gap-3 mt-2 flex-wrap">
-                        <div className="flex items-center gap-1">
-                          <Star size={10} className="text-amber-400" />
-                          <span className="text-[10px] font-bold text-amber-600">CGPA {s.cgpa}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-extrabold text-slate-800">{s.name}</p>
+                          <div className={`w-1.5 h-1.5 rounded-full ${s.active ? "bg-green-500" : "bg-gray-300"}`} />
+                          <span className="text-[9px] font-semibold text-gray-400">{s.lastSeen}</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <CheckCircle2 size={10} className="text-green-500" />
-                          <span className="text-[10px] font-bold text-green-600">{s.solved} solved</span>
+                        <p className="text-[10px] text-gray-400 font-mono">{s.roll} · Sec {s.section} · Year {s.year}</p>
+                        <div className="flex items-center gap-3 mt-2 flex-wrap">
+                          <div className="flex items-center gap-1"><Star size={10} className="text-amber-400" /><span className="text-[10px] font-bold text-amber-600">CGPA {s.cgpa}</span></div>
+                          <div className="flex items-center gap-1"><CheckCircle2 size={10} className="text-green-500" /><span className="text-[10px] font-bold text-green-600">{s.solved} solved</span></div>
+                          <div className="flex items-center gap-1"><Zap size={10} className="text-orange-400" /><span className="text-[10px] font-bold text-orange-600">{s.streak}d streak</span></div>
+                          {myTestSubs.length > 0 && (
+                            <div className="flex items-center gap-1">
+                              <ClipboardList size={10} className="text-blue-400" />
+                              <span className="text-[10px] font-bold text-blue-600">{myTestSubs.length} test{myTestSubs.length !== 1 ? "s" : ""} taken</span>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Zap size={10} className="text-orange-400" />
-                          <span className="text-[10px] font-bold text-orange-600">{s.streak}d streak</span>
+                        {myTestSubs.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {myTestSubs.map(sub => (
+                              <span key={sub.id} className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+                                style={{ background: sub.percentage >= 60 ? "#ECFDF5" : "#FEF2F2", color: sub.percentage >= 60 ? "#059669" : "#DC2626" }}>
+                                {sub.testTitle.slice(0, 20)}: {sub.percentage}%
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 mt-2.5">
+                          <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full transition-all"
+                              style={{ width: `${s.progress}%`, background: s.progress >= 80 ? "#10B981" : s.progress >= 50 ? "#3B82F6" : "#F59E0B" }} />
+                          </div>
+                          <span className="text-[10px] font-bold text-gray-500 w-8 text-right">{s.progress}%</span>
                         </div>
-                      </div>
-
-                      {/* Progress bar */}
-                      <div className="flex items-center gap-2 mt-2.5">
-                        <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all"
-                            style={{
-                              width: `${s.progress}%`,
-                              background: s.progress >= 80 ? "#10B981" : s.progress >= 50 ? "#3B82F6" : "#F59E0B",
-                            }}
-                          />
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-500 w-8 text-right">{s.progress}%</span>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -534,16 +595,36 @@ export default function FacultyDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-base font-extrabold text-slate-800">Practice Questions</h2>
-                <p className="text-[10px] text-gray-400 mt-0.5">Live from Rubrix Assessments API</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">Live from Rubrix Assessments API · {facultyPracticeQs.length} faculty MCQ added</p>
               </div>
-              <button
-                onClick={() => setTab("add")}
+              <button onClick={() => setTab("add")}
                 className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold"
-                style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)" }}
-              >
+                style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)" }}>
                 <PlusCircle size={13} /> Add New
               </button>
             </div>
+
+            {facultyPracticeQs.length > 0 && (
+              <div>
+                <p className="text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-2">Faculty Added (MCQ)</p>
+                <div className="space-y-2">
+                  {facultyPracticeQs.map(q => (
+                    <div key={q.id} className="bg-white rounded-xl p-3 border border-blue-100 flex items-start gap-3">
+                      <div>
+                        <p className="text-xs font-bold text-slate-800">{q.title}</p>
+                        <p className="text-[10px] text-gray-400 mt-0.5 truncate max-w-xs">{q.description}</p>
+                        <div className="flex gap-1 mt-1 flex-wrap">
+                          {q.tags.map(t => <span key={t} className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-md font-semibold">{t}</span>)}
+                        </div>
+                      </div>
+                      <button onClick={() => { deleteFacultyPracticeQuestion(q.id); loadData(); }} className="ml-auto shrink-0">
+                        <Trash2 size={13} className="text-red-400 hover:text-red-600" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {qLoading ? (
               <div className="flex items-center justify-center py-16">
@@ -552,11 +633,8 @@ export default function FacultyDashboard() {
             ) : questions.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-400">
                 <BookOpen size={36} className="opacity-30" />
-                <p className="text-sm font-semibold">No questions found</p>
-                <p className="text-xs text-gray-300">The API returned no questions, or they require authentication.</p>
-                <button onClick={() => setTab("add")} className="mt-2 px-5 py-2 rounded-xl bg-blue-500 text-white text-xs font-bold">
-                  Add a Question
-                </button>
+                <p className="text-sm font-semibold">No API questions found</p>
+                <button onClick={() => setTab("add")} className="mt-2 px-5 py-2 rounded-xl bg-blue-500 text-white text-xs font-bold">Add a Question</button>
               </div>
             ) : (
               <div className="space-y-2">
@@ -565,28 +643,22 @@ export default function FacultyDashboard() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <span
-                            className="text-[9px] font-extrabold px-2 py-0.5 rounded-lg"
-                            style={{ background: DIFF_BG[q.difficulty_level] || "#F9FAFB", color: DIFF_COLOR[q.difficulty_level] || "#6B7280" }}
-                          >
+                          <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-lg"
+                            style={{ background: DIFF_BG[q.difficulty_level] || "#F9FAFB", color: DIFF_COLOR[q.difficulty_level] || "#6B7280" }}>
                             {q.difficulty_level?.toUpperCase()}
                           </span>
                           <div className={`w-1.5 h-1.5 rounded-full ${q.is_active ? "bg-green-500" : "bg-gray-300"}`} />
-                          <span className="text-[9px] text-gray-400">{q.is_active ? "Active" : "Inactive"}</span>
                         </div>
                         <p className="text-sm font-bold text-slate-800">{q.name}</p>
-                        <p className="text-[10px] text-gray-400 mt-1 line-clamp-2">{q.description}</p>
                         <div className="flex flex-wrap gap-1 mt-2">
                           {(q.tags || []).slice(0, 5).map((tag, ti) => (
                             <span key={ti} className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-600">{tag}</span>
                           ))}
                         </div>
                       </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <div className="text-right">
-                          <p className="text-[9px] text-gray-400">Time</p>
-                          <p className="text-[10px] font-bold text-slate-600 flex items-center gap-0.5"><Clock size={9} /> {q.time_limit}s</p>
-                        </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-[9px] text-gray-400">Time</p>
+                        <p className="text-[10px] font-bold text-slate-600 flex items-center gap-0.5"><Clock size={9} /> {q.time_limit}s</p>
                       </div>
                     </div>
                   </div>
@@ -597,16 +669,151 @@ export default function FacultyDashboard() {
         )}
 
         {/* ADD QUESTION */}
-        {tab === "add" && (
-          <AddQuestionForm onAdded={() => setTab("questions")} />
+        {tab === "add" && <AddQuestionForm onAdded={() => setTab("questions")} />}
+
+        {/* TESTS */}
+        {tab === "tests" && (
+          <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4">
+            {showCreateTest ? (
+              <CreateTestForm faculty={faculty} onSaved={() => { setShowCreateTest(false); loadData(); }} />
+            ) : (
+              <>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-base font-extrabold text-slate-800">Manage Tests</h2>
+                    <p className="text-[10px] text-gray-400 mt-0.5">{tests.length} test{tests.length !== 1 ? "s" : ""} created</p>
+                  </div>
+                  <button onClick={() => setShowCreateTest(true)}
+                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-white text-xs font-bold"
+                    style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)" }}>
+                    <Plus size={13} /> Create Test
+                  </button>
+                </div>
+
+                {tests.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
+                    <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
+                      <ClipboardList size={24} className="text-gray-300" />
+                    </div>
+                    <p className="text-sm font-semibold">No tests created yet</p>
+                    <p className="text-xs text-gray-300">Create your first test and assign it to students.</p>
+                    <button onClick={() => setShowCreateTest(true)}
+                      className="mt-2 px-5 py-2.5 rounded-xl text-white text-xs font-bold"
+                      style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)" }}>
+                      Create First Test
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {[...tests].reverse().map(test => {
+                      const testSubs = submissions.filter(s => s.testId === test.id);
+                      const avgPct = testSubs.length > 0
+                        ? Math.round(testSubs.reduce((a, s) => a + s.percentage, 0) / testSubs.length)
+                        : null;
+                      return (
+                        <div key={test.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+                          <div className="flex items-start gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <p className="text-sm font-extrabold text-slate-800">{test.title}</p>
+                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${test.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                                  {test.isActive ? "Active" : "Hidden"}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-400 mb-2 line-clamp-1">{test.description}</p>
+                              <div className="flex gap-4 text-[11px] text-gray-400 flex-wrap">
+                                <span className="flex items-center gap-1"><Clock size={11} /> {test.duration} min</span>
+                                <span>{test.questions.length} questions</span>
+                                <span>{test.questions.reduce((a, q) => a + q.marks, 0)} marks</span>
+                                <span>{testSubs.length} submission{testSubs.length !== 1 ? "s" : ""}</span>
+                                {avgPct !== null && <span className="font-bold text-blue-600">Avg: {avgPct}%</span>}
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-2 shrink-0">
+                              <button onClick={() => { toggleTest(test.id); loadData(); }}
+                                className="text-gray-400 hover:text-blue-500 transition-colors">
+                                {test.isActive ? <ToggleRight size={22} className="text-green-500" /> : <ToggleLeft size={22} />}
+                              </button>
+                              <button onClick={() => { deleteTest(test.id); loadData(); }}>
+                                <Trash2 size={14} className="text-red-400 hover:text-red-600" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* RESULTS */}
+        {tab === "results" && (
+          <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div>
+                <h2 className="text-base font-extrabold text-slate-800">Student Test Results</h2>
+                <p className="text-[10px] text-gray-400 mt-0.5">{submissions.length} total submission{submissions.length !== 1 ? "s" : ""}</p>
+              </div>
+              <select value={resultFilter} onChange={e => setResultFilter(e.target.value)}
+                className="border border-gray-200 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:border-blue-400">
+                <option value="all">All Tests</option>
+                {tests.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+              </select>
+            </div>
+
+            {filteredSubs.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
+                <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
+                  <FileText size={24} className="text-gray-300" />
+                </div>
+                <p className="text-sm font-semibold">No results yet</p>
+                <p className="text-xs text-gray-300">Students haven't submitted any tests yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {[...filteredSubs].reverse().map(s => {
+                  const mins = Math.floor(s.timeTaken / 60);
+                  const secs = s.timeTaken % 60;
+                  return (
+                    <div key={s.id} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-[10px] font-extrabold shrink-0"
+                          style={{ background: s.percentage >= 60 ? "linear-gradient(135deg,#10B981,#059669)" : "linear-gradient(135deg,#EF4444,#DC2626)" }}>
+                          {s.studentName.split(" ").map(w => w[0]).slice(0, 2).join("")}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-extrabold text-slate-800">{s.studentName}</p>
+                            <span className="text-[9px] font-mono text-gray-400">{s.studentRoll}</span>
+                          </div>
+                          <p className="text-[11px] text-blue-600 font-semibold mt-0.5">{s.testTitle}</p>
+                          <div className="flex gap-4 mt-1.5 text-[11px] text-gray-400 flex-wrap">
+                            <span className="flex items-center gap-1"><Clock size={10} /> {mins}m {pad(secs)}s</span>
+                            <span>{s.score}/{s.totalMarks} marks</span>
+                            <span>{new Date(s.submittedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</span>
+                            <span>{new Date(s.submittedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-xl font-extrabold" style={{ color: s.percentage >= 60 ? "#10B981" : "#EF4444" }}>{s.percentage}%</p>
+                          <p className="text-[10px] text-gray-400">{s.percentage >= 90 ? "A+" : s.percentage >= 80 ? "A" : s.percentage >= 70 ? "B" : s.percentage >= 60 ? "C" : "F"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         )}
       </div>
 
       {/* Bottom branding */}
-      <div
-        className="shrink-0 flex items-center justify-center gap-2 py-1.5"
-        style={{ background: "rgba(10,12,28,0.88)", backdropFilter: "blur(16px)", borderTop: "1px solid rgba(255,255,255,0.07)" }}
-      >
+      <div className="shrink-0 flex items-center justify-center gap-2 py-1.5"
+        style={{ background: "rgba(10,12,28,0.88)", backdropFilter: "blur(16px)", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
         <span className="text-[8.5px] font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>BigBrains</span>
         <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 9 }}>·</span>
         <span className="text-[8.5px] font-medium" style={{ color: "rgba(255,255,255,0.25)" }}>Startup by Jashwanth &amp; Team</span>
