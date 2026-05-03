@@ -25,7 +25,6 @@ export default function StudentFeatures() {
 
   return (
     <section ref={ref} style={{ background: "#000", padding: "7rem 1.5rem 9rem", position: "relative", overflow: "hidden" }}>
-      {/* Subtle blue glow */}
       <div style={{
         position: "absolute", top: "20%", right: "-10%",
         width: "50vw", height: "50vh",
@@ -34,7 +33,6 @@ export default function StudentFeatures() {
       }} />
 
       <div style={{ maxWidth: "62rem", margin: "0 auto", position: "relative", zIndex: 1 }}>
-        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: "4rem" }}>
           <motion.div custom={0} variants={fadeUp} initial="hidden" animate={inView ? "visible" : "hidden"}
             style={{ display: "flex", justifyContent: "center", marginBottom: "1.25rem" }}>
@@ -60,11 +58,10 @@ export default function StudentFeatures() {
               fontSize: "1rem", color: "rgba(255,255,255,0.4)",
               maxWidth: "38rem", margin: "0 auto",
             }}>
-            Practice coding, take tests, review answers, and track your progress — all within Rubrix.
+            Practice coding, take tests, review answers, and track your progress — all within DataNauts.
           </motion.p>
         </div>
 
-        {/* Cards grid */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1rem" }}>
           {features.map((f, i) => (
             <motion.div
@@ -82,7 +79,6 @@ export default function StudentFeatures() {
                 overflow: "hidden",
               }}
             >
-              {/* Top shimmer line */}
               <div style={{
                 position: "absolute", top: 0, left: 0, right: 0, height: 1,
                 background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)",

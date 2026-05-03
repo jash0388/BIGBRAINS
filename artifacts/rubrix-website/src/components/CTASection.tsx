@@ -47,7 +47,7 @@ export default function CTASection() {
             fontSize: "1rem", color: "rgba(255,255,255,0.38)",
             marginBottom: "3rem", lineHeight: 1.7, maxWidth: "34rem", margin: "0 auto 3rem",
           }}>
-          Rubrix is a student-led startup by Big Brains — born inside Sphoorthy Engineering College. Log in and start your journey.
+          DataNauts is a student-led startup by Big Brains — born inside Sphoorthy Engineering College. Log in and start your journey.
         </motion.p>
 
         <motion.div custom={3} variants={fadeUp} initial="hidden" animate={inView ? "visible" : "hidden"}
@@ -81,7 +81,6 @@ export default function CTASection() {
           </a>
         </motion.div>
 
-        {/* Contact row */}
         <motion.div custom={4} variants={fadeUp} initial="hidden" animate={inView ? "visible" : "hidden"}
           style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "1.5rem" }}>
           {[

@@ -32,8 +32,6 @@ export default function FacultyFeatures() {
 
       <div style={{ maxWidth: "62rem", margin: "0 auto", position: "relative", zIndex: 1 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4rem", alignItems: "center" }} className="grid-cols-1 md:grid-cols-2">
-
-          {/* Left text */}
           <div>
             <motion.div custom={0} variants={fadeUp} initial="hidden" animate={inView ? "visible" : "hidden"}
               style={{ marginBottom: "1.25rem" }}>
@@ -56,7 +54,7 @@ export default function FacultyFeatures() {
                 fontSize: "1rem", color: "rgba(255,255,255,0.38)", lineHeight: 1.7,
                 marginBottom: "2.5rem",
               }}>
-              One dashboard to create tests, review code, track submissions, and give feedback — all without leaving Rubrix.
+              One dashboard to create tests, review code, track submissions, and give feedback — all without leaving DataNauts.
             </motion.p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
@@ -92,10 +90,8 @@ export default function FacultyFeatures() {
             </motion.div>
           </div>
 
-          {/* Right — live dashboard mock */}
           <motion.div custom={2} variants={fadeUp} initial="hidden" animate={inView ? "visible" : "hidden"}>
             <div className="liquid-glass" style={{ borderRadius: "1.5rem", padding: "1.75rem" }}>
-              {/* Header */}
               <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem" }}>
                 <div style={{
                   width: "2.25rem", height: "2.25rem", borderRadius: "0.75rem",
@@ -110,7 +106,6 @@ export default function FacultyFeatures() {
                 </div>
               </div>
 
-              {/* Progress bars */}
               {[
                 { label: "Tests Published",      pct: 82, color: "#6B9FFF" },
                 { label: "Code Reviews Done",    pct: 61, color: "#10B981" },
@@ -132,7 +127,6 @@ export default function FacultyFeatures() {
                 </div>
               ))}
 
-              {/* Mini stats */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.75rem", marginTop: "1.5rem" }}>
                 {[
                   { label: "Students",  value: "342" },

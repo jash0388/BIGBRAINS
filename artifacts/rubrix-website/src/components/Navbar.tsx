@@ -25,7 +25,6 @@ export default function Navbar() {
         padding: "1rem 1.5rem",
       }}
     >
-      {/* Pill container */}
       <div
         style={{
           width: "100%", maxWidth: "56rem",
@@ -45,7 +44,6 @@ export default function Navbar() {
           transition: "box-shadow 0.3s, background 0.3s",
         }}
       >
-        {/* Logo */}
         <a href="/" style={{ display: "flex", alignItems: "center", gap: "0.5rem", textDecoration: "none" }}>
           <div style={{ width: 28, height: 28 }}>
             <svg viewBox="0 0 32 32" fill="none">
@@ -61,10 +59,9 @@ export default function Navbar() {
             fontSize: "1.1rem",
             color: "rgba(255,255,255,0.92)",
             letterSpacing: "-0.01em",
-          }}>Rubrix</span>
+          }}>DataNauts</span>
         </a>
 
-        {/* Desktop buttons */}
         <div className="hidden md:flex items-center gap-2">
           <a href="/student/login" style={{
             padding: "0.45rem 1.1rem",
@@ -96,7 +93,6 @@ export default function Navbar() {
           </a>
         </div>
 
-        {/* Mobile hamburger */}
         <button
           className="md:hidden"
           onClick={() => setMenuOpen(!menuOpen)}
@@ -106,7 +102,6 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile menu */}
       <AnimatePresence>
         {menuOpen && (
           <motion.div

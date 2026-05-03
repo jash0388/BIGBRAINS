@@ -5,7 +5,7 @@ const testimonials = [
   {
     name: "Dr. P. Rajesh Kumar",
     title: "HOD – CSE Data Science, Sphoorthy Engineering College",
-    quote: "Rubrix has completely changed how we track student progress. Faculty can assign tests, review code, and monitor every student — all from one dashboard. A true game changer.",
+    quote: "DataNauts has completely changed how we track student progress. Faculty can assign tests, review code, and monitor every student — all from one dashboard. A true game changer.",
     initials: "PR",
     color: "#6B9FFF",
   },
@@ -83,8 +83,6 @@ export default function Testimonials() {
                 position: "absolute", top: 0, left: 0, right: 0, height: 1,
                 background: `linear-gradient(90deg, transparent, ${t.color}40, transparent)`,
               }} />
-
-              {/* Stars */}
               <div style={{ display: "flex", gap: "0.2rem", marginBottom: "1rem" }}>
                 {Array.from({ length: 5 }).map((_, j) => (
                   <svg key={j} width="14" height="14" fill="#FBBF24" viewBox="0 0 20 20">

@@ -4,7 +4,6 @@ export default function Footer() {
   return (
     <footer style={{ background: "#000", borderTop: "1px solid rgba(255,255,255,0.06)", padding: "3rem 1.5rem" }}>
       <div style={{ maxWidth: "56rem", margin: "0 auto", textAlign: "center" }}>
-        {/* Brand */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
           <svg viewBox="0 0 32 32" fill="none" style={{ width: 22, height: 22 }}>
             <rect x="2" y="2" width="12" height="12" rx="3" fill="#6B9FFF"/>
@@ -15,7 +14,7 @@ export default function Footer() {
           <span style={{
             fontFamily: "'Instrument Serif', serif", fontStyle: "italic",
             fontSize: "1.1rem", color: "rgba(255,255,255,0.7)",
-          }}>Rubrix</span>
+          }}>DataNauts</span>
         </div>
 
         <p style={{
@@ -26,7 +25,6 @@ export default function Footer() {
           Student excellence platform — built at Sphoorthy Engineering College.
         </p>
 
-        {/* Social */}
         <div style={{ display: "flex", justifyContent: "center", gap: "0.625rem", marginBottom: "2rem" }}>
           {[Linkedin, Twitter, Mail].map((Icon, i) => (
             <a key={i} href="#" style={{
@@ -43,14 +41,13 @@ export default function Footer() {
           ))}
         </div>
 
-        {/* Bottom line */}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "1.5rem" }}>
           <p style={{
             fontFamily: "'Barlow', sans-serif", fontWeight: 300,
             fontSize: "0.72rem", color: "rgba(255,255,255,0.2)",
             marginBottom: "0.5rem",
           }}>
-            © 2025 Rubrix. All rights reserved.
+            © 2025 DataNauts. All rights reserved.
           </p>
           <p style={{
             fontFamily: "'Barlow', sans-serif", fontWeight: 300,
