@@ -1,7 +1,11 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { BookOpen, Crown, Zap, FolderOpen, User, LogOut, ClipboardList } from "lucide-react";
+import { BookOpen, Crown, Zap, FolderOpen, User, LogOut, ClipboardList, ShieldCheck } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useFacultyAuth } from "../../context/FacultyAuthContext";
+
+// ── Admin roll numbers — these students see the Admin button ──────────────────
+const ADMIN_ROLLS = ["24N81A6758", "24N81A6786"];
 
 const NAV = [
   { href: "/student/academics", icon: BookOpen,     label: "Academics", color: "#3B82F6", bg: "#EFF6FF", glow: "#3B82F620" },
@@ -47,7 +51,6 @@ function BottomTab({ href, icon: Icon, label, color, bg }: typeof NAV[0]) {
         className="flex flex-col items-center justify-center w-full cursor-pointer select-none"
         style={{ height: 68 }}
       >
-        {/* Pill capsule */}
         <div
           className="flex items-center justify-center rounded-2xl transition-all duration-200 mb-1"
           style={{
@@ -72,10 +75,19 @@ function BottomTab({ href, icon: Icon, label, color, bg }: typeof NAV[0]) {
 /* ── Layout ─────────────────────────────────────────────────────────── */
 export default function PortalLayout({ children }: { children: ReactNode }) {
   const { student, logout } = useAuth();
+  const { login: facultyLogin } = useFacultyAuth();
   const [, navigate] = useLocation();
   const [location] = useLocation();
 
+  const isAdmin = student ? ADMIN_ROLLS.includes(student.rollNumber) : false;
+
   const handleLogout = () => { logout(); navigate("/student/login"); };
+
+  const handleAdminClick = () => {
+    facultyLogin("1234567890");
+    navigate("/faculty/dashboard");
+  };
+
   const initials = student
     ? (`${student.firstName?.[0] || ""}${student.lastName?.[0] || ""}`).toUpperCase() || "S"
     : "?";
@@ -126,6 +138,12 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
             <div className="flex gap-1 mt-2 flex-wrap">
               {student.year && <span className="text-[9px] font-bold px-2 py-0.5 rounded-lg bg-white text-blue-600 border border-blue-100 shadow-sm">{student.year}</span>}
               {student.semester && <span className="text-[9px] font-bold px-2 py-0.5 rounded-lg bg-white text-emerald-600 border border-emerald-100 shadow-sm">SEM {student.semester}</span>}
+              {isAdmin && (
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded-lg shadow-sm"
+                  style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)", color: "white" }}>
+                  Admin
+                </span>
+              )}
             </div>
           </div>
         )}
@@ -135,6 +153,23 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
           {NAV.map(item => <SideNavItem key={item.href} {...item} />)}
         </div>
         <div className="h-px bg-slate-100 mt-4 mb-3" />
+
+        {/* Admin button — only for admin rolls */}
+        {isAdmin && (
+          <button
+            onClick={handleAdminClick}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-left mb-2 transition-all duration-150"
+            style={{ background: "linear-gradient(135deg,#EFF6FF,#F0F9FF)", border: "1.5px solid #BFDBFE" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg,#3B82F6,#0EA5E9)"; (e.currentTarget as HTMLButtonElement).style.border = "1.5px solid #3B82F6"; (e.currentTarget as HTMLButtonElement).querySelectorAll("span").forEach(s => { (s as HTMLSpanElement).style.color = "white"; }); }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg,#EFF6FF,#F0F9FF)"; (e.currentTarget as HTMLButtonElement).style.border = "1.5px solid #BFDBFE"; (e.currentTarget as HTMLButtonElement).querySelectorAll("span").forEach(s => { (s as HTMLSpanElement).style.color = ""; }); }}
+          >
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)", boxShadow: "0 3px 8px #3B82F640" }}>
+              <ShieldCheck size={15} strokeWidth={2.5} color="white" />
+            </div>
+            <span className="text-sm font-extrabold text-blue-600">Admin Panel</span>
+          </button>
+        )}
 
         <button
           onClick={handleLogout}
@@ -184,6 +219,17 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Admin shortcut pill — mobile header */}
+            {isAdmin && (
+              <button
+                onClick={handleAdminClick}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-white text-[10px] font-extrabold"
+                style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)", boxShadow: "0 3px 10px #3B82F640" }}
+              >
+                <ShieldCheck size={11} strokeWidth={2.5} />
+                Admin
+              </button>
+            )}
             <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-100">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[9px] font-bold text-emerald-600">Live</span>
@@ -231,7 +277,7 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
           </div>
         )}
 
-        {/* Main scrollable content — bottom padding accounts for fixed nav + branding tag + safe area */}
+        {/* Main scrollable content */}
         <main className="flex-1 overflow-y-auto">
           <div
             className="md:pb-0"
@@ -262,7 +308,7 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
           <span className="text-[9.5px] font-medium" style={{ color: "rgba(255,255,255,0.28)" }}>Sphoorthy Engineering College</span>
         </div>
 
-        {/* Mobile glassmorphism branding tag — sits just above the bottom nav */}
+        {/* Mobile glassmorphism branding tag */}
         <div
           className="md:hidden fixed left-0 right-0 z-40 flex items-center justify-center gap-2 px-4 py-1.5"
           style={{
@@ -286,7 +332,7 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
           <span className="text-[8.5px] font-medium" style={{ color: "rgba(100,116,139,0.55)" }}>Sphoorthy Engg College</span>
         </div>
 
-        {/* Mobile bottom nav — height grows to include safe area */}
+        {/* Mobile bottom nav */}
         <nav
           className="md:hidden fixed bottom-0 left-0 right-0 flex bg-white z-50"
           style={{
@@ -297,6 +343,23 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
           }}
         >
           {NAV.map(item => <BottomTab key={item.href} {...item} />)}
+
+          {/* Admin tab — only for admin rolls, shown as last tab */}
+          {isAdmin && (
+            <button
+              onClick={handleAdminClick}
+              className="flex-1 flex flex-col items-center justify-center cursor-pointer select-none"
+              style={{ height: 68 }}
+            >
+              <div
+                className="flex items-center justify-center rounded-2xl mb-1"
+                style={{ width: 40, height: 32, background: "linear-gradient(135deg,#EFF6FF,#F0F9FF)" }}
+              >
+                <ShieldCheck size={20} strokeWidth={2} color="#3B82F6" />
+              </div>
+              <span className="text-[10px] font-bold leading-none" style={{ color: "#3B82F6" }}>Admin</span>
+            </button>
+          )}
         </nav>
       </div>
     </div>
