@@ -59,9 +59,7 @@ export default function FacultyLoginPage() {
       <div
         className="w-full max-w-sm rounded-3xl p-8"
         style={{
-          background: "rgba(255,255,255,0.06)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
+          background: "rgba(255,255,255,0.10)",
           border: "1px solid rgba(255,255,255,0.12)",
           boxShadow: "0 32px 64px rgba(0,0,0,0.4)",
         }}

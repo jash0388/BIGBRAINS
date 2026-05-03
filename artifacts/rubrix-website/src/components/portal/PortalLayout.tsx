@@ -28,10 +28,8 @@ function SideNavItem({ href, icon: Icon, label, color, bg }: typeof NAV[0]) {
   return (
     <Link href={href}>
       <div
-        className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-150"
-        style={active ? { background: bg } : { background: "transparent" }}
-        onMouseEnter={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = "#F8FAFC"; }}
-        onMouseLeave={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
+        className="group flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors duration-150 hover:bg-slate-50"
+        style={active ? { background: bg } : undefined}
       >
         <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
           style={{ background: active ? color : "#F1F5F9" }}>
@@ -143,23 +141,17 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
 
         {isAdmin && (
           <button onClick={handleAdminClick}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-left mb-2 transition-all duration-150"
-            style={{ background: "linear-gradient(135deg,#EFF6FF,#F0F9FF)", border: "1.5px solid #BFDBFE" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg,#3B82F6,#0EA5E9)"; (e.currentTarget as HTMLButtonElement).style.border = "1.5px solid #3B82F6"; (e.currentTarget as HTMLButtonElement).querySelectorAll("span").forEach(s => { (s as HTMLSpanElement).style.color = "white"; }); }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg,#EFF6FF,#F0F9FF)"; (e.currentTarget as HTMLButtonElement).style.border = "1.5px solid #BFDBFE"; (e.currentTarget as HTMLButtonElement).querySelectorAll("span").forEach(s => { (s as HTMLSpanElement).style.color = ""; }); }}>
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)", boxShadow: "0 3px 8px #3B82F640" }}>
+            className="group flex items-center gap-3 px-3 py-2.5 rounded-xl w-full text-left mb-2 transition-colors duration-150 hover:bg-blue-500 border border-blue-100 bg-blue-50">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-blue-500">
               <ShieldCheck size={15} strokeWidth={2.5} color="white" />
             </div>
-            <span className="text-sm font-extrabold text-blue-600">Admin Panel</span>
+            <span className="text-sm font-extrabold text-blue-600 group-hover:text-white transition-colors">Admin Panel</span>
           </button>
         )}
 
         <button onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 transition-all duration-150 w-full text-left"
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#FFF1F2"; (e.currentTarget as HTMLButtonElement).style.color = "#E11D48"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "#94A3B8"; }}>
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-50">
+          className="group flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 transition-colors duration-150 w-full text-left hover:bg-red-50 hover:text-red-500">
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-50 group-hover:bg-red-100 transition-colors">
             <LogOut size={14} strokeWidth={2} />
           </div>
           <span className="text-sm font-semibold">Sign Out</span>
@@ -251,7 +243,7 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
 
         {/* Desktop branding strip */}
         <div className="hidden md:flex shrink-0 items-center justify-center gap-2.5 py-1.5 px-4"
-          style={{ background: "rgba(10,12,28,0.88)", backdropFilter: "blur(16px)", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+          style={{ background: "#0A0C1C", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
           <span className="text-[9.5px] font-medium tracking-wide" style={{ color: "rgba(255,255,255,0.38)" }}>Modified by</span>
           <span className="text-[10px] font-black tracking-widest uppercase"
             style={{ background: "linear-gradient(90deg,#3B82F6,#0EA5E9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Big Brains</span>

@@ -413,7 +413,8 @@ export default function FacultyDashboard() {
     await loadData();
   };
 
-  useEffect(() => { loadData(); }, [tab]);
+  // Load once on mount only — caching in facultyDataStore prevents redundant API calls
+  useEffect(() => { loadData(); }, []);
 
   // Merge students from login tracking + test submissions (deduplicated by roll)
   const allStudents: RegisteredStudent[] = [...realStudents];
@@ -559,7 +560,7 @@ export default function FacultyDashboard() {
                 <p className="text-white/50 text-[10px] mt-1">{faculty?.role} · {faculty?.department}</p>
               </div>
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-extrabold text-xl"
-                style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)" }}>{initials}</div>
+                style={{ background: "rgba(255,255,255,0.18)" }}>{initials}</div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -1147,7 +1148,7 @@ export default function FacultyDashboard() {
 
       {/* Bottom branding */}
       <div className="shrink-0 flex items-center justify-center gap-2 py-1.5"
-        style={{ background: "rgba(10,12,28,0.88)", backdropFilter: "blur(16px)", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+        style={{ background: "#0A0C1C", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
         <span className="text-[8.5px] font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>BigBrains</span>
         <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 9 }}>·</span>
         <span className="text-[8.5px] font-medium" style={{ color: "rgba(255,255,255,0.25)" }}>Startup by Jashwanth &amp; Team</span>

@@ -8,7 +8,6 @@ export interface TestQuestion {
   correctAnswer: number;
   marks: number;
 }
-
 export interface FacultyTest {
   id: string;
   title: string;
@@ -19,7 +18,6 @@ export interface FacultyTest {
   createdAt: string;
   isActive: boolean;
 }
-
 export interface TestSubmission {
   id: string;
   testId: string;
@@ -33,7 +31,6 @@ export interface TestSubmission {
   timeTaken: number;
   submittedAt: string;
 }
-
 export interface FacultyPracticeQuestion {
   id: string;
   title: string;
@@ -46,7 +43,6 @@ export interface FacultyPracticeQuestion {
   createdBy: string;
   createdAt: string;
 }
-
 export interface CodingQuestion {
   id: string;
   title: string;
@@ -60,7 +56,6 @@ export interface CodingQuestion {
   createdBy: string;
   createdAt: string;
 }
-
 export interface CodeSubmission {
   id: string;
   questionId: string;
@@ -74,7 +69,6 @@ export interface CodeSubmission {
   submittedAt: string;
   reviewedAt: string;
 }
-
 export interface RegisteredStudent {
   rollNumber: string;
   fullName: string;
@@ -88,7 +82,6 @@ export interface RegisteredStudent {
   cgpa: string;
   lastLoginAt: string;
 }
-
 export interface PracticeAttempt {
   id: string;
   studentRoll: string;
@@ -101,7 +94,24 @@ export interface PracticeAttempt {
   attemptedAt: string;
 }
 
-// ── helpers ───────────────────────────────────────────────────────────────────
+// ── Simple in-memory cache (30 second TTL) ────────────────────────────────────
+interface CacheEntry { data: unknown; ts: number }
+const _cache = new Map<string, CacheEntry>();
+const TTL = 30_000;
+
+function fromCache<T>(key: string): T | null {
+  const entry = _cache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.ts > TTL) { _cache.delete(key); return null; }
+  return entry.data as T;
+}
+function toCache(key: string, data: unknown) { _cache.set(key, { data, ts: Date.now() }); }
+export function invalidateCache(key?: string) {
+  if (key) _cache.delete(key);
+  else _cache.clear();
+}
+
+// ── Row mappers ───────────────────────────────────────────────────────────────
 function rowToTest(r: Record<string, unknown>): FacultyTest {
   return {
     id: String(r.id), title: String(r.title),
@@ -174,78 +184,81 @@ function rowToAttempt(r: Record<string, unknown>): PracticeAttempt {
   };
 }
 
+// ── Generic cached GET ────────────────────────────────────────────────────────
+async function cachedGet<T>(url: string, mapper: (r: Record<string, unknown>) => T): Promise<T[]> {
+  const hit = fromCache<T[]>(url);
+  if (hit) return hit;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(await res.text());
+    const data = (await res.json() as Record<string, unknown>[]).map(mapper);
+    toCache(url, data);
+    return data;
+  } catch (e) { console.error(`fetch ${url} failed`, e); return []; }
+}
+
 // ── TESTS ─────────────────────────────────────────────────────────────────────
 export async function getTests(): Promise<FacultyTest[]> {
-  try {
-    const res = await fetch(`${DB}/tests`);
-    if (!res.ok) throw new Error(await res.text());
-    return (await res.json() as Record<string, unknown>[]).map(rowToTest);
-  } catch (e) { console.error("getTests failed", e); return []; }
+  return cachedGet(`${DB}/tests`, rowToTest);
 }
 export async function saveTest(t: FacultyTest): Promise<void> {
+  invalidateCache(`${DB}/tests`);
   await fetch(`${DB}/tests`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(t) });
 }
 export async function deleteTest(id: string): Promise<void> {
+  invalidateCache(`${DB}/tests`);
   await fetch(`${DB}/tests/${id}`, { method: "DELETE" });
 }
 export async function toggleTest(id: string): Promise<void> {
+  invalidateCache(`${DB}/tests`);
   await fetch(`${DB}/tests/${id}/toggle`, { method: "PATCH" });
 }
 
 // ── SUBMISSIONS ───────────────────────────────────────────────────────────────
 export async function getSubmissions(): Promise<TestSubmission[]> {
-  try {
-    const res = await fetch(`${DB}/submissions`);
-    if (!res.ok) throw new Error(await res.text());
-    return (await res.json() as Record<string, unknown>[]).map(rowToSubmission);
-  } catch (e) { console.error("getSubmissions failed", e); return []; }
+  return cachedGet(`${DB}/submissions`, rowToSubmission);
 }
 export async function saveSubmission(s: TestSubmission): Promise<void> {
+  invalidateCache(`${DB}/submissions`);
   await fetch(`${DB}/submissions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) });
 }
 
 // ── PRACTICE QUESTIONS (MCQ) ──────────────────────────────────────────────────
 export async function getFacultyPracticeQuestions(): Promise<FacultyPracticeQuestion[]> {
-  try {
-    const res = await fetch(`${DB}/practice-questions`);
-    if (!res.ok) throw new Error(await res.text());
-    return (await res.json() as Record<string, unknown>[]).map(rowToPracticeQ);
-  } catch (e) { console.error("getFacultyPracticeQuestions failed", e); return []; }
+  return cachedGet(`${DB}/practice-questions`, rowToPracticeQ);
 }
 export async function saveFacultyPracticeQuestion(q: FacultyPracticeQuestion): Promise<void> {
+  invalidateCache(`${DB}/practice-questions`);
   await fetch(`${DB}/practice-questions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(q) });
 }
 export async function deleteFacultyPracticeQuestion(id: string): Promise<void> {
+  invalidateCache(`${DB}/practice-questions`);
   await fetch(`${DB}/practice-questions/${id}`, { method: "DELETE" });
 }
 
 // ── CODING QUESTIONS ──────────────────────────────────────────────────────────
 export async function getCodingQuestions(): Promise<CodingQuestion[]> {
-  try {
-    const res = await fetch(`${DB}/coding-questions`);
-    if (!res.ok) throw new Error(await res.text());
-    return (await res.json() as Record<string, unknown>[]).map(rowToCodingQ);
-  } catch (e) { console.error("getCodingQuestions failed", e); return []; }
+  return cachedGet(`${DB}/coding-questions`, rowToCodingQ);
 }
 export async function saveCodingQuestion(q: CodingQuestion): Promise<void> {
+  invalidateCache(`${DB}/coding-questions`);
   await fetch(`${DB}/coding-questions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(q) });
 }
 export async function deleteCodingQuestion(id: string): Promise<void> {
+  invalidateCache(`${DB}/coding-questions`);
   await fetch(`${DB}/coding-questions/${id}`, { method: "DELETE" });
 }
 
 // ── CODE SUBMISSIONS ──────────────────────────────────────────────────────────
 export async function getCodeSubmissions(): Promise<CodeSubmission[]> {
-  try {
-    const res = await fetch(`${DB}/code-submissions`);
-    if (!res.ok) throw new Error(await res.text());
-    return (await res.json() as Record<string, unknown>[]).map(rowToCodeSubmission);
-  } catch (e) { console.error("getCodeSubmissions failed", e); return []; }
+  return cachedGet(`${DB}/code-submissions`, rowToCodeSubmission);
 }
 export async function saveCodeSubmission(s: CodeSubmission): Promise<void> {
+  invalidateCache(`${DB}/code-submissions`);
   await fetch(`${DB}/code-submissions`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) });
 }
 export async function reviewCodeSubmission(id: string, status: "approved" | "rejected", facultyNotes: string): Promise<void> {
+  invalidateCache(`${DB}/code-submissions`);
   await fetch(`${DB}/code-submissions/${id}/review`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
@@ -255,24 +268,18 @@ export async function reviewCodeSubmission(id: string, status: "approved" | "rej
 
 // ── STUDENTS ──────────────────────────────────────────────────────────────────
 export async function getRegisteredStudents(): Promise<RegisteredStudent[]> {
-  try {
-    const res = await fetch(`${DB}/students`);
-    if (!res.ok) throw new Error(await res.text());
-    return (await res.json() as Record<string, unknown>[]).map(rowToStudent);
-  } catch (e) { console.error("getRegisteredStudents failed", e); return []; }
+  return cachedGet(`${DB}/students`, rowToStudent);
 }
 export async function upsertRegisteredStudent(s: RegisteredStudent): Promise<void> {
+  invalidateCache(`${DB}/students`);
   await fetch(`${DB}/students/upsert`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) });
 }
 
 // ── PRACTICE ATTEMPTS ─────────────────────────────────────────────────────────
 export async function getPracticeAttempts(): Promise<PracticeAttempt[]> {
-  try {
-    const res = await fetch(`${DB}/practice-attempts`);
-    if (!res.ok) throw new Error(await res.text());
-    return (await res.json() as Record<string, unknown>[]).map(rowToAttempt);
-  } catch (e) { console.error("getPracticeAttempts failed", e); return []; }
+  return cachedGet(`${DB}/practice-attempts`, rowToAttempt);
 }
 export async function savePracticeAttempt(a: PracticeAttempt): Promise<void> {
+  invalidateCache(`${DB}/practice-attempts`);
   await fetch(`${DB}/practice-attempts`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(a) });
 }
