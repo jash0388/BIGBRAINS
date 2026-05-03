@@ -44,9 +44,24 @@ export interface FacultyPracticeQuestion {
   createdAt: string;
 }
 
+export interface RegisteredStudent {
+  rollNumber: string;
+  fullName: string;
+  email: string;
+  mobile: string;
+  college: string;
+  branch: string;
+  year: string;
+  semester: string;
+  section: string;
+  cgpa: string;
+  lastLoginAt: string;
+}
+
 const TESTS_KEY      = "bigbrains_faculty_tests";
 const SUBS_KEY       = "bigbrains_test_submissions";
 const PRACTICE_KEY   = "bigbrains_faculty_practice_qs";
+const STUDENTS_KEY   = "bigbrains_registered_students";
 
 export function getTests(): FacultyTest[] {
   try { return JSON.parse(localStorage.getItem(TESTS_KEY) || "[]"); } catch { return []; }
@@ -79,4 +94,12 @@ export function saveFacultyPracticeQuestion(q: FacultyPracticeQuestion) {
 }
 export function deleteFacultyPracticeQuestion(id: string) {
   localStorage.setItem(PRACTICE_KEY, JSON.stringify(getFacultyPracticeQuestions().filter(q => q.id !== id)));
+}
+
+export function getRegisteredStudents(): RegisteredStudent[] {
+  try { return JSON.parse(localStorage.getItem(STUDENTS_KEY) || "[]"); } catch { return []; }
+}
+export function upsertRegisteredStudent(s: RegisteredStudent) {
+  const list = getRegisteredStudents().filter(x => x.rollNumber !== s.rollNumber);
+  localStorage.setItem(STUDENTS_KEY, JSON.stringify([...list, s]));
 }

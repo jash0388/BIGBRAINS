@@ -8,11 +8,7 @@ export interface Faculty {
 }
 
 const FACULTY_CODES: Record<string, Omit<Faculty, "code">> = {
-  "1234567890": { name: "Jashwanth Singh",    role: "Admin · BigBrains",        department: "CSE – Data Science" },
-  "9876543210": { name: "HOD – CSE",           role: "Head of Department",       department: "Computer Science" },
-  "5555555555": { name: "Dr. Ramesh Kumar",    role: "Associate Professor",      department: "CSE – Data Science" },
-  "1111111111": { name: "Prof. Anitha Reddy",  role: "Assistant Professor",      department: "CSE – AI & ML" },
-  "2222222222": { name: "Dr. Suresh Babu",     role: "Professor",                department: "Mathematics" },
+  "1234567890": { name: "Jashwanth Singh", role: "Admin · BigBrains", department: "CSE – Data Science" },
 };
 
 interface FacultyAuthState {
@@ -48,10 +44,10 @@ export function FacultyAuthProvider({ children }: { children: ReactNode }) {
       return { success: false, error: "Enter a valid 10-digit faculty code." };
     }
     const meta = FACULTY_CODES[code.trim()];
-    const f: Faculty = meta
-      ? { code: code.trim(), ...meta }
-      : { code: code.trim(), name: "Faculty Member", role: "Visiting Faculty", department: "Sphoorthy Engineering College" };
-    setFaculty(f);
+    if (!meta) {
+      return { success: false, error: "Invalid faculty code. Please contact your administrator." };
+    }
+    setFaculty({ code: code.trim(), ...meta });
     return { success: true };
   };
 

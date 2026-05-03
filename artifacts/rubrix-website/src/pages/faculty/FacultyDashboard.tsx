@@ -10,7 +10,8 @@ import { useFacultyAuth } from "../../context/FacultyAuthContext";
 import {
   getTests, saveTest, deleteTest, toggleTest,
   getSubmissions, getFacultyPracticeQuestions, deleteFacultyPracticeQuestion,
-  FacultyTest, TestQuestion, TestSubmission,
+  getRegisteredStudents,
+  FacultyTest, TestQuestion, TestSubmission, RegisteredStudent,
 } from "../../store/facultyDataStore";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -24,19 +25,6 @@ interface ApiQuestion {
   is_active: boolean;
 }
 
-// ─── Mock student data ────────────────────────────────────────────────────────
-const MOCK_STUDENTS = [
-  { roll: "24N81A6758", name: "Neanavth Jashwanth Singh", year: "2nd", sem: "IV", cgpa: "8.2",  section: "A", active: true,  lastSeen: "Today",       progress: 78, solved: 24, streak: 7  },
-  { roll: "24N81A6701", name: "Aditi Sharma",             year: "2nd", sem: "IV", cgpa: "9.1",  section: "A", active: true,  lastSeen: "Today",       progress: 91, solved: 41, streak: 14 },
-  { roll: "24N81A6702", name: "Ravi Teja Konda",          year: "2nd", sem: "IV", cgpa: "7.8",  section: "A", active: false, lastSeen: "Yesterday",   progress: 55, solved: 18, streak: 2  },
-  { roll: "24N81A6703", name: "Priya Nair",               year: "2nd", sem: "IV", cgpa: "8.7",  section: "A", active: true,  lastSeen: "Today",       progress: 83, solved: 33, streak: 9  },
-  { roll: "24N81A6704", name: "Mohammed Farhan",          year: "2nd", sem: "IV", cgpa: "7.4",  section: "A", active: false, lastSeen: "3 days ago",  progress: 42, solved: 12, streak: 0  },
-  { roll: "24N81A6705", name: "Sneha Reddy",              year: "2nd", sem: "IV", cgpa: "8.9",  section: "A", active: true,  lastSeen: "Today",       progress: 88, solved: 37, streak: 11 },
-  { roll: "24N81A6706", name: "Karthik Raj",              year: "2nd", sem: "IV", cgpa: "6.9",  section: "A", active: false, lastSeen: "1 week ago",  progress: 29, solved: 7,  streak: 0  },
-  { roll: "24N81A6707", name: "Lakshmi Priya",            year: "2nd", sem: "IV", cgpa: "9.3",  section: "A", active: true,  lastSeen: "Today",       progress: 94, solved: 48, streak: 21 },
-  { roll: "24N81A6708", name: "Suresh Babu",              year: "2nd", sem: "IV", cgpa: "7.6",  section: "A", active: true,  lastSeen: "2 hrs ago",   progress: 61, solved: 22, streak: 5  },
-  { roll: "24N81A6709", name: "Divya Krishnan",           year: "2nd", sem: "IV", cgpa: "8.4",  section: "A", active: false, lastSeen: "Yesterday",   progress: 70, solved: 28, streak: 3  },
-];
 
 const DIFF_COLOR: Record<string, string> = { easy: "#10B981", medium: "#F59E0B", hard: "#EF4444" };
 const DIFF_BG:    Record<string, string> = { easy: "#ECFDF5", medium: "#FFFBEB", hard: "#FEF2F2" };
@@ -303,8 +291,9 @@ export default function FacultyDashboard() {
   const [questions, setQuestions] = useState<ApiQuestion[]>([]);
   const [qLoading, setQLoading]   = useState(false);
   const [menuOpen, setMenuOpen]   = useState(false);
-  const [tests, setTests]         = useState<FacultyTest[]>([]);
-  const [submissions, setSubmissions] = useState<TestSubmission[]>([]);
+  const [tests, setTests]             = useState<FacultyTest[]>([]);
+  const [submissions, setSubmissions]  = useState<TestSubmission[]>([]);
+  const [realStudents, setRealStudents] = useState<RegisteredStudent[]>([]);
   const [showCreateTest, setShowCreateTest] = useState(false);
   const [resultFilter, setResultFilter] = useState("all");
 
@@ -313,6 +302,7 @@ export default function FacultyDashboard() {
   const loadData = () => {
     setTests(getTests());
     setSubmissions(getSubmissions());
+    setRealStudents(getRegisteredStudents());
   };
 
   useEffect(() => { loadData(); }, [tab]);
@@ -327,14 +317,14 @@ export default function FacultyDashboard() {
       .finally(() => setQLoading(false));
   }, [tab]);
 
-  const filteredStudents = MOCK_STUDENTS.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.roll.toLowerCase().includes(search.toLowerCase())
+  const filteredStudents = realStudents.filter(s =>
+    s.fullName.toLowerCase().includes(search.toLowerCase()) ||
+    s.rollNumber.toLowerCase().includes(search.toLowerCase())
   );
 
-  const activeCount = MOCK_STUDENTS.filter(s => s.active).length;
-  const avgProgress = Math.round(MOCK_STUDENTS.reduce((a, s) => a + s.progress, 0) / MOCK_STUDENTS.length);
-  const avgCgpa     = (MOCK_STUDENTS.reduce((a, s) => a + parseFloat(s.cgpa), 0) / MOCK_STUDENTS.length).toFixed(1);
+  const avgCgpa = realStudents.length > 0
+    ? (realStudents.reduce((a, s) => a + (parseFloat(s.cgpa) || 0), 0) / realStudents.length).toFixed(1)
+    : "—";
 
   const TABS = [
     { id: "overview",  label: "Overview",  icon: BarChart3     },
@@ -435,10 +425,10 @@ export default function FacultyDashboard() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
-                { label: "Total Students",  value: MOCK_STUDENTS.length,                                   icon: Users,         color: "#3B82F6", bg: "#EFF6FF" },
-                { label: "Active Today",    value: activeCount,                                             icon: Activity,      color: "#10B981", bg: "#ECFDF5" },
-                { label: "Faculty Tests",   value: tests.length,                                            icon: ClipboardList, color: "#F59E0B", bg: "#FFFBEB" },
-                { label: "Submissions",     value: submissions.length,                                      icon: FileText,      color: "#EC4899", bg: "#FDF2F8" },
+                { label: "Registered Students", value: realStudents.length,  icon: Users,         color: "#3B82F6", bg: "#EFF6FF" },
+                { label: "Faculty Tests",        value: tests.length,         icon: ClipboardList, color: "#F59E0B", bg: "#FFFBEB" },
+                { label: "Test Submissions",     value: submissions.length,   icon: FileText,      color: "#10B981", bg: "#ECFDF5" },
+                { label: "Avg CGPA",             value: avgCgpa,              icon: Activity,      color: "#EC4899", bg: "#FDF2F8" },
               ].map(s => (
                 <div key={s.label} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3" style={{ background: s.bg }}>
@@ -452,29 +442,33 @@ export default function FacultyDashboard() {
 
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                <p className="text-sm font-extrabold text-slate-800">Top Performers</p>
+                <p className="text-sm font-extrabold text-slate-800">Registered Students</p>
                 <button onClick={() => setTab("students")} className="text-[10px] text-blue-500 font-bold flex items-center gap-1">
                   See all <ChevronRight size={11} />
                 </button>
               </div>
-              {[...MOCK_STUDENTS].sort((a, b) => b.progress - a.progress).slice(0, 5).map((s, i) => (
-                <div key={s.roll} className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 last:border-0">
-                  <span className="text-[10px] font-extrabold text-gray-300 w-4">{i + 1}</span>
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-pink-400 flex items-center justify-center text-white text-[9px] font-extrabold shrink-0">
-                    {s.name.split(" ").map(w => w[0]).slice(0, 2).join("")}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-slate-800 truncate">{s.name}</p>
-                    <p className="text-[9px] text-gray-400">{s.roll}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-blue-500" style={{ width: `${s.progress}%` }} />
-                    </div>
-                    <span className="text-[10px] font-bold text-blue-600 w-8 text-right">{s.progress}%</span>
-                  </div>
+              {realStudents.length === 0 ? (
+                <div className="px-4 py-8 text-center text-xs text-gray-400">
+                  No students have logged in yet. Students will appear here after their first login.
                 </div>
-              ))}
+              ) : (
+                [...realStudents].slice(0, 5).map((s, i) => (
+                  <div key={s.rollNumber} className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 last:border-0">
+                    <span className="text-[10px] font-extrabold text-gray-300 w-4">{i + 1}</span>
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-pink-400 flex items-center justify-center text-white text-[9px] font-extrabold shrink-0">
+                      {s.fullName.split(" ").map(w => w[0]).slice(0, 2).join("")}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-slate-800 truncate">{s.fullName}</p>
+                      <p className="text-[9px] text-gray-400">{s.rollNumber}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      {s.cgpa ? <span className="text-[10px] font-bold text-amber-600">CGPA {s.cgpa}</span>
+                        : <span className="text-[10px] text-gray-300">—</span>}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
             {submissions.length > 0 && (
@@ -505,15 +499,15 @@ export default function FacultyDashboard() {
 
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-white rounded-2xl p-4 text-center border border-blue-50 shadow-sm">
-                <p className="text-2xl font-extrabold text-blue-600">{avgCgpa}</p>
+                <p className="text-2xl font-extrabold text-blue-600">{realStudents.length}</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">Registered</p>
+              </div>
+              <div className="bg-white rounded-2xl p-4 text-center border border-amber-50 shadow-sm">
+                <p className="text-2xl font-extrabold text-amber-600">{avgCgpa}</p>
                 <p className="text-[10px] text-gray-400 mt-0.5">Avg CGPA</p>
               </div>
               <div className="bg-white rounded-2xl p-4 text-center border border-green-50 shadow-sm">
-                <p className="text-2xl font-extrabold text-green-600">{avgProgress}%</p>
-                <p className="text-[10px] text-gray-400 mt-0.5">Avg Progress</p>
-              </div>
-              <div className="bg-white rounded-2xl p-4 text-center border border-amber-50 shadow-sm">
-                <p className="text-2xl font-extrabold text-amber-600">{MOCK_STUDENTS.filter(s => parseFloat(s.cgpa) >= 8).length}</p>
+                <p className="text-2xl font-extrabold text-green-600">{realStudents.filter(s => parseFloat(s.cgpa) >= 8).length}</p>
                 <p className="text-[10px] text-gray-400 mt-0.5">CGPA ≥ 8</p>
               </div>
             </div>
@@ -532,60 +526,72 @@ export default function FacultyDashboard() {
             </div>
 
             <p className="text-[10px] text-gray-400 font-semibold px-1">
-              {filteredStudents.length} student{filteredStudents.length !== 1 ? "s" : ""} · B.Tech CSE (Data Science) · Sem IV
+              {filteredStudents.length} student{filteredStudents.length !== 1 ? "s" : ""} registered
             </p>
 
-            <div className="space-y-2">
-              {filteredStudents.map(s => {
-                const myTestSubs = submissions.filter(sub => sub.studentRoll === s.roll);
-                return (
-                  <div key={s.roll} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-xs font-extrabold shrink-0"
-                        style={{ background: "linear-gradient(135deg,#3B82F6,#EC4899)" }}>
-                        {s.name.split(" ").map(w => w[0]).slice(0, 2).join("")}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-extrabold text-slate-800">{s.name}</p>
-                          <div className={`w-1.5 h-1.5 rounded-full ${s.active ? "bg-green-500" : "bg-gray-300"}`} />
-                          <span className="text-[9px] font-semibold text-gray-400">{s.lastSeen}</span>
+            {realStudents.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
+                <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
+                  <Users size={24} className="text-gray-300" />
+                </div>
+                <p className="text-sm font-semibold">No students yet</p>
+                <p className="text-xs text-gray-300 text-center max-w-xs">Students will appear here automatically once they log in to the student portal for the first time.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {filteredStudents.map(s => {
+                  const myTestSubs = submissions.filter(sub => sub.studentRoll === s.rollNumber);
+                  const lastLogin  = new Date(s.lastLoginAt);
+                  const isToday    = new Date().toDateString() === lastLogin.toDateString();
+                  const lastSeen   = isToday
+                    ? `Today ${lastLogin.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+                    : lastLogin.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+                  return (
+                    <div key={s.rollNumber} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-xs font-extrabold shrink-0"
+                          style={{ background: "linear-gradient(135deg,#3B82F6,#EC4899)" }}>
+                          {s.fullName.split(" ").map(w => w[0]).slice(0, 2).join("")}
                         </div>
-                        <p className="text-[10px] text-gray-400 font-mono">{s.roll} · Sec {s.section} · Year {s.year}</p>
-                        <div className="flex items-center gap-3 mt-2 flex-wrap">
-                          <div className="flex items-center gap-1"><Star size={10} className="text-amber-400" /><span className="text-[10px] font-bold text-amber-600">CGPA {s.cgpa}</span></div>
-                          <div className="flex items-center gap-1"><CheckCircle2 size={10} className="text-green-500" /><span className="text-[10px] font-bold text-green-600">{s.solved} solved</span></div>
-                          <div className="flex items-center gap-1"><Zap size={10} className="text-orange-400" /><span className="text-[10px] font-bold text-orange-600">{s.streak}d streak</span></div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-extrabold text-slate-800">{s.fullName}</p>
+                            <div className={`w-1.5 h-1.5 rounded-full ${isToday ? "bg-green-500" : "bg-gray-300"}`} />
+                            <span className="text-[9px] font-semibold text-gray-400">{lastSeen}</span>
+                          </div>
+                          <p className="text-[10px] text-gray-400 font-mono">
+                            {s.rollNumber}{s.section ? ` · Sec ${s.section}` : ""}{s.year ? ` · Year ${s.year}` : ""}{s.semester ? ` · Sem ${s.semester}` : ""}
+                          </p>
+                          <div className="flex items-center gap-3 mt-2 flex-wrap">
+                            {s.cgpa && <div className="flex items-center gap-1"><Star size={10} className="text-amber-400" /><span className="text-[10px] font-bold text-amber-600">CGPA {s.cgpa}</span></div>}
+                            {s.branch && <span className="text-[9px] bg-blue-50 text-blue-600 font-semibold px-1.5 py-0.5 rounded-md">{s.branch.length > 20 ? "Data Science" : s.branch}</span>}
+                            {myTestSubs.length > 0 && (
+                              <div className="flex items-center gap-1">
+                                <ClipboardList size={10} className="text-blue-400" />
+                                <span className="text-[10px] font-bold text-blue-600">{myTestSubs.length} test{myTestSubs.length !== 1 ? "s" : ""} taken</span>
+                              </div>
+                            )}
+                          </div>
                           {myTestSubs.length > 0 && (
-                            <div className="flex items-center gap-1">
-                              <ClipboardList size={10} className="text-blue-400" />
-                              <span className="text-[10px] font-bold text-blue-600">{myTestSubs.length} test{myTestSubs.length !== 1 ? "s" : ""} taken</span>
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {myTestSubs.map(sub => (
+                                <span key={sub.id} className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+                                  style={{ background: sub.percentage >= 60 ? "#ECFDF5" : "#FEF2F2", color: sub.percentage >= 60 ? "#059669" : "#DC2626" }}>
+                                  {sub.testTitle.slice(0, 22)}: {sub.percentage}%
+                                </span>
+                              ))}
                             </div>
                           )}
-                        </div>
-                        {myTestSubs.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-1.5">
-                            {myTestSubs.map(sub => (
-                              <span key={sub.id} className="text-[9px] font-bold px-2 py-0.5 rounded-full"
-                                style={{ background: sub.percentage >= 60 ? "#ECFDF5" : "#FEF2F2", color: sub.percentage >= 60 ? "#059669" : "#DC2626" }}>
-                                {sub.testTitle.slice(0, 20)}: {sub.percentage}%
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2 mt-2.5">
-                          <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                            <div className="h-full rounded-full transition-all"
-                              style={{ width: `${s.progress}%`, background: s.progress >= 80 ? "#10B981" : s.progress >= 50 ? "#3B82F6" : "#F59E0B" }} />
-                          </div>
-                          <span className="text-[10px] font-bold text-gray-500 w-8 text-right">{s.progress}%</span>
+                          {s.email && (
+                            <p className="text-[9px] text-gray-300 mt-1 truncate">{s.email}</p>
+                          )}
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

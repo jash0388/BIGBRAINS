@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { upsertRegisteredStudent } from "../store/facultyDataStore";
 
 export interface Student {
   rollNumber: string;
@@ -143,6 +144,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStudent(s);
       setIsLoggedIn(true);
       localStorage.setItem("dn_auth", JSON.stringify(s));
+      upsertRegisteredStudent({
+        rollNumber:  s.rollNumber,
+        fullName:    s.fullName,
+        email:       s.email,
+        mobile:      s.mobile,
+        college:     s.college,
+        branch:      s.branch,
+        year:        s.year,
+        semester:    s.semester,
+        section:     s.section,
+        cgpa:        s.cgpa,
+        lastLoginAt: new Date().toISOString(),
+      });
       return { success: true };
     } catch {
       return { success: false, error: "Network error. Please try again." };
