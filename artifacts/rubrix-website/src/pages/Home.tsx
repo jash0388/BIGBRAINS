@@ -11,8 +11,7 @@ import Footer from "../components/Footer";
 
 export default function Home() {
   return (
-    <div style={{ background: "#000", minHeight: "100vh" }}>
-      <div className="grain-overlay" />
+    <div style={{ background: "#F8FAFF", minHeight: "100vh" }}>
       <PageLoader />
       <Navbar />
       <Hero />
