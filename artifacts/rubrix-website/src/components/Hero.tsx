@@ -20,13 +20,13 @@ function AtmosphereCanvas() {
     };
     window.addEventListener("resize", resize);
 
-    const motes = Array.from({ length: 120 }, () => ({
+    const motes = Array.from({ length: 90 }, () => ({
       x: Math.random() * W,
       y: Math.random() * H,
       r: Math.random() * 1.2 + 0.2,
-      sx: (Math.random() - 0.5) * 0.12,
-      sy: -(Math.random() * 0.12 + 0.03),
-      op: Math.random() * 0.18 + 0.05,
+      sx: (Math.random() - 0.5) * 0.08,
+      sy: -(Math.random() * 0.08 + 0.02),
+      op: Math.random() * 0.12 + 0.03,
       phase: Math.random() * Math.PI * 2,
     }));
 
@@ -45,7 +45,6 @@ function AtmosphereCanvas() {
         ctx.arc(m.x, m.y, m.r * 2.2, 0, Math.PI * 2);
         ctx.fillStyle = grad;
         ctx.fill();
-
         m.x += m.sx;
         m.y += m.sy;
         if (m.y < -10) { m.y = H + 10; m.x = Math.random() * W; }
@@ -64,32 +63,30 @@ function AtmosphereCanvas() {
 export default function Hero() {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 0.6], ["0%", "6%"]);
+  const y = useTransform(scrollYProgress, [0, 0.6], ["0%", "4%"]);
   const op = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
 
   return (
     <section ref={ref} style={{ minHeight: "100vh", background: "linear-gradient(180deg,#F8FAFF 0%,#EEF5FF 100%)", overflow: "hidden", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at top, rgba(61,101,244,0.08), transparent 45%)", zIndex: 0 }} />
+      <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at top, rgba(61,101,244,0.08), transparent 42%)", zIndex: 0 }} />
       <AtmosphereCanvas />
-      <motion.div style={{ y, opacity: op, position: "relative", zIndex: 2, textAlign: "center", maxWidth: "60rem", padding: "0 1.5rem", paddingTop: "6rem" }}>
+      <motion.div style={{ y, opacity: op, position: "relative", zIndex: 2, textAlign: "center", maxWidth: "58rem", padding: "0 1.5rem", paddingTop: "6rem" }}>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }} style={{ display: "flex", justifyContent: "center", marginBottom: "1.5rem" }}>
-          <span className="section-badge" style={{ color: "#3D65F4", background: "rgba(61,101,244,0.08)", borderColor: "rgba(61,101,244,0.18)" }}>
-            Live at Sphoorthy Engineering College
-          </span>
+          <span className="section-badge">Live at Sphoorthy Engineering College</span>
         </motion.div>
-        <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.35 }} style={{ fontFamily: "'Instrument Serif', serif", fontStyle: "italic", fontSize: "clamp(3rem, 9vw, 6rem)", lineHeight: 0.95, letterSpacing: "-0.03em", color: "#12306A", marginBottom: "1.4rem" }}>
+        <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.35 }} style={{ fontFamily: "'Instrument Serif', serif", fontStyle: "italic", fontSize: "clamp(3rem, 8vw, 5.5rem)", lineHeight: 0.95, letterSpacing: "-0.03em", color: "#12306A", marginBottom: "1.4rem" }}>
           The Future Of<br />
           <span style={{ background: "linear-gradient(135deg, #3D65F4, #0EA5E9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Education</span> Begins Here
         </motion.h1>
-        <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.5 }} style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 400, fontSize: "clamp(1rem, 2.4vw, 1.2rem)", color: "#5B6E9A", marginBottom: "2.5rem", lineHeight: 1.6 }}>
+        <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.5 }} style={{ fontFamily: "'Barlow', sans-serif", fontWeight: 400, fontSize: "clamp(1rem, 2.2vw, 1.15rem)", color: "#5B6E9A", marginBottom: "2.5rem", lineHeight: 1.65 }}>
           Smarter practice. Instant feedback. Real results.<br />Built by students, for students — at Sphoorthy.
         </motion.p>
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.65 }} style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
-          <a href="/student/login" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.9rem 2rem", borderRadius: "999px", fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: "0.95rem", color: "#fff", background: "linear-gradient(135deg, #3D65F4, #0EA5E9)", textDecoration: "none", boxShadow: "0 12px 30px rgba(61,101,244,0.25)" }}>Student Login <ArrowUpRight size={16} /></a>
-          <a href="/faculty/login" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.9rem 2rem", borderRadius: "999px", fontFamily: "'Barlow', sans-serif", fontWeight: 600, fontSize: "0.95rem", color: "#3D65F4", background: "#fff", border: "1px solid rgba(61,101,244,0.18)", textDecoration: "none" }}>Faculty Login</a>
+          <a href="/student/login" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.9rem 2rem", borderRadius: "999px", fontFamily: "'Barlow', sans-serif", fontWeight: 700, fontSize: "0.95rem", color: "#fff", background: "linear-gradient(135deg, #3D65F4, #0EA5E9)", textDecoration: "none", boxShadow: "0 12px 30px rgba(61,101,244,0.22)" }}>Student Login <ArrowUpRight size={16} /></a>
+          <a href="/faculty/login" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.9rem 2rem", borderRadius: "999px", fontFamily: "'Barlow', sans-serif", fontWeight: 700, fontSize: "0.95rem", color: "#3D65F4", background: "#fff", border: "1px solid rgba(61,101,244,0.16)", textDecoration: "none", boxShadow: "0 10px 24px rgba(61,101,244,0.08)" }}>Faculty Login</a>
         </motion.div>
       </motion.div>
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "20%", background: "linear-gradient(to bottom, transparent, #F8FAFF)", zIndex: 3, pointerEvents: "none" }} />
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "18%", background: "linear-gradient(to bottom, transparent, #F8FAFF)", zIndex: 3, pointerEvents: "none" }} />
     </section>
   );
 }
