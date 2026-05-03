@@ -3,16 +3,14 @@ import { Link, useLocation } from "wouter";
 import { BookOpen, Crown, Zap, FolderOpen, User, LogOut } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
-// ── Color palette – no violet ──────────────────────────────────────────────────
 const NAV = [
-  { href: "/student/academics", icon: BookOpen,   label: "Academics", color: "#3B82F6", bg: "#EFF6FF", glow: "#3B82F620" },
-  { href: "/student/career",    icon: Crown,      label: "Career",    color: "#EC4899", bg: "#FDF2F8", glow: "#EC489920" },
-  { href: "/student/practice",  icon: Zap,        label: "Practice",  color: "#F59E0B", bg: "#FFFBEB", glow: "#F59E0B20" },
-  { href: "/student/resource",  icon: FolderOpen, label: "Resources", color: "#10B981", bg: "#ECFDF5", glow: "#10B98120" },
-  { href: "/student/profile",   icon: User,       label: "Profile",   color: "#06B6D4", bg: "#ECFEFF", glow: "#06B6D420" },
+  { href: "/student/academics", icon: BookOpen, label: "Academics", color: "#3B82F6", bg: "#EFF6FF", glow: "#3B82F620" },
+  { href: "/student/career", icon: Crown, label: "Career", color: "#EC4899", bg: "#FDF2F8", glow: "#EC489920" },
+  { href: "/student/practice", icon: Zap, label: "Practice", color: "#F59E0B", bg: "#FFFBEB", glow: "#F59E0B20" },
+  { href: "/student/resource", icon: FolderOpen, label: "Resources", color: "#10B981", bg: "#ECFDF5", glow: "#10B98120" },
+  { href: "/student/profile", icon: User, label: "Profile", color: "#06B6D4", bg: "#ECFEFF", glow: "#06B6D420" },
 ];
 
-// ── Desktop sidebar nav item ───────────────────────────────────────────────────
 function SideNavItem({ href, icon: Icon, label, color, bg }: typeof NAV[0]) {
   const [location] = useLocation();
   const active = location.startsWith(href);
@@ -24,10 +22,7 @@ function SideNavItem({ href, icon: Icon, label, color, bg }: typeof NAV[0]) {
         onMouseEnter={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = "#F8FAFC"; }}
         onMouseLeave={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = "transparent"; }}
       >
-        <div
-          className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-          style={{ background: active ? color : "#F1F5F9" }}
-        >
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: active ? color : "#F1F5F9" }}>
           <Icon size={15} strokeWidth={2.5} color={active ? "#fff" : "#94A3B8"} />
         </div>
         <span className="text-sm font-bold" style={{ color: active ? color : "#64748B" }}>{label}</span>
@@ -37,14 +32,12 @@ function SideNavItem({ href, icon: Icon, label, color, bg }: typeof NAV[0]) {
   );
 }
 
-// ── Mobile bottom tab ──────────────────────────────────────────────────────────
 function BottomTab({ href, icon: Icon, label, color, bg }: typeof NAV[0]) {
   const [location] = useLocation();
   const active = location.startsWith(href);
   return (
     <Link href={href}>
-      <div className="flex flex-col items-center justify-center flex-1 h-full gap-1 cursor-pointer select-none">
-        {/* Pill capsule when active */}
+      <div className="flex flex-col items-center justify-center flex-1 h-full gap-1 cursor-pointer select-none pt-1">
         <div
           className="flex items-center justify-center rounded-2xl transition-all duration-200"
           style={{
@@ -53,16 +46,9 @@ function BottomTab({ href, icon: Icon, label, color, bg }: typeof NAV[0]) {
             background: active ? bg : "transparent",
           }}
         >
-          <Icon
-            size={18}
-            strokeWidth={active ? 2.5 : 1.8}
-            color={active ? color : "#B0BEC5"}
-          />
+          <Icon size={18} strokeWidth={active ? 2.5 : 1.8} color={active ? color : "#B0BEC5"} />
         </div>
-        <span
-          className="text-[10px] font-bold leading-none transition-colors"
-          style={{ color: active ? color : "#B0BEC5" }}
-        >
+        <span className="text-[10px] font-bold leading-none transition-colors" style={{ color: active ? color : "#B0BEC5" }}>
           {label}
         </span>
       </div>
@@ -70,7 +56,6 @@ function BottomTab({ href, icon: Icon, label, color, bg }: typeof NAV[0]) {
   );
 }
 
-// ── Layout ─────────────────────────────────────────────────────────────────────
 export default function PortalLayout({ children }: { children: ReactNode }) {
   const { student, logout } = useAuth();
   const [, navigate] = useLocation();
@@ -84,19 +69,10 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: "#F4F6FB", fontFamily: "'Sora', sans-serif" }}>
-
-      {/* ══════════════════ DESKTOP SIDEBAR ══════════════════ */}
-      <aside
-        className="hidden md:flex w-[220px] shrink-0 flex-col py-5 px-3 bg-white border-r border-slate-100"
-        style={{ boxShadow: "2px 0 16px rgba(0,0,0,0.04)" }}
-      >
-        {/* Logo */}
+      <aside className="hidden md:flex w-[220px] shrink-0 flex-col py-5 px-3 bg-white border-r border-slate-100" style={{ boxShadow: "2px 0 16px rgba(0,0,0,0.04)" }}>
         <Link href="/">
           <div className="flex items-center gap-2.5 mb-6 px-1 cursor-pointer">
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)", boxShadow: "0 4px 12px #3B82F640" }}
-            >
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg,#3B82F6,#0EA5E9)", boxShadow: "0 4px 12px #3B82F640" }}>
               <svg viewBox="0 0 32 32" fill="none" className="w-5 h-5">
                 <rect x="3" y="3" width="11" height="11" rx="2.5" fill="white" />
                 <rect x="18" y="3" width="11" height="11" rx="2.5" fill="white" opacity="0.45" />
@@ -110,15 +86,10 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         </Link>
-
-        {/* Student card */}
         {student && (
           <div className="mb-5 rounded-2xl p-3" style={{ background: "linear-gradient(135deg,#F0F9FF,#FFF0F6)", border: "1px solid #BFDBFE" }}>
             <div className="flex items-center gap-2.5">
-              <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white text-xs font-extrabold"
-                style={{ background: "linear-gradient(135deg,#3B82F6,#EC4899)", boxShadow: "0 4px 10px #3B82F640" }}
-              >
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white text-xs font-extrabold" style={{ background: "linear-gradient(135deg,#3B82F6,#EC4899)", boxShadow: "0 4px 10px #3B82F640" }}>
                 {initials}
               </div>
               <div className="min-w-0">
@@ -132,21 +103,12 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
         )}
-
         <div className="h-px bg-slate-100 mb-4" />
-
         <div className="flex flex-col gap-0.5 flex-1">
           {NAV.map(item => <SideNavItem key={item.href} {...item} />)}
         </div>
-
         <div className="h-px bg-slate-100 mt-4 mb-3" />
-
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 transition-all duration-150 w-full text-left"
-          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#FFF1F2"; (e.currentTarget as HTMLButtonElement).style.color = "#E11D48"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "#94A3B8"; }}
-        >
+        <button onClick={handleLogout} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 transition-all duration-150 w-full text-left" onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#FFF1F2"; (e.currentTarget as HTMLButtonElement).style.color = "#E11D48"; }} onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "#94A3B8"; }}>
           <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-slate-50">
             <LogOut size={14} strokeWidth={2} />
           </div>
@@ -154,20 +116,10 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
         </button>
       </aside>
 
-      {/* ══════════════════ CONTENT AREA ══════════════════ */}
       <div className="flex flex-col flex-1 overflow-hidden min-w-0">
-
-        {/* ── MOBILE TOP HEADER ─────────────────────────────────── */}
-        <header
-          className="md:hidden flex items-center justify-between px-4 shrink-0 bg-white"
-          style={{ height: 58, borderBottom: "1px solid #F1F5F9", boxShadow: "0 1px 12px rgba(0,0,0,0.05)" }}
-        >
-          {/* Left: logo + section name */}
+        <header className="md:hidden flex items-center justify-between px-4 shrink-0 bg-white" style={{ height: 58, borderBottom: "1px solid #F1F5F9", boxShadow: "0 1px 12px rgba(0,0,0,0.05)" }}>
           <div className="flex items-center gap-2.5">
-            <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: current ? `linear-gradient(135deg,${current.color},${current.color}cc)` : "linear-gradient(135deg,#3B82F6,#0EA5E9)", boxShadow: current ? `0 3px 10px ${current.glow}` : "none" }}
-            >
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: current ? `linear-gradient(135deg,${current.color},${current.color}cc)` : "linear-gradient(135deg,#3B82F6,#0EA5E9)", boxShadow: current ? `0 3px 10px ${current.glow}` : "none" }}>
               {current ? <current.icon size={15} strokeWidth={2.5} color="#fff" /> : (
                 <svg viewBox="0 0 32 32" fill="none" className="w-4 h-4">
                   <rect x="3" y="3" width="11" height="11" rx="2.5" fill="white" />
@@ -182,34 +134,22 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
               <p className="text-[10px] text-slate-400 font-medium leading-tight">{student?.college || "Sphoorthy Engineering College"}</p>
             </div>
           </div>
-
-          {/* Right: live badge + avatar */}
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 border border-emerald-100">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[9px] font-bold text-emerald-600">Live</span>
             </div>
-            <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-[10px] font-extrabold shrink-0"
-              style={{ background: "linear-gradient(135deg,#3B82F6,#EC4899)" }}
-            >
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-[10px] font-extrabold shrink-0" style={{ background: "linear-gradient(135deg,#3B82F6,#EC4899)" }}>
               {initials}
             </div>
           </div>
         </header>
 
-        {/* ── DESKTOP TOP BAR ───────────────────────────────────── */}
         {student && (
-          <div
-            className="hidden md:flex items-center justify-between px-6 py-3 bg-white shrink-0"
-            style={{ borderBottom: "1px solid #F1F5F9", boxShadow: "0 2px 10px rgba(59,130,246,0.05)" }}
-          >
+          <div className="hidden md:flex items-center justify-between px-6 py-3 bg-white shrink-0" style={{ borderBottom: "1px solid #F1F5F9", boxShadow: "0 2px 10px rgba(59,130,246,0.05)" }}>
             <div className="flex items-center gap-3">
               {current && (
-                <div
-                  className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: current.color, boxShadow: `0 4px 12px ${current.glow}` }}
-                >
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: current.color, boxShadow: `0 4px 12px ${current.glow}` }}>
                   <current.icon size={15} strokeWidth={2.5} color="#fff" />
                 </div>
               )}
@@ -232,27 +172,15 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
           </div>
         )}
 
-        {/* ── MAIN CONTENT ──────────────────────────────────────── */}
         <main className="flex-1 overflow-y-auto" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
           <div className="md:pb-0 pb-20">
             {children}
           </div>
         </main>
 
-        {/* ── DESKTOP BRANDING STRIP ────────────────────────────── */}
-        <div
-          className="hidden md:flex shrink-0 items-center justify-center gap-2.5 py-1.5 px-4"
-          style={{
-            background: "rgba(10,12,28,0.88)",
-            backdropFilter: "blur(16px)",
-            borderTop: "1px solid rgba(255,255,255,0.07)",
-          }}
-        >
+        <div className="hidden md:flex shrink-0 items-center justify-center gap-2.5 py-1.5 px-4" style={{ background: "rgba(10,12,28,0.88)", backdropFilter: "blur(16px)", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
           <span className="text-[9.5px] font-medium tracking-wide" style={{ color: "rgba(255,255,255,0.38)" }}>Modified by</span>
-          <span
-            className="text-[10px] font-black tracking-widest uppercase"
-            style={{ background: "linear-gradient(90deg,#818CF8,#A78BFA)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
-          >Big Brains</span>
+          <span className="text-[10px] font-black tracking-widest uppercase" style={{ background: "linear-gradient(90deg,#818CF8,#A78BFA)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Big Brains</span>
           <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 10 }}>·</span>
           <span className="text-[9.5px] font-medium" style={{ color: "rgba(255,255,255,0.38)" }}>Startup by</span>
           <span className="text-[10px] font-bold" style={{ color: "rgba(167,139,250,0.85)" }}>Jashwanth &amp; Team</span>
@@ -260,16 +188,7 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
           <span className="text-[9.5px] font-medium" style={{ color: "rgba(255,255,255,0.28)" }}>Sphoorthy Engineering College</span>
         </div>
 
-        {/* ══════════════════ MOBILE BOTTOM NAV ══════════════════ */}
-        <nav
-          className="md:hidden fixed bottom-0 left-0 right-0 flex items-stretch bg-white z-50"
-          style={{
-            borderTop: "1.5px solid #F1F5F9",
-            boxShadow: "0 -4px 24px rgba(59,130,246,0.08)",
-            paddingBottom: "env(safe-area-inset-bottom)",
-            height: 68,
-          }}
-        >
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 flex items-stretch bg-white z-50" style={{ borderTop: "1.5px solid #F1F5F9", boxShadow: "0 -4px 24px rgba(59,130,246,0.08)", paddingBottom: "env(safe-area-inset-bottom)", height: 68 }}>
           {NAV.map(item => <BottomTab key={item.href} {...item} />)}
         </nav>
       </div>
