@@ -22,7 +22,7 @@ export default function CTASection() {
             <div className="space-y-4">
               {[
                 { icon: Mail,   label: "bigbrains@sphoorthyengg.ac.in"   },
-                { icon: Phone,  label: "+91 98765 43210"                  },
+                { icon: Phone,  label: "+91 80747 72823"                  },
                 { icon: MapPin, label: "Sphoorthy Engineering College, Hyderabad" },
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-3 text-gray-600">
