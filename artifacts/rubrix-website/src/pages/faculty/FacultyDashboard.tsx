@@ -317,13 +317,28 @@ export default function FacultyDashboard() {
       .finally(() => setQLoading(false));
   }, [tab]);
 
-  const filteredStudents = realStudents.filter(s =>
+  // Merge students from login tracking + test submissions (deduplicated by roll)
+  const allStudents: RegisteredStudent[] = [...realStudents];
+  submissions.forEach(sub => {
+    if (!allStudents.find(s => s.rollNumber === sub.studentRoll)) {
+      allStudents.push({
+        rollNumber: sub.studentRoll,
+        fullName:   sub.studentName,
+        email: "", mobile: "", college: "", branch: "",
+        year: "", semester: "", section: "", cgpa: "",
+        lastLoginAt: sub.submittedAt,
+      });
+    }
+  });
+
+  const filteredStudents = allStudents.filter(s =>
     s.fullName.toLowerCase().includes(search.toLowerCase()) ||
     s.rollNumber.toLowerCase().includes(search.toLowerCase())
   );
 
-  const avgCgpa = realStudents.length > 0
-    ? (realStudents.reduce((a, s) => a + (parseFloat(s.cgpa) || 0), 0) / realStudents.length).toFixed(1)
+  const avgCgpa = allStudents.length > 0
+    ? (allStudents.filter(s => s.cgpa).reduce((a, s) => a + (parseFloat(s.cgpa) || 0), 0) /
+       (allStudents.filter(s => s.cgpa).length || 1)).toFixed(1)
     : "—";
 
   const TABS = [
@@ -425,7 +440,7 @@ export default function FacultyDashboard() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {[
-                { label: "Registered Students", value: realStudents.length,  icon: Users,         color: "#3B82F6", bg: "#EFF6FF" },
+                { label: "Total Students",       value: allStudents.length,  icon: Users,         color: "#3B82F6", bg: "#EFF6FF" },
                 { label: "Faculty Tests",        value: tests.length,         icon: ClipboardList, color: "#F59E0B", bg: "#FFFBEB" },
                 { label: "Test Submissions",     value: submissions.length,   icon: FileText,      color: "#10B981", bg: "#ECFDF5" },
                 { label: "Avg CGPA",             value: avgCgpa,              icon: Activity,      color: "#EC4899", bg: "#FDF2F8" },
@@ -447,12 +462,12 @@ export default function FacultyDashboard() {
                   See all <ChevronRight size={11} />
                 </button>
               </div>
-              {realStudents.length === 0 ? (
+              {allStudents.length === 0 ? (
                 <div className="px-4 py-8 text-center text-xs text-gray-400">
-                  No students have logged in yet. Students will appear here after their first login.
+                  No students yet. Students will appear here once they submit a test.
                 </div>
               ) : (
-                [...realStudents].slice(0, 5).map((s, i) => (
+                [...allStudents].slice(0, 5).map((s, i) => (
                   <div key={s.rollNumber} className="flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 last:border-0">
                     <span className="text-[10px] font-extrabold text-gray-300 w-4">{i + 1}</span>
                     <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-400 to-pink-400 flex items-center justify-center text-white text-[9px] font-extrabold shrink-0">
@@ -499,15 +514,15 @@ export default function FacultyDashboard() {
 
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-white rounded-2xl p-4 text-center border border-blue-50 shadow-sm">
-                <p className="text-2xl font-extrabold text-blue-600">{realStudents.length}</p>
-                <p className="text-[10px] text-gray-400 mt-0.5">Registered</p>
+                <p className="text-2xl font-extrabold text-blue-600">{allStudents.length}</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">Total Students</p>
               </div>
               <div className="bg-white rounded-2xl p-4 text-center border border-amber-50 shadow-sm">
                 <p className="text-2xl font-extrabold text-amber-600">{avgCgpa}</p>
                 <p className="text-[10px] text-gray-400 mt-0.5">Avg CGPA</p>
               </div>
               <div className="bg-white rounded-2xl p-4 text-center border border-green-50 shadow-sm">
-                <p className="text-2xl font-extrabold text-green-600">{realStudents.filter(s => parseFloat(s.cgpa) >= 8).length}</p>
+                <p className="text-2xl font-extrabold text-green-600">{allStudents.filter(s => parseFloat(s.cgpa) >= 8).length}</p>
                 <p className="text-[10px] text-gray-400 mt-0.5">CGPA ≥ 8</p>
               </div>
             </div>
@@ -529,13 +544,13 @@ export default function FacultyDashboard() {
               {filteredStudents.length} student{filteredStudents.length !== 1 ? "s" : ""} registered
             </p>
 
-            {realStudents.length === 0 ? (
+            {allStudents.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
                 <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center">
                   <Users size={24} className="text-gray-300" />
                 </div>
                 <p className="text-sm font-semibold">No students yet</p>
-                <p className="text-xs text-gray-300 text-center max-w-xs">Students will appear here automatically once they log in to the student portal for the first time.</p>
+                <p className="text-xs text-gray-300 text-center max-w-xs">Students appear here automatically the moment they submit any test you have created.</p>
               </div>
             ) : (
               <div className="space-y-2">
