@@ -230,11 +230,11 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
           </div>
         )}
 
-        {/* Main scrollable content — bottom padding accounts for fixed nav + safe area */}
+        {/* Main scrollable content — bottom padding accounts for fixed nav + branding tag + safe area */}
         <main className="flex-1 overflow-y-auto">
           <div
             className="md:pb-0"
-            style={{ paddingBottom: "calc(68px + env(safe-area-inset-bottom) + 8px)" }}
+            style={{ paddingBottom: "calc(68px + env(safe-area-inset-bottom) + 30px + 8px)" }}
           >
             {children}
           </div>
@@ -252,13 +252,37 @@ export default function PortalLayout({ children }: { children: ReactNode }) {
           <span className="text-[9.5px] font-medium tracking-wide" style={{ color: "rgba(255,255,255,0.38)" }}>Modified by</span>
           <span
             className="text-[10px] font-black tracking-widest uppercase"
-            style={{ background: "linear-gradient(90deg,#818CF8,#A78BFA)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
+            style={{ background: "linear-gradient(90deg,#3B82F6,#0EA5E9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
           >Big Brains</span>
           <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 10 }}>·</span>
           <span className="text-[9.5px] font-medium" style={{ color: "rgba(255,255,255,0.38)" }}>Startup by</span>
-          <span className="text-[10px] font-bold" style={{ color: "rgba(167,139,250,0.85)" }}>Jashwanth &amp; Team</span>
+          <span className="text-[10px] font-bold" style={{ color: "rgba(96,165,250,0.9)" }}>Jashwanth &amp; Team</span>
           <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 10 }}>·</span>
           <span className="text-[9.5px] font-medium" style={{ color: "rgba(255,255,255,0.28)" }}>Sphoorthy Engineering College</span>
+        </div>
+
+        {/* Mobile glassmorphism branding tag — sits just above the bottom nav */}
+        <div
+          className="md:hidden fixed left-0 right-0 z-40 flex items-center justify-center gap-2 px-4 py-1.5"
+          style={{
+            bottom: "calc(68px + env(safe-area-inset-bottom))",
+            height: 30,
+            background: "rgba(255,255,255,0.72)",
+            backdropFilter: "blur(18px)",
+            WebkitBackdropFilter: "blur(18px)",
+            borderTop: "1px solid rgba(59,130,246,0.12)",
+            borderBottom: "1px solid rgba(59,130,246,0.08)",
+          }}
+        >
+          <span className="text-[8.5px] font-medium" style={{ color: "rgba(100,116,139,0.7)" }}>by</span>
+          <span
+            className="text-[9px] font-black tracking-widest uppercase"
+            style={{ background: "linear-gradient(90deg,#3B82F6,#0EA5E9)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
+          >Big Brains</span>
+          <span style={{ color: "rgba(148,163,184,0.5)", fontSize: 9 }}>·</span>
+          <span className="text-[8.5px] font-bold" style={{ color: "rgba(59,130,246,0.75)" }}>Jashwanth &amp; Team</span>
+          <span style={{ color: "rgba(148,163,184,0.5)", fontSize: 9 }}>·</span>
+          <span className="text-[8.5px] font-medium" style={{ color: "rgba(100,116,139,0.55)" }}>Sphoorthy Engg College</span>
         </div>
 
         {/* Mobile bottom nav — height grows to include safe area */}

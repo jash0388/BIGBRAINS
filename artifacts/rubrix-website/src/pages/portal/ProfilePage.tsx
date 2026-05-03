@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Edit2, MapPin, Phone, Mail, Globe, Award, Loader2 } from "lucide-react";
+import { Edit2, MapPin, Phone, Mail, Globe, Award, Loader2, LogOut } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useRubrixData } from "../../hooks/useRubrixData";
+import { useLocation } from "wouter";
 
 function InfoField({ label, value }: { label: string; value: string }) {
   return (
@@ -25,7 +26,10 @@ interface RubrixProfile {
 
 export default function ProfilePage() {
   const [tab, setTab] = useState<"profile" | "feedback">("profile");
-  const { student } = useAuth();
+  const { student, logout } = useAuth();
+  const [, navigate] = useLocation();
+
+  const handleLogout = () => { logout(); navigate("/student/login"); };
 
   const idNo = student?.identificationNo || (student?.rollNumber ? `SPHN_STD_${student.rollNumber}` : "");
   const { data: rawInfo, loading: infoLoading } = useRubrixData<{ result?: RubrixProfile[] }>(
@@ -186,11 +190,28 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="text-center pb-2">
+          <div className="text-center pb-1">
             <p className="text-[11px] text-gray-300 font-medium">
               Portal customized by <span className="text-[#3D65F4] font-bold">Neanavth Jashwanth Singh</span> · 24N81A6758 · Sphoorthy Engineering College
             </p>
           </div>
+
+          {/* ── Logout button ── */}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-bold text-sm transition-all active:scale-95"
+            style={{
+              background: "linear-gradient(135deg,#FEF2F2,#FFF1F2)",
+              border: "1.5px solid #FCA5A5",
+              color: "#DC2626",
+              boxShadow: "0 4px 16px rgba(220,38,38,0.10)",
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg,#FEE2E2,#FFE4E6)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg,#FEF2F2,#FFF1F2)"; }}
+          >
+            <LogOut size={16} strokeWidth={2.5} />
+            Sign Out
+          </button>
         </div>
       )}
 
