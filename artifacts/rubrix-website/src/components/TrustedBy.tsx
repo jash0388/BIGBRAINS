@@ -1,24 +1,35 @@
 import { motion } from "framer-motion";
 
-const institutions = [
-  "JNTUK", "VNIT", "SRM University", "KL University", "VIT", "GITAM",
-  "MVSR", "Osmania University", "CBIT", "MGIT",
+const departments = [
+  "CSE – Data Science",
+  "CSE – Artificial Intelligence",
+  "Computer Science & Engineering",
+  "Electronics & Communication",
+  "Electrical & Electronics",
+  "Mechanical Engineering",
+  "Civil Engineering",
+  "Information Technology",
 ];
 
 export default function TrustedBy() {
   return (
     <section className="py-16 bg-white border-y border-blue-50">
       <div className="max-w-7xl mx-auto px-6">
-        <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center text-sm font-semibold text-gray-400 uppercase tracking-widest mb-10"
+          className="text-center mb-3"
         >
-          Trusted by 100+ Institutions across India
-        </motion.p>
-        <div className="flex flex-wrap justify-center gap-6 items-center">
-          {institutions.map((name, i) => (
+          <p className="text-sm font-semibold text-gray-400 uppercase tracking-widest mb-1">
+            Powering All Departments at
+          </p>
+          <p className="text-xl font-extrabold text-[#182B68]">Sphoorthy Engineering College</p>
+          <p className="text-xs text-gray-400 mt-1">Hyderabad, Telangana · Approved by AICTE · Affiliated to JNTUH</p>
+        </motion.div>
+
+        <div className="flex flex-wrap justify-center gap-3 mt-8 items-center">
+          {departments.map((name, i) => (
             <motion.div
               key={name}
               initial={{ opacity: 0, y: 10 }}

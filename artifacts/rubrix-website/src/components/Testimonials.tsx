@@ -2,25 +2,25 @@ import { motion } from "framer-motion";
 
 const testimonials = [
   {
-    name: "Dr. K. Srinivasa Rao",
-    title: "Principal, MVSR Engineering College",
-    quote: "DataNauts transformed how we approach NBA accreditation. What used to take months of manual work now happens automatically. Our SAR was ready in days.",
-    initials: "KS",
+    name: "Dr. P. Rajesh Kumar",
+    title: "HOD – CSE Data Science, Sphoorthy Engineering College",
+    quote: "Rubrix has completely changed how we track student progress. Faculty can now assign tests, review code submissions, and monitor every student — all from one dashboard. A true game changer for our department.",
+    initials: "PR",
     color: "#3D65F4",
   },
   {
-    name: "Prof. Anitha Reddy",
-    title: "Dean of Academics, KL University",
-    quote: "The AI Faculty Agents are a game changer. My faculty spend 60% less time on routine tasks and more time mentoring students. Results speak for themselves.",
-    initials: "AR",
+    name: "Prof. S. Lakshmi Prasanna",
+    title: "Faculty – Computer Science, Sphoorthy Engineering College",
+    quote: "I can now create coding problems, review submissions with feedback notes, and track who submitted what — all without any paperwork. Students know exactly where they stand thanks to the instant feedback.",
+    initials: "SL",
     color: "#0EA5E9",
   },
   {
-    name: "Dr. Ramesh Babu",
-    title: "Training & Placement Officer, GITAM",
-    quote: "Our placement numbers jumped 40% in the first year with DataNauts. Students get personalized prep and we finally have visibility into their readiness.",
-    initials: "RB",
-    color: "#FF6B4A",
+    name: "Neanavth Jashwanth Singh",
+    title: "B.Tech CSE Data Science, 2nd Year · Roll 24N81A6758",
+    quote: "As a student, having everything — tests, coding practice, results, leaderboard — all in one app is incredible. I can see my score the moment I submit a test and even review where I went wrong. Built for us.",
+    initials: "NJ",
+    color: "#10B981",
   },
 ];
 
@@ -35,9 +35,9 @@ export default function Testimonials() {
           className="text-center mb-12 md:mb-16"
         >
           <h2 className="text-3xl md:text-4xl font-extrabold text-[#182B68] mb-3">
-            Loved by Institutions Across India
+            What Sphoorthy Says
           </h2>
-          <p className="text-gray-500 text-sm md:text-base">Real results from real educators</p>
+          <p className="text-gray-500 text-sm md:text-base">Straight from our faculty and students</p>
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-5 md:gap-6">

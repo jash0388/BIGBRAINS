@@ -1,24 +1,26 @@
 import { motion } from "framer-motion";
 
 const stats = [
-  { value: "100+",    label: "Institutions",             color: "#3D65F4" },
-  { value: "50,000+", label: "Students",                 color: "#0EA5E9" },
-  { value: "95%",     label: "Accreditation Success Rate",color: "#FF6B4A" },
-  { value: "3x",      label: "Placement Improvement",    color: "#00C2CB" },
+  { value: "2,000+",  label: "Students at Sphoorthy",          color: "#3D65F4" },
+  { value: "120+",    label: "Faculty Members",                 color: "#0EA5E9" },
+  { value: "8",       label: "Departments Onboarded",           color: "#FF6B4A" },
+  { value: "100%",    label: "Digital — Zero Paperwork",        color: "#10B981" },
 ];
 
 export default function Stats() {
   return (
     <section className="py-16 md:py-20 bg-gradient-to-br from-[#182B68] to-[#0F1A45]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <motion.p
+        <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="text-center text-blue-300 text-sm font-semibold uppercase tracking-widest mb-10 md:mb-12"
+          className="text-center mb-10 md:mb-12"
         >
-          DataNauts by the Numbers
-        </motion.p>
+          <p className="text-blue-300 text-sm font-semibold uppercase tracking-widest">
+            Rubrix at Sphoorthy Engineering College
+          </p>
+        </motion.div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           {stats.map((s, i) => (
             <motion.div
