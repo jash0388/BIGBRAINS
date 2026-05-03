@@ -1,10 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useFacultyAuth } from "../../context/FacultyAuthContext";
 import { ShieldCheck, ArrowRight, Eye, EyeOff, ChevronLeft } from "lucide-react";
 
 export default function FacultyLoginPage() {
-  const { login } = useFacultyAuth();
+  const { login, isLoggedIn } = useFacultyAuth();
   const [, navigate] = useLocation();
 
   const [code, setCode]       = useState("");
@@ -13,6 +13,11 @@ export default function FacultyLoginPage() {
   const [loading, setLoading] = useState(false);
   const [shake, setShake]     = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Navigate only AFTER React has processed the isLoggedIn state update
+  useEffect(() => {
+    if (isLoggedIn) navigate("/faculty/dashboard");
+  }, [isLoggedIn]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,15 +28,14 @@ export default function FacultyLoginPage() {
       return;
     }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(r => setTimeout(r, 600));
     const result = login(code);
     setLoading(false);
-    if (result.success) {
-      navigate("/faculty/dashboard");
-    } else {
+    if (!result.success) {
       setError(result.error || "Invalid code.");
       triggerShake();
     }
+    // Navigation is handled by the useEffect above
   };
 
   const triggerShake = () => {
