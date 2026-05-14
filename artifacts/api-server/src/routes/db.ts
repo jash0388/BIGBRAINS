@@ -90,6 +90,15 @@ router.post("/students/upsert", async (req: Request, res: Response): Promise<voi
   if (error) { res.status(500).json({ error: error.message }); return; }
   res.json(data);
 });
+router.patch("/students/:roll/platforms", async (req: Request, res: Response): Promise<void> => {
+  const { leetcodeUsername, hackerrankUsername } = req.body as { leetcodeUsername?: string; hackerrankUsername?: string };
+  const { data, error } = await supabase.from("registered_students").update({
+    leetcode_username:   leetcodeUsername   ?? "",
+    hackerrank_username: hackerrankUsername ?? "",
+  }).eq("roll_number", req.params.roll).select().single();
+  if (error) { res.status(500).json({ error: error.message }); return; }
+  res.json(data);
+});
 
 // ── PRACTICE ATTEMPTS ─────────────────────────────────────────────────────────
 router.get("/practice-attempts", async (_req: Request, res: Response): Promise<void> => {

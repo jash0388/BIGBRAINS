@@ -53,8 +53,14 @@ create table if not exists registered_students (
   semester text,
   section text,
   cgpa text,
-  last_login_at timestamptz not null default now()
+  last_login_at timestamptz not null default now(),
+  leetcode_username text default '',
+  hackerrank_username text default ''
 );
+
+-- Add platform columns to existing tables (safe to run on existing DBs)
+alter table registered_students add column if not exists leetcode_username text default '';
+alter table registered_students add column if not exists hackerrank_username text default '';
 
 -- Practice Attempts (tracks which student answered which MCQ)
 create table if not exists practice_attempts (

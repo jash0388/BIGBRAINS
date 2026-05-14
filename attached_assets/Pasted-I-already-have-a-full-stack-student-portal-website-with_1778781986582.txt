@@ -1,0 +1,72 @@
+I already have a full-stack student portal website with authentication and an admin panel.
+
+Now I want to integrate coding practice platforms like LeetCode and HackerRank into my website.
+
+Requirements:
+
+1. Student Platform Integration
+- Add “Connect Accounts” section in student profile/settings.
+- Students should be able to securely connect:
+  - LeetCode account
+  - HackerRank account
+- Use OAuth or the best available secure authentication method.
+- Store linked account info in database.
+
+2. Coding Questions Dashboard
+- Create a new “Practice” page.
+- Fetch and display coding problems from LeetCode and HackerRank.
+- Show:
+  - problem title
+  - difficulty
+  - tags/topics
+  - platform source
+  - completion status
+- Allow filtering by difficulty/platform/topic.
+
+3. Solve Flow
+- When student clicks “Solve”, redirect/open the actual problem page on LeetCode/HackerRank.
+- Track whether the problem was completed successfully.
+- Sync solved problem data back into my database automatically.
+
+4. Student Tracking System
+- Add new admin panel tab called “Students”.
+- Inside it:
+  - show all registered students
+  - searchable student list
+  - click student → open detailed analytics page
+
+5. Student Analytics Page
+Show:
+- linked platform usernames
+- LeetCode ranking
+- HackerRank badges/stars
+- solved problems count
+- easy/medium/hard statistics
+- recent activity
+- submission history
+- coding streaks
+- graphs/charts for progress
+- platform-wise performance
+
+6. Code History
+- Store history of solved questions.
+- Save:
+  - question name
+  - submission time
+  - code submitted (if accessible legally via APIs)
+  - language used
+  - verdict/result
+- Display chronological history in admin dashboard.
+
+7. Tech Requirements
+- Use scalable backend architecture.
+- Add proper API handling and error management.
+- Follow official APIs and legal integrations only.
+- Build responsive modern UI.
+- Maintain secure token storage and authentication.
+
+8. Extra Features
+- Leaderboard between students.
+- Daily challenge section.
+- Contest tracking.
+- AI recommendations for practice questions based on weak topics.

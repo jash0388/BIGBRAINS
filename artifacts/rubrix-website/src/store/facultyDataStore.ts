@@ -81,6 +81,8 @@ export interface RegisteredStudent {
   section: string;
   cgpa: string;
   lastLoginAt: string;
+  leetcodeUsername?: string;
+  hackerrankUsername?: string;
 }
 export interface PracticeAttempt {
   id: string;
@@ -172,6 +174,8 @@ function rowToStudent(r: Record<string, unknown>): RegisteredStudent {
     year: String(r.year ?? ""), semester: String(r.semester ?? ""),
     section: String(r.section ?? ""), cgpa: String(r.cgpa ?? ""),
     lastLoginAt: String(r.last_login_at ?? new Date().toISOString()),
+    leetcodeUsername:   String(r.leetcode_username  ?? ""),
+    hackerrankUsername: String(r.hackerrank_username ?? ""),
   };
 }
 function rowToAttempt(r: Record<string, unknown>): PracticeAttempt {
@@ -273,6 +277,18 @@ export async function getRegisteredStudents(): Promise<RegisteredStudent[]> {
 export async function upsertRegisteredStudent(s: RegisteredStudent): Promise<void> {
   invalidateCache(`${DB}/students`);
   await fetch(`${DB}/students/upsert`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(s) });
+}
+export async function updatePlatformUsernames(
+  rollNumber: string,
+  leetcodeUsername: string,
+  hackerrankUsername: string,
+): Promise<void> {
+  invalidateCache(`${DB}/students`);
+  await fetch(`${DB}/students/${encodeURIComponent(rollNumber)}/platforms`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ leetcodeUsername, hackerrankUsername }),
+  });
 }
 
 // ── PRACTICE ATTEMPTS ─────────────────────────────────────────────────────────

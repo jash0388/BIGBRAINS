@@ -18,6 +18,7 @@ import {
   FacultyTest, TestQuestion, TestSubmission, RegisteredStudent, PracticeAttempt,
   FacultyPracticeQuestion, CodingQuestion, CodeSubmission,
 } from "../../store/facultyDataStore";
+import StudentAnalyticsPanel from "../../components/StudentAnalyticsPanel";
 
 const DIFF_COLOR: Record<string, string> = { easy: "#10B981", medium: "#F59E0B", hard: "#EF4444" };
 const DIFF_BG:    Record<string, string> = { easy: "#ECFDF5", medium: "#FFFBEB", hard: "#FEF2F2" };
@@ -372,6 +373,7 @@ export default function FacultyDashboard() {
   const [expandedCode, setExpandedCode] = useState<string | null>(null);
   const [seeding, setSeeding] = useState(false);
   const [seedMsg, setSeedMsg] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState<RegisteredStudent | null>(null);
 
   const handleLogout = () => { logout(); navigate("/faculty/login"); };
   const handleBackToPortal = () => { navigate("/student/academics"); };
@@ -655,7 +657,7 @@ export default function FacultyDashboard() {
         )}
 
         {/* STUDENTS */}
-        {tab === "students" && (
+        {tab === "students" && !selectedStudent && (
           <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-4">
             <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-2.5 border border-gray-100 shadow-sm">
               <Search size={15} className="text-gray-300 shrink-0" />
@@ -686,6 +688,8 @@ export default function FacultyDashboard() {
                   const lastSeen   = isToday
                     ? `Today ${lastLogin.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
                     : lastLogin.toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+                  const hasLC = !!(s.leetcodeUsername);
+                  const hasHR = !!(s.hackerrankUsername);
                   return (
                     <div key={s.rollNumber} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
                       <div className="flex items-start gap-3">
@@ -711,6 +715,16 @@ export default function FacultyDashboard() {
                                 <span className="text-[10px] font-bold text-blue-600">{myTestSubs.length} test{myTestSubs.length !== 1 ? "s" : ""} taken</span>
                               </div>
                             )}
+                            {hasLC && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md" style={{ background: "#FFF7ED", color: "#C2410C" }}>
+                                LC @{s.leetcodeUsername}
+                              </span>
+                            )}
+                            {hasHR && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md" style={{ background: "#F0FDF4", color: "#166534" }}>
+                                HR @{s.hackerrankUsername}
+                              </span>
+                            )}
                           </div>
                           {myTestSubs.length > 0 && (
                             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -726,6 +740,12 @@ export default function FacultyDashboard() {
                             <p className="text-[9px] text-gray-300 mt-1 truncate">{s.email}</p>
                           )}
                         </div>
+                        <button
+                          onClick={() => setSelectedStudent(s)}
+                          className="shrink-0 flex items-center gap-1 px-3 py-2 rounded-xl text-[11px] font-bold transition-colors"
+                          style={{ background: "#EFF6FF", color: "#2563EB", border: "1px solid #BFDBFE" }}>
+                          Analytics <ChevronRight size={12} />
+                        </button>
                       </div>
                     </div>
                   );
@@ -733,6 +753,16 @@ export default function FacultyDashboard() {
               </div>
             )}
           </div>
+        )}
+
+        {tab === "students" && selectedStudent && (
+          <StudentAnalyticsPanel
+            student={selectedStudent}
+            codeSubs={codeSubmissions}
+            testSubs={submissions}
+            practiceAttempts={practiceAttempts}
+            onBack={() => setSelectedStudent(null)}
+          />
         )}
 
         {/* QUESTIONS — MCQ */}
